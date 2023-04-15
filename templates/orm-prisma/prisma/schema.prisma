@@ -1,0 +1,18 @@
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator aomex {
+  provider = "aomex-prisma-model"
+}
+
+model User {
+  id  Int @id 
+  name String 
+  age Int
+}

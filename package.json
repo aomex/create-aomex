@@ -1,0 +1,42 @@
+{
+  "name": "create-aomex",
+  "version": "0.0.0",
+  "repository": "git@github.com:aomex/create-aomex.git",
+  "author": "geekact <fanwenhua1990@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cli": "ts-node src/index.ts",
+    "snapshot": "sh scripts/snapshot.sh"
+  },
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "glob": "^10.1.0",
+    "inquirer": "^9.1.5",
+    "lodash.kebabcase": "^4.1.1",
+    "ora": "^6.3.0",
+    "yargs-parser": "^21.1.1"
+  },
+  "devDependencies": {
+    "@aomex/commander": "^0.0.25",
+    "@aomex/compress": "^0.0.19",
+    "@aomex/console": "^0.0.23",
+    "@aomex/core": "^0.0.20",
+    "@aomex/cors": "^0.0.19",
+    "@aomex/logger": "^0.0.16",
+    "@aomex/openapi": "^0.0.27",
+    "@aomex/prisma-model": "^0.0.4",
+    "@aomex/router": "^0.0.23",
+    "@aomex/service": "^0.0.3",
+    "@aomex/web": "^0.0.21",
+    "@prisma/client": "^4.12.0",
+    "@types/inquirer": "^9.0.3",
+    "@types/lodash.kebabcase": "^4.1.7",
+    "@types/node": "^18.15.11",
+    "@types/yargs-parser": "^21.0.0",
+    "prisma": "^4.12.0",
+    "ts-node": "^10.9.1",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  }
+}

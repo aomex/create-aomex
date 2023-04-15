@@ -1,0 +1,11 @@
+{
+  "name": "project-name",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "start": "pnpm install && nodemon"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
