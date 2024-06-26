@@ -3,11 +3,11 @@ import { inputProjectName } from './input-project-name';
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rm } from 'node:fs/promises';
 import { Listr } from 'listr2';
 import { promisify, styleText } from 'node:util';
 import childProcess from 'node:child_process';
-import kebabCase from 'lodash.kebabcase';
+import { replaceVariables } from './replace-variables';
 
 const argv = yargsParser(process.argv.slice(2));
 const projectName = await inputProjectName(argv);
@@ -43,14 +43,8 @@ spinner.add({
   title: '复制模板文件',
   task: async () => {
     await cp(templateDir, targetDir, { recursive: true });
-    {
-      const packageJSONFile = path.resolve('package.json');
-      let packageContent = await readFile(packageJSONFile, 'utf8');
-      packageContent = packageContent
-        .replaceAll('{{projectName}}', kebabCase(projectName))
-        .replaceAll('{{packageManager}}', packageManager);
-      await writeFile(packageJSONFile, packageContent);
-    }
+    await replaceVariables('package.json', { projectName, packageManager });
+    await replaceVariables('README.md', { projectName, packageManager });
     await sleep();
   },
 });
