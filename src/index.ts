@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { inputPackageManager } from './input-package-manager';
 import { inputProjectName } from './input-project-name';
 import path from 'node:path/posix';
