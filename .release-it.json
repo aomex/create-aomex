@@ -1,0 +1,13 @@
+{
+  "git": {
+    "push": true,
+    "commitMessage": "chore: 发布版本 v${version}",
+    "requireBranch": "main"
+  },
+  "github": {
+    "release": true
+  },
+  "npm": {
+    "publish": true
+  }
+}
