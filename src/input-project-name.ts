@@ -11,7 +11,7 @@ export const inputProjectName = async (
   const result = await inquirer.prompt<{ projectName: string }>({
     name: 'projectName',
     type: 'input',
-    message: 'Project name',
+    message: '项目名称',
     suffix: ':',
   });
 
@@ -22,7 +22,7 @@ export const inputProjectName = async (
     const { goon } = await inquirer.prompt<{ goon: boolean }>({
       name: 'goon',
       type: 'confirm',
-      message: `Project "${projectName}" has been created, want to dangerously override it?`,
+      message: `目录 "${absolutePath}" 已经存在，是否覆盖？`,
       suffix: ':',
     });
 

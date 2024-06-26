@@ -1,8 +1,8 @@
 import inquirer from 'inquirer';
 
-const packageManagers = <const>['pnpm', 'yarn', 'npm'];
+const packageManagers = <const>['pnpm', 'npm', 'yarn'];
 
-export type PackageManager = typeof packageManagers[number];
+export type PackageManager = (typeof packageManagers)[number];
 
 export const inputPackageManager = async (
   argv: Record<string, any>,
@@ -15,7 +15,7 @@ export const inputPackageManager = async (
     manager: PackageManager;
   }>({
     name: 'manager',
-    message: 'Select a package manager',
+    message: '选择包管理工具',
     type: 'list',
     choices: packageManagers,
     default: 'pnpm',

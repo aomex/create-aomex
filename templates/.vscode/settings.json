@@ -1,6 +1,9 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
   "editor.tabSize": 2,
   "editor.inlayHints.fontSize": 9,
   "typescript.inlayHints.parameterNames.enabled": "all",
@@ -8,17 +11,5 @@
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.quoteStyle": "single",
-  "typescript.suggest.autoImports": true,
-  "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
-  },
-  "cSpell.words": [
-    "openapi",
-    "openapiv3",
-    "aomex",
-    "filesize",
-    "tsup",
-    "geekact",
-    "ruleset"
-  ]
+  "typescript.suggest.autoImports": true
 }

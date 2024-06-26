@@ -1,0 +1,12 @@
+{
+  "name": "{{projectName}}",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx/esm --watch src/web.ts",
+    "build": "tsc && tsc-alias --resolve-full-paths",
+    "prepare": "husky",
+    "preinstall": "npx only-allow {{packageManager}}"
+  }
+}

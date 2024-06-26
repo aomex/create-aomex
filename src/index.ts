@@ -1,106 +1,127 @@
 import { inputPackageManager } from './input-package-manager';
 import { inputProjectName } from './input-project-name';
 import path from 'node:path/posix';
-import { copyTemplate } from './copy-template';
-import { updatePackageName } from './update-package-name';
-import { inputTools } from './input-tools';
-import { inputOrm } from './input-orm';
-import chalk from 'chalk';
 import yargsParser from 'yargs-parser';
-import {
-  getCommonPackages,
-  getPackagesFromOrm,
-  getPackagesFromTools,
-  installPackage,
-} from './install-package';
-import { execute } from './execute';
-import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
-import { mkdir, rm } from 'node:fs/promises';
-import { vscodeAddExtension, vscodeAddSetting } from './vscode';
-import { addScriptCommand } from './add-script-command';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { Listr } from 'listr2';
+import { promisify, styleText } from 'node:util';
+import childProcess from 'node:child_process';
+import kebabCase from 'lodash.kebabcase';
 
 const argv = yargsParser(process.argv.slice(2));
-
 const projectName = await inputProjectName(argv);
 const packageManager = await inputPackageManager(argv);
-const orm = await inputOrm(argv);
-const tools = await inputTools(argv);
+const templateDir = path.join(import.meta.dirname, '..', 'templates');
+const targetDir = path.resolve(projectName);
 
-const templateDir = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-  'templates',
+const exec = promisify(childProcess.exec);
+const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
+
+const spinner = new Listr([]);
+
+spinner.add({
+  title: '创建目录',
+  task: async () => {
+    if (existsSync(targetDir)) {
+      await rm(targetDir, { recursive: true, force: true });
+    }
+    await mkdir(targetDir, { recursive: true });
+    process.chdir(path.resolve(projectName));
+  },
+});
+
+spinner.add({
+  title: 'git初始化',
+  task: async () => {
+    await exec('git init');
+    await sleep();
+  },
+});
+
+spinner.add({
+  title: '复制模板文件',
+  task: async () => {
+    await cp(templateDir, targetDir, { recursive: true });
+    {
+      const packageJSONFile = path.resolve('package.json');
+      let packageContent = await readFile(packageJSONFile, 'utf8');
+      packageContent = packageContent
+        .replaceAll('{{projectName}}', kebabCase(projectName))
+        .replaceAll('{{packageManager}}', packageManager);
+      await writeFile(packageJSONFile, packageContent);
+    }
+    await sleep();
+  },
+});
+
+spinner.add({
+  title: '增加volta配置',
+  skip: async () => {
+    return !/\d\.\d/.test((await exec('volta -v')).stdout);
+  },
+  task: async () => {
+    await exec('volta pin node');
+    if (packageManager !== 'npm') {
+      await exec(`volta pin ${packageManager}`);
+    }
+  },
+});
+
+spinner.add({
+  title: '安装插件',
+  task: async (_, task) => {
+    const packages: { pkg: string; dev?: boolean }[] = [
+      { pkg: '@aomex/core' },
+      { pkg: '@aomex/web' },
+      { pkg: '@aomex/console' },
+      { pkg: '@aomex/router' },
+      { pkg: '@aomex/cors' },
+      { pkg: '@aomex/etag' },
+      { pkg: '@aomex/compress' },
+      { pkg: '@aomex/http-logger' },
+      { pkg: '@aomex/commander' },
+      { pkg: '@aomex/openapi' },
+      { pkg: '@prisma/client' },
+      { pkg: 'prisma', dev: true },
+      { pkg: 'typescript', dev: true },
+      { pkg: '@types/node', dev: true },
+      { pkg: 'tsx', dev: true },
+      { pkg: 'husky', dev: true },
+      { pkg: 'tsc-alias', dev: true },
+      { pkg: 'prettier', dev: true },
+      { pkg: '@commitlint/cli', dev: true },
+      { pkg: '@commitlint/config-conventional', dev: true },
+      { pkg: 'eslint', dev: true },
+      { pkg: '@typescript-eslint/eslint-plugin', dev: true },
+      { pkg: '@typescript-eslint/parser', dev: true },
+      { pkg: 'eslint-plugin-check-file', dev: true },
+    ];
+    const action = packageManager === 'npm' ? 'install' : 'add';
+    const devSuffix = packageManager === 'npm' ? '--save-dev' : '-D';
+
+    for (let i = 0; i < packages.length; ++i) {
+      const { pkg, dev } = packages[i]!;
+      task.title = '安装插件 ' + styleText('gray', pkg);
+      await exec(`${packageManager} ${action} ${pkg} ${dev ? devSuffix : ''}`, {
+        cwd: process.cwd(),
+        env: process.env,
+      });
+    }
+    task.title = '安装插件';
+  },
+});
+
+spinner.add({
+  title: '生成prisma/client文件',
+  task: async () => {
+    await exec('npx prisma generate');
+    await sleep();
+  },
+});
+
+await spinner.run();
+
+console.log(
+  '\n项目创建成功：' + styleText(['blue', 'underline'], process.cwd()) + '\n',
 );
-
-{
-  const targetDir = path.resolve(projectName);
-  if (existsSync(targetDir)) {
-    await rm(targetDir, { recursive: true, force: true });
-  }
-  await mkdir(targetDir, { recursive: true });
-  process.chdir(path.resolve(projectName));
-}
-
-await execute('Git initialize', async (exec) => {
-  await exec('git init');
-});
-
-await execute('Copy template files', async () => {
-  await Promise.all([
-    copyTemplate(path.join(templateDir, 'common')),
-    copyTemplate(path.join(templateDir, 'platform-web')),
-    copyTemplate(path.join(templateDir, 'platform-console')),
-  ]);
-
-  if (orm !== '-') {
-    await copyTemplate(path.join(templateDir, 'orm-' + orm));
-  }
-
-  await Promise.all(
-    tools.map((tool) => {
-      return copyTemplate(path.join(templateDir, 'tool-' + tool));
-    }),
-  );
-});
-
-await execute('Pre settings', async () => {
-  await addScriptCommand('preinstall', 'npx only-allow ' + packageManager);
-  await updatePackageName(projectName);
-
-  if (tools.includes('commitlint')) {
-    await addScriptCommand('prepare', 'npx husky install');
-  }
-});
-
-await execute('Install packages', async () => {
-  const install = installPackage.bind(null, packageManager);
-  await install(getCommonPackages());
-  await install(getPackagesFromOrm(orm));
-  await install(getPackagesFromTools(tools));
-});
-
-if (orm === 'prisma') {
-  await execute('Generate prisma client', async (exec) => {
-    await exec('./node_modules/.bin/prisma generate');
-  });
-}
-
-await execute('Post settings', async (exec) => {
-  await exec('./node_modules/.bin/aomex --init');
-
-  if (orm === 'prisma') {
-    await vscodeAddExtension('prisma.prisma');
-  }
-
-  if (tools.includes('prettier')) {
-    await Promise.all([
-      vscodeAddExtension('esbenp.prettier-vscode'),
-      vscodeAddSetting({
-        'editor.defaultFormatter': 'esbenp.prettier-vscode',
-      }),
-    ]);
-  }
-});
-
-console.log('\nProject has been created: ' + chalk.blue(process.cwd()) + '\n');

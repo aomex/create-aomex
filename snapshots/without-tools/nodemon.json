@@ -1,7 +1,0 @@
-{
-  "delay": 400,
-  "verbose": true,
-  "ext": "ts",
-  "exec": "ts-node ./src/index.ts",
-  "watch": ["./src/**/*", "package.json"]
-}
