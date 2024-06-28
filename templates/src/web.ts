@@ -6,11 +6,16 @@ import { etag } from '@aomex/etag';
 import { routers } from '@aomex/router';
 import { helmet } from '@aomex/helmet';
 import { responseTime } from '@aomex/response-time';
+import { traceMiddleware } from '@aomex/async-trace';
 
 export const app = new WebApp({
   locale: 'zh_CN',
   mount: [
     responseTime,
+    traceMiddleware('生命周期', async (record) => {
+      // 根据 record.delta 上报慢日志
+      // console.log(record);
+    }),
     cors(),
     compress(),
     httpLogger(),

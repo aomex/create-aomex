@@ -1,9 +1,11 @@
 import { Service } from '@aomex/core';
 import { db } from './db';
 import { Prisma } from '@prisma/client';
+import { traceMethod } from '@aomex/async-trace';
 
 export class UserService extends Service {
-  findAll() {
+  @traceMethod('User.findAll')
+  async findAll() {
     return db.user.findMany({
       orderBy: [
         {
@@ -13,7 +15,8 @@ export class UserService extends Service {
     });
   }
 
-  findById(userId: number) {
+  @traceMethod((userId) => `User.find(${userId})`)
+  async findById(userId: number) {
     return db.user.findUnique({ where: { id: userId } });
   }
 

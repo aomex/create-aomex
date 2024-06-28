@@ -18,6 +18,9 @@ importers:
         specifier: ^21.1.1
         version: 21.1.1
     devDependencies:
+      '@aomex/async-trace':
+        specifier: ^1.3.0
+        version: 1.3.0(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2))
       '@aomex/commander':
         specifier: ^1.0.5
         version: 1.3.0(@aomex/console@1.3.0(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2)))(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2))
@@ -60,9 +63,6 @@ importers:
       '@prisma/client':
         specifier: ^5.16.0
         version: 5.16.0(prisma@5.16.0)
-      '@types/inquirer':
-        specifier: ^9.0.7
-        version: 9.0.7
       '@types/lodash.kebabcase':
         specifier: ^4.1.9
         version: 4.1.9
@@ -89,6 +89,12 @@ importers:
         version: 5.5.2
 
 packages:
+
+  '@aomex/async-trace@1.3.0':
+    resolution: {integrity: sha512-XGiW1Tb1CaPghMYNMCG2vbFvfLsVYMrAQxzk9mzvZ7g0tojVzE8ulj3Fp2d5Krw3kp8OB8P6PRHCkWXY9q8vuQ==}
+    engines: {node: ^20.13.0 || ^22}
+    peerDependencies:
+      '@aomex/core': ^1.0.0
 
   '@aomex/commander@1.3.0':
     resolution: {integrity: sha512-7kWq+9Zh8kl05xjL9bYrROeRnOccOojMJV4GRYoCEcEqno8v0GSKukoixLtyMZvpWV/IFfpPXsXF4VsICVECZw==}
@@ -722,9 +728,6 @@ packages:
   '@types/http-errors@2.0.4':
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
 
-  '@types/inquirer@9.0.7':
-    resolution: {integrity: sha512-Q0zyBupO6NxGRZut/JdmqYKOnN95Eg5V8Csg3PGKkP+FnvsUZx1jAyK7fztIszxxMuoBA6E3KXWvdZVXIpx60g==}
-
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
@@ -742,9 +745,6 @@ packages:
 
   '@types/statuses@2.0.5':
     resolution: {integrity: sha512-jmIUGWrAiwu3dZpxntxieC+1n/5c3mjrImkmOSQ2NC5uP6cYO4aAZDdSmRcI5C1oiTmqlZGHC+/NmJrKogbP5A==}
-
-  '@types/through@0.0.33':
-    resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
 
   '@types/urijs@1.19.25':
     resolution: {integrity: sha512-XOfUup9r3Y06nFAZh3WvO0rBU4OtlfPB/vgxpjg+NRdGU6CN6djdc6OEiH+PcqHCY6eFLo9Ista73uarf4gnBg==}
@@ -2759,6 +2759,10 @@ packages:
 
 snapshots:
 
+  '@aomex/async-trace@1.3.0(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2))':
+    dependencies:
+      '@aomex/core': 1.3.0(@types/node@20.14.8)(typescript@5.5.2)
+
   '@aomex/commander@1.3.0(@aomex/console@1.3.0(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2)))(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2))':
     dependencies:
       '@aomex/console': 1.3.0(@aomex/core@1.3.0(@types/node@20.14.8)(typescript@5.5.2))
@@ -3418,11 +3422,6 @@ snapshots:
 
   '@types/http-errors@2.0.4': {}
 
-  '@types/inquirer@9.0.7':
-    dependencies:
-      '@types/through': 0.0.33
-      rxjs: 7.8.1
-
   '@types/json-schema@7.0.15': {}
 
   '@types/lodash.kebabcase@4.1.9':
@@ -3438,10 +3437,6 @@ snapshots:
   '@types/qs@6.9.15': {}
 
   '@types/statuses@2.0.5': {}
-
-  '@types/through@0.0.33':
-    dependencies:
-      '@types/node': 20.14.8
 
   '@types/urijs@1.19.25': {}
 

@@ -105,6 +105,7 @@ spinner.add({
           '@aomex/cron',
           '@aomex/helmet',
           '@aomex/openapi',
+          '@aomex/async-trace',
           '@prisma/client',
           // prisma不会直接导入代码，但是需要在生产环境中生成代码。
           // 导致devDependencies被忽略的场景：

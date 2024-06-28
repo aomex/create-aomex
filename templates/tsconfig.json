@@ -23,6 +23,7 @@
     "checkJs": false,
     "declaration": false,
     "removeComments": true,
+    "sourceMap": true,
     "rootDir": "./",
     "outDir": "build",
     "noEmit": false,
