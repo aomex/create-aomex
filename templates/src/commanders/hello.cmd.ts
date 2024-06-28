@@ -1,12 +1,25 @@
 import { Commander } from '@aomex/commander';
-import { commanderChain } from '../middleware/console.chain';
+import { options } from '@aomex/console';
+import { rule } from '@aomex/core';
 
-export const commander = new Commander({
-  mount: commanderChain,
-});
+export const commander = new Commander();
 
+// npx aomex hello
+// npx aomex hello --user World
+// npx aomex hello -u aomex.js
 commander.create('hello', {
-  async action(_ctx) {
-    console.log('Hello World');
+  mount: [
+    options(
+      {
+        user: rule.string().default('World'),
+      },
+      {
+        user: ['u'],
+      },
+    ),
+  ],
+  action: async (ctx) => {
+    const { user } = ctx.options;
+    console.log(`Hello ${user}`);
   },
 });

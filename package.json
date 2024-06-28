@@ -6,17 +6,17 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "tsx src/index.ts",
+    "cli": "tsx src/index.ts --project=abc --pnpm",
     "release": "release-it --ci",
     "build": "tsup",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "tsup"
   },
   "volta": {
     "node": "20.15.0",
     "pnpm": "9.4.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.13.0"
   },
   "publishConfig": {
     "access": "public"
@@ -37,17 +37,19 @@
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
-    "@aomex/commander": "^1.0.4",
-    "@aomex/compress": "^1.0.4",
-    "@aomex/console": "^1.0.4",
-    "@aomex/core": "^1.0.4",
-    "@aomex/cors": "^1.0.4",
-    "@aomex/etag": "^1.0.4",
-    "@aomex/helmet": "^1.0.4",
-    "@aomex/http-logger": "^1.0.4",
-    "@aomex/openapi": "^1.0.4",
-    "@aomex/router": "^1.0.4",
-    "@aomex/web": "^1.0.4",
+    "@aomex/commander": "^1.0.5",
+    "@aomex/compress": "^1.0.5",
+    "@aomex/console": "^1.0.5",
+    "@aomex/core": "^1.0.5",
+    "@aomex/cors": "^1.0.5",
+    "@aomex/cron": "^1.3.0",
+    "@aomex/etag": "^1.0.5",
+    "@aomex/helmet": "^1.0.5",
+    "@aomex/http-logger": "^1.0.5",
+    "@aomex/openapi": "^1.0.5",
+    "@aomex/response-time": "^1.3.0",
+    "@aomex/router": "^1.0.5",
+    "@aomex/web": "^1.0.5",
     "@prisma/client": "^5.16.0",
     "@types/inquirer": "^9.0.7",
     "@types/lodash.kebabcase": "^4.1.9",

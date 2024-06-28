@@ -1,18 +1,45 @@
 import { Router } from '@aomex/router';
-import { routerChain } from '../middleware/web.chain';
+import { services } from '../services';
+import { body, params } from '@aomex/web';
+import { rule } from '@aomex/core';
 
 export const router = new Router({
-  mount: routerChain,
+  prefix: '/users',
 });
 
 router.get('/', {
-  async action(ctx) {
-    ctx.send('hello world');
+  action: async (ctx) => {
+    const users = await services.user.findAll();
+    ctx.send(200, users);
+  },
+});
+
+router.get('/:id', {
+  mount: [
+    params({
+      id: rule.int().min(1),
+    }),
+  ],
+  action: async (ctx) => {
+    const { id } = ctx.params;
+    const user = await services.user.findById(id);
+    if (!user) {
+      ctx.throw(404, 'user not found');
+    }
+    ctx.send(user);
   },
 });
 
 router.post('/', {
-  async action(ctx) {
-    ctx.send(201, { id: 1 });
+  mount: [
+    body({
+      name: rule.string(),
+      age: rule.number(),
+    }),
+  ],
+  action: async (ctx) => {
+    const { name, age } = ctx.body;
+    await services.user.createUser(name, age);
+    ctx.send(201);
   },
 });

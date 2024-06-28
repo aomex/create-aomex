@@ -1,7 +1,7 @@
 import { combineServices } from '@aomex/core';
 import { UserService } from './user.service';
 
-export const services = combineServices({
+export const services = await combineServices({
   user: UserService,
 });
 
