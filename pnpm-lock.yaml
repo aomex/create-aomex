@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      inquirer:
-        specifier: ^9.2.23
-        version: 9.2.23
       listr2:
         specifier: ^8.2.3
         version: 8.2.3
