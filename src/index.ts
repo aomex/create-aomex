@@ -19,6 +19,7 @@ if (existsSync(targetDir)) {
   console.error(styleText('red', `目录 "${targetDir}" 已存在！`));
   process.exit(1);
 }
+const nodeVersion = process.versions.node;
 
 let packageManager = 'npm';
 for (const item of <const>['pnpm', 'npm', 'yarn']) {
@@ -65,9 +66,15 @@ spinner.add({
 spinner.add({
   title: '复制模板文件',
   task: async () => {
+    const variables = {
+      projectName,
+      packageManager,
+      nodeVersion,
+    };
     await cp(templateDir, targetDir, { recursive: true });
-    await replaceVariables('package.json', { projectName, packageManager });
-    await replaceVariables('README.md', { projectName, packageManager });
+    await replaceVariables('package.json', variables);
+    await replaceVariables('README.md', variables);
+    await replaceVariables('Dockerfile', variables);
     await sleep();
   },
 });
@@ -78,7 +85,7 @@ spinner.add({
     return !/\d\.\d/.test(execSync('volta -v', { encoding: 'utf8' }));
   },
   task: async () => {
-    await runShell('volta pin node');
+    await runShell(`volta pin node@${nodeVersion}`);
     if (packageManager !== 'npm') {
       await runShell(`volta pin ${packageManager}`);
     }
@@ -107,16 +114,12 @@ spinner.add({
           '@aomex/openapi',
           '@aomex/async-trace',
           '@prisma/client',
-          // prisma不会直接导入代码，但是需要在生产环境中生成代码。
-          // 导致devDependencies被忽略的场景：
-          // 1. pnpm install --production
-          // 2. NODE_ENV='production'
-          'prisma',
         ],
       },
       {
         label: 'dev dependencies',
         pkgs: [
+          'prisma',
           'typescript',
           'tsx',
           'tsc-alias',
