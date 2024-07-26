@@ -1,6 +1,4 @@
-import { ConsoleApp } from '@aomex/console';
-import { commanders } from '@aomex/commander';
-import { openapi } from '@aomex/openapi';
+import { commanders, ConsoleApp } from '@aomex/console';
 import { cron } from '@aomex/cron';
 import { traceMiddleware } from '@aomex/async-trace';
 
@@ -9,17 +7,11 @@ const app = new ConsoleApp({
   mount: [
     cron({
       path: './src/commanders',
-      // store: RedisCache,
+      // store: new Caching(),
     }),
     traceMiddleware('生命周期', async (record) => {
       // 根据 record.delta 上报慢日志
       // console.log(record);
-    }),
-    openapi({
-      routers: './src/routers',
-      docs: {
-        servers: [{ url: 'http://localhost:3000', description: 'Local' }],
-      },
     }),
     commanders('./src/commanders'),
   ],
@@ -38,7 +30,4 @@ declare module '@aomex/console' {
     type T = ConsoleApp.Infer<typeof app>;
     interface Props extends T {}
   }
-}
-function traceMiddleware(arg0: string, arg1: (record: any) => Promise<void>): any {
-  throw new Error('Function not implemented.');
 }

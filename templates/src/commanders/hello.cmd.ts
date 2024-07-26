@@ -1,5 +1,4 @@
-import { Commander } from '@aomex/commander';
-import { options } from '@aomex/console';
+import { Commander, options } from '@aomex/console';
 import { rule } from '@aomex/core';
 
 export const commander = new Commander();

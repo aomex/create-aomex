@@ -1,4 +1,4 @@
-import { Router } from '@aomex/router';
+import { Router } from '@aomex/web';
 
 export const router = new Router();
 

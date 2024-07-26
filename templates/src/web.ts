@@ -1,12 +1,13 @@
-import { WebApp } from '@aomex/web';
+import { routers, WebApp } from '@aomex/web';
 import { cors } from '@aomex/cors';
 import { compress } from '@aomex/compress';
 import { httpLogger } from '@aomex/http-logger';
 import { etag } from '@aomex/etag';
-import { routers } from '@aomex/router';
 import { helmet } from '@aomex/helmet';
 import { responseTime } from '@aomex/response-time';
 import { traceMiddleware } from '@aomex/async-trace';
+import { swaggerUI } from '@aomex/swagger-ui';
+import { generateOpenapi } from '@aomex/openapi';
 
 export const app = new WebApp({
   locale: 'zh_CN',
@@ -18,9 +19,20 @@ export const app = new WebApp({
     }),
     cors(),
     compress(),
-    httpLogger(),
     etag(),
+    // 访问 http://localhost:3000/swagger 可以查看文档
+    swaggerUI({
+      openapi: () => {
+        return generateOpenapi({
+          routers: './src/routers',
+          docs: {
+            servers: [{ url: 'http://localhost:3000', description: 'Local' }],
+          },
+        });
+      },
+    }),
     helmet(),
+    httpLogger(),
     routers('./src/routers'),
   ],
 });

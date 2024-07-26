@@ -21,7 +21,7 @@ if (existsSync(targetDir)) {
 }
 const nodeVersion = process.versions.node;
 
-let packageManager = 'npm';
+let packageManager = 'pnpm';
 for (const item of <const>['pnpm', 'npm', 'yarn']) {
   if (argv[item]) {
     packageManager = item;
@@ -74,7 +74,6 @@ spinner.add({
     await cp(templateDir, targetDir, { recursive: true });
     await replaceVariables('package.json', variables);
     await replaceVariables('README.md', variables);
-    await replaceVariables('Dockerfile', variables);
     await sleep();
   },
 });
@@ -101,17 +100,16 @@ spinner.add({
         pkgs: [
           '@aomex/core',
           '@aomex/web',
-          '@aomex/router',
           '@aomex/cors',
           '@aomex/etag',
           '@aomex/compress',
           '@aomex/http-logger',
           '@aomex/response-time',
           '@aomex/console',
-          '@aomex/commander',
           '@aomex/cron',
           '@aomex/helmet',
           '@aomex/openapi',
+          '@aomex/swagger-ui',
           '@aomex/async-trace',
           '@prisma/client',
         ],

@@ -1,6 +1,5 @@
-import { Router } from '@aomex/router';
 import { services } from '../services';
-import { body, params } from '@aomex/web';
+import { body, params, Router } from '@aomex/web';
 import { rule } from '@aomex/core';
 
 export const router = new Router({
@@ -24,7 +23,7 @@ router.get('/:id', {
     const { id } = ctx.params;
     const user = await services.user.findById(id);
     if (!user) {
-      ctx.throw(404, 'user not found');
+      return void ctx.throw(404, 'user not found');
     }
     ctx.send(user);
   },
