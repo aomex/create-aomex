@@ -21,6 +21,9 @@ importers:
       '@aomex/async-trace':
         specifier: ^2.0.1
         version: 2.0.1(@aomex/core@2.0.1(@types/node@20.14.12)(typescript@5.5.4))
+      '@aomex/cache':
+        specifier: ^2.0.1
+        version: 2.0.1(@aomex/core@2.0.1(@types/node@20.14.12)(typescript@5.5.4))
       '@aomex/compress':
         specifier: ^2.0.1
         version: 2.0.1(@aomex/core@2.0.1(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@2.0.1(@aomex/core@2.0.1(@types/node@20.14.12)(typescript@5.5.4)))

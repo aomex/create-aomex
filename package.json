@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "rm -rf abc && tsx src/index.ts --project=my-aomex",
+    "cli": "rm -rf my-aomex && tsx src/index.ts --project=my-aomex",
     "release": "release-it --ci",
     "build": "tsup",
     "prepublishOnly": "tsup"
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@aomex/async-trace": "^2.0.1",
+    "@aomex/cache": "^2.0.1",
     "@aomex/compress": "^2.0.1",
     "@aomex/console": "^2.0.1",
     "@aomex/core": "^2.0.1",

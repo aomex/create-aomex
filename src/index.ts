@@ -112,6 +112,8 @@ spinner.add({
           '@aomex/swagger-ui',
           '@aomex/async-trace',
           '@prisma/client',
+          '@aomex/cache',
+          '@aomex/cache-redis-store',
         ],
       },
       {
