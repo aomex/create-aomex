@@ -2,7 +2,7 @@ import { Service } from '@aomex/core';
 import { Caching, CacheMemoryStore } from '@aomex/cache';
 // import { CacheRedisStore } from '@aomex/cache-redis-store';
 
-const cache = new Caching(CacheMemoryStore, {});
+export const cache = new Caching(CacheMemoryStore, {});
 
 export class CacheService extends Service {
   protected hotRankingKey = 'hot-rankings';

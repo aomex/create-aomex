@@ -31,7 +31,7 @@ commander.create('long:schedule', {
   mount: [
     schedule({
       second: '*/10',
-      overlap: true,
+      concurrent: Infinity,
     }),
   ],
   action: async () => {
