@@ -1,11 +1,11 @@
 import { Service } from '@aomex/core';
-import { Caching, CacheMemoryStore } from '@aomex/cache';
-// import { CacheRedisStore } from '@aomex/cache-redis-store';
+import { Caching, CacheMemoryAdapter } from '@aomex/cache';
+// import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 
-export const cache = new Caching(CacheMemoryStore, {});
+export const cache = new Caching(new CacheMemoryAdapter());
 
 export class CacheService extends Service {
-  protected hotRankingKey = 'hot-rankings';
+  protected readonly hotRankingKey = 'hot-rankings';
 
   getHotRankings() {
     return cache.get<HotRankingItem[]>(this.hotRankingKey, []);

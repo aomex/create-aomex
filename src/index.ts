@@ -113,7 +113,7 @@ spinner.add({
           '@aomex/async-trace',
           '@prisma/client',
           '@aomex/cache',
-          '@aomex/cache-redis-store',
+          '@aomex/cache-redis-adapter',
         ],
       },
       {
