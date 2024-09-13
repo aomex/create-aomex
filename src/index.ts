@@ -3,7 +3,7 @@
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
 import { existsSync } from 'node:fs';
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
 import { Listr } from 'listr2';
 import { styleText } from 'node:util';
 import { execSync, spawn } from 'node:child_process';
@@ -56,14 +56,6 @@ spinner.add({
 });
 
 spinner.add({
-  title: 'git初始化',
-  task: async () => {
-    await runShell('git init');
-    await sleep();
-  },
-});
-
-spinner.add({
   title: '复制模板文件',
   task: async () => {
     const variables = {
@@ -72,8 +64,20 @@ spinner.add({
       nodeVersion,
     };
     await cp(templateDir, targetDir, { recursive: true });
-    await replaceVariables('package.json', variables);
-    await replaceVariables('README.md', variables);
+    const files = await readdir(targetDir, { recursive: true });
+    for (const file of files) {
+      const isFile = (await stat(path.join(targetDir, file))).isFile();
+      if (!isFile) continue;
+      await replaceVariables(file, variables);
+    }
+    await sleep();
+  },
+});
+
+spinner.add({
+  title: 'git初始化',
+  task: async () => {
+    await runShell('git init');
     await sleep();
   },
 });

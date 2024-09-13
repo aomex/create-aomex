@@ -7,8 +7,9 @@
     "node": "{{nodeVersion}}"
   },
   "scripts": {
-    "start": "prisma generate && prisma db push && node --import tsx/esm --watch src/web.ts",
-    "build": "tsc && tsc-alias --resolve-full-paths",
+    "start": "node scripts/start.mjs",
+    "deploy:production": "sh scripts/deploy-production.sh",
+    "deploy:integration": "sh scripts/deploy-integration.sh",
     "prepare": "npx husky",
     "preinstall": "npx only-allow {{packageManager}}"
   }
