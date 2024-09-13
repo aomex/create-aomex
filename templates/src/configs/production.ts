@@ -4,7 +4,7 @@ import { type RedisOptions } from 'ioredis';
 export const production = {
   redis: <RedisOptions>{
     host: '',
-    port: 3306,
+    port: 6379,
     password: '',
     db: 0,
   },

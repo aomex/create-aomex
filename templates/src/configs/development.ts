@@ -7,7 +7,7 @@ export const development: Config = {
   ...integration,
   redis: <RedisOptions>{
     host: 'localhost',
-    port: 3306,
+    port: 6379,
     password: undefined,
     db: 0,
   },
