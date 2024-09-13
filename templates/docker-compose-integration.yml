@@ -1,13 +1,13 @@
 services:
   migration:
-    image: {{projectName}}:latest
+    image: {{projectName}}:integration
     command: npx prisma migrate deploy
   api:
-    image: {{projectName}}:latest
+    image: {{projectName}}:integration
     restart: always
     ports:
       - 3000:3000
   cron:
-    image: {{projectName}}:latest
-    container_name: {{projectName}}-cron
+    image: {{projectName}}:integration
+    container_name: {{projectName}}-cron-integration
     command: npx aomex cron:start
