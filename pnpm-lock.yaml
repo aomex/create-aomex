@@ -24,6 +24,9 @@ importers:
       '@aomex/cache':
         specifier: ^3.0.0
         version: 3.0.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))
+      '@aomex/cache-redis-adapter':
+        specifier: ^3.1.0
+        version: 3.1.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))
       '@aomex/compress':
         specifier: ^3.0.0
         version: 3.0.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@3.0.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4)))
@@ -72,6 +75,9 @@ importers:
       '@types/yargs-parser':
         specifier: ^21.0.3
         version: 21.0.3
+      ioredis:
+        specifier: ^5.4.1
+        version: 5.4.1
       prisma:
         specifier: ^5.17.0
         version: 5.17.0
@@ -96,11 +102,21 @@ packages:
     peerDependencies:
       '@aomex/core': ^2.0.0
 
+  '@aomex/cache-redis-adapter@3.1.0':
+    resolution: {integrity: sha512-Deekhx3F7pQ0MzZ68HHRMqX14RGec+EgcBFJYbFPlgDEo3DtywtzlUnSQ7+U5ocf1gQ7bzDC6q8SCwTZlVtlew==}
+    engines: {node: ^20.13.0 || ^22}
+
   '@aomex/cache@3.0.0':
     resolution: {integrity: sha512-Y7AGu+1h28b5pqbchEOnj8CmvotizcnsP7jrT0SWJRUgsTjPFBczXWnhQgnRLM7GlyFdzbxO7Q9YxMpbeUc3+A==}
     engines: {node: ^20.13.0 || ^22}
     peerDependencies:
       '@aomex/core': ^2.0.0
+
+  '@aomex/cache@3.1.0':
+    resolution: {integrity: sha512-eX3aaxxnEJdWEMLIWvYr4gzzpDbgL0ydRFdNgyNwJ1D/hXdwUlt4hC29NIg7lClbzVOdSTs4QMOOU1kPGagjLA==}
+    engines: {node: ^20.13.0 || ^22}
+    peerDependencies:
+      '@aomex/core': ^3.0.0
 
   '@aomex/compress@3.0.0':
     resolution: {integrity: sha512-F/vlANbZq1ZroR17AmRV+teXV7imxlXznQ9wJnomU4QOOlg79dQvinTu/UEXLJGbXRWIdDQUBX+GNyBfOicVxw==}
@@ -519,6 +535,9 @@ packages:
   '@inquirer/figures@1.0.5':
     resolution: {integrity: sha512-79hP/VWdZ2UVc9bFGJnoQ/lQMpL74mGgzSYX1xUqCVk7/v73vJCMw1VuyWN1jGkZ9B3z7THAbySqGbCNefcjfA==}
     engines: {node: '>=18'}
+
+  '@ioredis/commands@1.2.0':
+    resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1242,6 +1261,10 @@ packages:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
 
+  cluster-key-slot@1.1.2:
+    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
+    engines: {node: '>=0.10.0'}
+
   co-body@6.2.0:
     resolution: {integrity: sha512-Kbpv2Yd1NdL1V/V4cwLVxraHDV6K8ayohr2rmH0J87Er8+zJjcTa6dAn9QMPC9CRgU8+aNajKbSf1TzDB1yKPA==}
     engines: {node: '>=8.0.0'}
@@ -1404,6 +1427,10 @@ packages:
   delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
     engines: {node: '>=0.4.0'}
+
+  denque@2.1.0:
+    resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
+    engines: {node: '>=0.10'}
 
   depd@2.0.0:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
@@ -1875,6 +1902,10 @@ packages:
   invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
 
+  ioredis@5.4.1:
+    resolution: {integrity: sha512-2YZsvl7jopIa1gaePkeMtd9rAcSjOOjPtpcLlOeusyO+XH2SK5ZcT+UCrElPP+WVIInh2TzeI4XW9ENaSLVVHA==}
+    engines: {node: '>=12.22.0'}
+
   ip-address@9.0.5:
     resolution: {integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==}
     engines: {node: '>= 12'}
@@ -2150,8 +2181,14 @@ packages:
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
+  lodash.defaults@4.2.0:
+    resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
+
   lodash.escaperegexp@4.1.2:
     resolution: {integrity: sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==}
+
+  lodash.isarguments@3.1.0:
+    resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
 
   lodash.isplainobject@4.0.6:
     resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
@@ -2687,6 +2724,14 @@ packages:
     resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
     engines: {node: '>= 0.10'}
 
+  redis-errors@1.2.0:
+    resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
+    engines: {node: '>=4'}
+
+  redis-parser@3.0.0:
+    resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
+    engines: {node: '>=4'}
+
   redux-immutable@4.0.0:
     resolution: {integrity: sha512-SchSn/DWfGb3oAejd+1hhHx01xUoxY+V7TeK0BKqpkLKiQPVFf7DYzEaKmrEVxsWxielKfSK9/Xq66YyxgR1cg==}
     peerDependencies:
@@ -2941,6 +2986,9 @@ packages:
 
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
+
+  standard-as-callback@2.1.0:
+    resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
   statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
@@ -3338,7 +3386,19 @@ snapshots:
     dependencies:
       '@aomex/core': 3.0.0(@types/node@20.14.12)(typescript@5.5.4)
 
+  '@aomex/cache-redis-adapter@3.1.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))':
+    dependencies:
+      '@aomex/cache': 3.1.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))
+      ioredis: 5.4.1
+    transitivePeerDependencies:
+      - '@aomex/core'
+      - supports-color
+
   '@aomex/cache@3.0.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))':
+    dependencies:
+      '@aomex/core': 3.0.0(@types/node@20.14.12)(typescript@5.5.4)
+
+  '@aomex/cache@3.1.0(@aomex/core@3.0.0(@types/node@20.14.12)(typescript@5.5.4))':
     dependencies:
       '@aomex/core': 3.0.0(@types/node@20.14.12)(typescript@5.5.4)
 
@@ -3651,6 +3711,8 @@ snapshots:
   '@iarna/toml@2.2.5': {}
 
   '@inquirer/figures@1.0.5': {}
+
+  '@ioredis/commands@1.2.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -4683,6 +4745,8 @@ snapshots:
 
   clone@1.0.4: {}
 
+  cluster-key-slot@1.1.2: {}
+
   co-body@6.2.0:
     dependencies:
       '@hapi/bourne': 3.0.0
@@ -4839,6 +4903,8 @@ snapshots:
       esprima: 4.0.1
 
   delayed-stream@1.0.0: {}
+
+  denque@2.1.0: {}
 
   depd@2.0.0: {}
 
@@ -5424,6 +5490,20 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
+  ioredis@5.4.1:
+    dependencies:
+      '@ioredis/commands': 1.2.0
+      cluster-key-slot: 1.1.2
+      debug: 4.3.5
+      denque: 2.1.0
+      lodash.defaults: 4.2.0
+      lodash.isarguments: 3.1.0
+      redis-errors: 1.2.0
+      redis-parser: 3.0.0
+      standard-as-callback: 2.1.0
+    transitivePeerDependencies:
+      - supports-color
+
   ip-address@9.0.5:
     dependencies:
       jsbn: 1.1.0
@@ -5652,7 +5732,11 @@ snapshots:
 
   lodash.debounce@4.0.8: {}
 
+  lodash.defaults@4.2.0: {}
+
   lodash.escaperegexp@4.1.2: {}
+
+  lodash.isarguments@3.1.0: {}
 
   lodash.isplainobject@4.0.6: {}
 
@@ -6175,6 +6259,12 @@ snapshots:
     dependencies:
       resolve: 1.22.8
 
+  redis-errors@1.2.0: {}
+
+  redis-parser@3.0.0:
+    dependencies:
+      redis-errors: 1.2.0
+
   redux-immutable@4.0.0(immutable@3.8.2):
     dependencies:
       immutable: 3.8.2
@@ -6465,6 +6555,8 @@ snapshots:
   sprintf-js@1.0.3: {}
 
   sprintf-js@1.1.3: {}
+
+  standard-as-callback@2.1.0: {}
 
   statuses@2.0.1: {}
 

@@ -1,4 +1,13 @@
+import { type RedisOptions } from 'ioredis';
+
 // 正式环境。对应 main 分支
-export const production = {};
+export const production = {
+  redis: <RedisOptions>{
+    host: '',
+    port: 3306,
+    password: '',
+    db: 0,
+  },
+};
 
 export type Config = typeof production;

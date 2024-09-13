@@ -118,6 +118,7 @@ spinner.add({
           '@prisma/client',
           '@aomex/cache',
           '@aomex/cache-redis-adapter',
+          'ioredis',
         ],
       },
       {

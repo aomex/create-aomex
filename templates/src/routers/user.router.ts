@@ -1,4 +1,4 @@
-import { services } from '../services';
+import { services } from '@services';
 import { body, params, Router } from '@aomex/web';
 import { rule } from '@aomex/core';
 
