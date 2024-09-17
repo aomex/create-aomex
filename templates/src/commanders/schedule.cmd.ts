@@ -4,15 +4,14 @@ import { schedule } from '@aomex/cron';
 
 export const commander = new Commander();
 
-// npx aomex cron:start
 commander.create('schedule', {
   mount: [
+    // schedule({
+    //   second: '*/15',
+    // }),
     schedule({
-      second: '*/5',
-    }),
-    schedule({
-      second: '*/8',
-      args: ['--user', 'aomex.js'],
+      minute: '*/2',
+      args: ['--user', 'Boss'],
     }),
     options({
       user: rule.string().default('World'),
@@ -22,21 +21,7 @@ commander.create('schedule', {
     const { user } = ctx.options;
     console.log(`Hello ${user}`);
     await new Promise((resolve) => {
-      setTimeout(resolve, 2_000);
-    });
-  },
-});
-
-commander.create('long:schedule', {
-  mount: [
-    schedule({
-      second: '*/10',
-      concurrent: Infinity,
-    }),
-  ],
-  action: async () => {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 15_000);
+      setTimeout(resolve, 5_000);
     });
   },
 });
