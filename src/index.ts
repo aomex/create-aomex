@@ -21,13 +21,19 @@ if (existsSync(targetDir)) {
 }
 const nodeVersion = process.versions.node;
 
-let packageManager = 'pnpm';
+let packageManager: 'pnpm' | 'yarn' | 'npm' = 'pnpm';
 for (const item of <const>['pnpm', 'npm', 'yarn']) {
   if (argv[item]) {
     packageManager = item;
     break;
   }
 }
+
+const packageManagerVersion =
+  execSync(
+    packageManager === 'npm' ? 'npm -v' : `npm view ${packageManager} version`,
+    { encoding: 'utf8' },
+  ).replaceAll('\n', '') || '0.0.0';
 
 const runShell = async (command: string) => {
   await new Promise((resolve, reject) => {
@@ -62,6 +68,7 @@ spinner.add({
       projectName,
       packageManager,
       nodeVersion,
+      packageManagerVersion,
     };
     await cp(templateDir, targetDir, { recursive: true });
     const files = await readdir(targetDir, { recursive: true });
@@ -90,7 +97,7 @@ spinner.add({
   task: async () => {
     await runShell(`volta pin node@${nodeVersion}`);
     if (packageManager !== 'npm') {
-      await runShell(`volta pin ${packageManager}`);
+      await runShell(`volta pin ${packageManager}@${packageManagerVersion}`);
     }
   },
 });

@@ -12,5 +12,6 @@
     "deploy:integration": "sh scripts/deploy-integration.sh",
     "prepare": "npx husky",
     "preinstall": "npx only-allow {{packageManager}}"
-  }
+  },
+  "packageManager": "{{packageManager}}@{{packageManagerVersion}}"
 }
