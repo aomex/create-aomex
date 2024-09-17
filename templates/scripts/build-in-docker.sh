@@ -2,7 +2,7 @@
 
 set -ex
 
-corepack enable
+corepack enable # package.json => packageManager
 pnpm install
 pnpm prisma generate
 pnpm exec tsc

@@ -13,6 +13,12 @@
 {{packageManager}} start
 ```
 
+## Swagger 文档
+
+启动服务后访问链接 http://localhost:3000/swagger
+
+如果需要 openapi 配置，则访问链接 http://localhost:3000/swagger/openapi.json
+
 ## 在集成环境服务器下部署
 
 ```bash

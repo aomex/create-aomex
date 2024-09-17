@@ -3,11 +3,17 @@
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import {
+  cp,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { terminal } from '@aomex/console';
-import { styleText } from 'node:util';
 import { execSync, spawn } from 'node:child_process';
-import { replaceVariables } from './replace-variables';
 import kebabCase from 'lodash.kebabcase';
 
 const argv = yargsParser(process.argv.slice(2));
@@ -16,7 +22,7 @@ const templateDir = path.join(import.meta.dirname, '..', 'templates');
 const projectName = kebabCase(argv['project'] || 'my-aomex-project');
 const targetDir = path.resolve(projectName);
 if (existsSync(targetDir)) {
-  console.error(styleText('red', `目录 "${targetDir}" 已存在！`));
+  terminal.printError(`目录 "${targetDir}" 已存在！`);
   process.exit(1);
 }
 const nodeVersion = process.versions.node;
@@ -73,13 +79,21 @@ const { error } = await terminal.runTasks([
       for (const file of files) {
         const isFile = (await stat(path.join(targetDir, file))).isFile();
         if (!isFile) continue;
-        await replaceVariables(file, variables);
+        const fileAbsolutePath = path.resolve(file);
+        let fileContent = await readFile(fileAbsolutePath, 'utf8');
+        Object.entries(variables).forEach(([key, value]) => {
+          fileContent = fileContent.replaceAll(`{{${key}}}`, value);
+        });
+        await writeFile(fileAbsolutePath, fileContent);
       }
       await sleep();
     },
   },
   {
     title: 'git初始化',
+    skip: async () => {
+      return !/\d\.\d/.test(execSync('git -v', { encoding: 'utf8' }));
+    },
     task: async () => {
       await runShell('git init');
       await sleep();
@@ -148,14 +162,14 @@ const { error } = await terminal.runTasks([
 
       for (let i = 0; i < packages.length; ++i) {
         const { pkgs, dev, label } = packages[i]!;
-        task.title = '安装插件 ' + styleText('gray', label);
+        task.suffix = terminal.style('gray', label);
         await runShell(
           `${packageManager} ${action} ${pkgs.join(' ')} ${
             dev ? devSuffix : ''
           }`,
         );
       }
-      task.title = '安装插件';
+      task.suffix = '';
     },
   },
   {
@@ -171,10 +185,10 @@ if (error) process.exit(1);
 
 console.log(
   '\n项目创建成功：' +
-    styleText(['blue', 'underline'], process.cwd()) +
+    terminal.style(['blue', 'underline'], process.cwd()) +
     '\n' +
     '启动项目可执行如下指令：' +
     '\n\n' +
-    styleText('green', `cd ${projectName} && ${packageManager} start`) +
+    terminal.style('green', `cd ${projectName} && ${packageManager} start`) +
     '\n',
 );
