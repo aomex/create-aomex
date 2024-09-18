@@ -14,9 +14,13 @@ rules:
   '@typescript-eslint/no-unsafe-return': 'error'
 
   '@typescript-eslint/await-thenable': 'error'
-  # Number String Object
-  '@typescript-eslint/ban-types': 'error'
-  '@typescript-eslint/ban-ts-comments': 'error'
+  # Number String Object Boolean BigInt Symbol
+  '@typescript-eslint/no-wrapper-object-types': 'error'
+  # Function
+  '@typescript-eslint/no-unsafe-function-type': 'error'
+  # no  @ts-ignore @ts-nocheck @ts-check
+  # yes @ts-expect-error: WITH_YOUR_DESCRIPTION
+  '@typescript-eslint/ban-ts-comments': ['error', { 'ts-expect-error': 'allow-with-description' }]
   '@typescript-eslint/no-duplicate-type-constituents': 'error'
   '@typescript-eslint/no-non-null-asserted-nullish-coalescing': 'error'
   # foo?.bar!
