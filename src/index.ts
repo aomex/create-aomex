@@ -2,44 +2,20 @@
 
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
-import { existsSync } from 'node:fs';
 import {
   cp,
   mkdir,
   readdir,
   readFile,
-  rm,
   stat,
   writeFile,
 } from 'node:fs/promises';
 import { terminal } from '@aomex/console';
 import { execSync, spawn } from 'node:child_process';
-import kebabCase from 'lodash.kebabcase';
-
-const argv = yargsParser(process.argv.slice(2));
-const templateDir = path.join(import.meta.dirname, '..', 'templates');
-
-const projectName = kebabCase(argv['project'] || 'my-aomex-project');
-const targetDir = path.resolve(projectName);
-if (existsSync(targetDir)) {
-  terminal.printError(`目录 "${targetDir}" 已存在！`);
-  process.exit(1);
-}
-const nodeVersion = process.versions.node;
-
-let packageManager: 'pnpm' | 'yarn' | 'npm' = 'pnpm';
-for (const item of <const>['pnpm', 'npm', 'yarn']) {
-  if (argv[item]) {
-    packageManager = item;
-    break;
-  }
-}
-
-const packageManagerVersion =
-  execSync(
-    packageManager === 'npm' ? 'npm -v' : `npm view ${packageManager} version`,
-    { encoding: 'utf8' },
-  ).replaceAll('\n', '') || '0.0.0';
+import { setTimeout } from 'node:timers/promises';
+import { inputProject } from './input-project';
+import { selectPackageManager } from './select-package-manager';
+import { selectNodeVersion } from './select-node-version';
 
 const runShell = async (command: string) => {
   await new Promise((resolve, reject) => {
@@ -52,17 +28,23 @@ const runShell = async (command: string) => {
     stream.on('error', reject);
   });
 };
-const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
+
+const argv = yargsParser(process.argv.slice(2));
+const templateDir = path.join(import.meta.dirname, '..', 'templates');
+const projectName = await inputProject(argv);
+const { packageManager, packageManagerVersion } = await selectPackageManager(
+  argv,
+);
+const nodeVersion = await selectNodeVersion(argv);
+const targetDir = path.resolve(projectName);
 
 const { error } = await terminal.runTasks([
   {
     title: '创建目录',
     task: async () => {
-      if (existsSync(targetDir)) {
-        await rm(targetDir, { recursive: true, force: true });
-      }
       await mkdir(targetDir, { recursive: true });
-      process.chdir(path.resolve(projectName));
+      process.chdir(targetDir);
+      await setTimeout(500);
     },
   },
   {
@@ -86,7 +68,7 @@ const { error } = await terminal.runTasks([
         });
         await writeFile(fileAbsolutePath, fileContent);
       }
-      await sleep();
+      await setTimeout(500);
     },
   },
   {
@@ -96,7 +78,7 @@ const { error } = await terminal.runTasks([
     },
     task: async () => {
       await runShell('git init');
-      await sleep();
+      await setTimeout(500);
     },
   },
   {
@@ -176,7 +158,6 @@ const { error } = await terminal.runTasks([
     title: '生成prisma客户端',
     task: async () => {
       await runShell('npx prisma generate');
-      await sleep();
     },
   },
 ]);
