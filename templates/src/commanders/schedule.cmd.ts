@@ -5,6 +5,10 @@ import { schedule } from '@aomex/cron';
 export const commander = new Commander();
 
 commander.create('schedule', {
+  docs: {
+    summary: '执行 npx aomex -h 可以看到我',
+    description: '执行 npx aomex schedule -h 可以看到我',
+  },
   mount: [
     // schedule({
     //   second: '*/15',

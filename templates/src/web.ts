@@ -12,8 +12,9 @@ import { generateOpenapi } from '@aomex/openapi';
 export const app = new WebApp({
   locale: 'zh_CN',
   mount: [
+    httpLogger(),
     responseTime,
-    traceMiddleware('生命周期', async (record) => {
+    traceMiddleware('生命周期', async (_record) => {
       // 根据 record.delta 上报慢日志
       // console.log(record);
     }),
@@ -32,7 +33,6 @@ export const app = new WebApp({
       },
     }),
     helmet(),
-    httpLogger(),
     routers('./src/routers'),
   ],
 });

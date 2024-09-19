@@ -10,7 +10,7 @@ const app = new ConsoleApp({
       commanders: './src/commanders',
       cache: cache,
     }),
-    traceMiddleware('生命周期', async (record) => {
+    traceMiddleware('生命周期', async (_record) => {
       // 根据 record.delta 上报慢日志
       // console.log(record);
     }),
