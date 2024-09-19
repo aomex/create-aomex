@@ -31,6 +31,8 @@
   "bin": "dist/index.js",
   "packageManager": "pnpm@9.4.0",
   "dependencies": {
+    "@aomex/console": "^3.2.2",
+    "@aomex/core": "^3.2.2",
     "@inquirer/prompts": "^6.0.1",
     "lodash.kebabcase": "^4.1.1",
     "yargs-parser": "^21.1.1"
@@ -40,8 +42,6 @@
     "@aomex/cache": "^3.2.2",
     "@aomex/cache-redis-adapter": "^3.2.2",
     "@aomex/compress": "^3.2.2",
-    "@aomex/console": "^3.2.2",
-    "@aomex/core": "^3.2.2",
     "@aomex/cors": "^3.2.2",
     "@aomex/cron": "^3.2.2",
     "@aomex/etag": "^3.2.2",

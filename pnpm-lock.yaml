@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@aomex/console':
+        specifier: ^3.2.2
+        version: 3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4))
+      '@aomex/core':
+        specifier: ^3.2.2
+        version: 3.2.2(@types/node@20.14.12)(typescript@5.5.4)
       '@inquirer/prompts':
         specifier: ^6.0.1
         version: 6.0.1
@@ -30,12 +36,6 @@ importers:
       '@aomex/compress':
         specifier: ^3.2.2
         version: 3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4)))
-      '@aomex/console':
-        specifier: ^3.2.2
-        version: 3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4))
-      '@aomex/core':
-        specifier: ^3.2.2
-        version: 3.2.2(@types/node@20.14.12)(typescript@5.5.4)
       '@aomex/cors':
         specifier: ^3.2.2
         version: 3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@3.2.2(@aomex/core@3.2.2(@types/node@20.14.12)(typescript@5.5.4)))
