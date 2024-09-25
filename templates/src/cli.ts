@@ -4,7 +4,7 @@ import { traceMiddleware } from '@aomex/async-trace';
 import { cache } from './services/cache.service';
 
 const app = new ConsoleApp({
-  locale: 'zh_CN',
+  language: 'zh_CN',
   mount: [
     cron({
       commanders: './src/commanders',

@@ -8,10 +8,16 @@ import { responseTime } from '@aomex/response-time';
 import { traceMiddleware } from '@aomex/async-trace';
 import { swaggerUI } from '@aomex/swagger-ui';
 import { generateOpenapi } from '@aomex/openapi';
+import { I18n, middleware } from '@aomex/core';
 
 export const app = new WebApp({
-  locale: 'zh_CN',
+  language: 'zh_CN',
   mount: [
+    middleware.web((ctx, next) => {
+      // 动态选择i18n语言包
+      const language = ctx.request.accept.language()[0] || 'zh_CN';
+      return I18n.provider(language, next);
+    }),
     httpLogger(),
     responseTime,
     traceMiddleware('生命周期', async (_record) => {
