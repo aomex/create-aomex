@@ -1,6 +1,7 @@
 import { rule } from '@aomex/core';
 import { response, Router } from '@aomex/web';
 import { hello } from '@middleware/hello.middleware';
+import { i18n } from '../i18n';
 
 export const router = new Router();
 
@@ -13,6 +14,6 @@ router.get('/', {
     }),
   ],
   action: (ctx) => {
-    ctx.send(`hello world, ${ctx.visitCount}`);
+    ctx.send(`${i18n.t('hello', { count: ctx.visitCount })}`);
   },
 });
