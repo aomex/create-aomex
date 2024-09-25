@@ -15,8 +15,7 @@ export const app = new WebApp({
   mount: [
     middleware.web((ctx, next) => {
       // 动态选择i18n语言包
-      const language = ctx.request.accept.language()[0] || 'zh_CN';
-      return I18n.provider(language, next);
+      return I18n.provider(ctx.request.accept.language()[0] || 'zh_CN', next);
     }),
     httpLogger(),
     responseTime,
