@@ -1,6 +1,6 @@
 import { Commander, options } from '@aomex/console';
 import { rule } from '@aomex/core';
-import { schedule } from '@aomex/cron';
+import { cron } from '@aomex/cron';
 
 export const commander = new Commander();
 
@@ -10,10 +10,10 @@ commander.create('schedule', {
     description: '执行 npx aomex schedule -h 可以看到我',
   },
   mount: [
-    // schedule({
+    // cron({
     //   second: '*/15',
     // }),
-    schedule({
+    cron({
       minute: '*/2',
       args: ['--user', 'Boss'],
     }),

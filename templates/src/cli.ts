@@ -1,12 +1,12 @@
 import { commanders, ConsoleApp } from '@aomex/console';
-import { cron } from '@aomex/cron';
+import { crons } from '@aomex/cron';
 import { traceMiddleware } from '@aomex/async-trace';
 import { cache } from './services/cache.service';
 
 const app = new ConsoleApp({
   language: 'zh_CN',
   mount: [
-    cron({
+    crons({
       commanders: './src/commanders',
       cache: cache,
     }),
