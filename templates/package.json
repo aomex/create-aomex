@@ -8,8 +8,8 @@
   },
   "scripts": {
     "start": "node scripts/start.mjs",
-    "deploy:production": "sh scripts/deploy-production.sh",
-    "deploy:integration": "sh scripts/deploy-integration.sh",
+    "deploy:production": "sh scripts/deploy.sh production",
+    "deploy:integration": "sh scripts/deploy.sh integration",
     "prepare": "npx husky",
     "preinstall": "npx only-allow {{packageManager}}"
   },
