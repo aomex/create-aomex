@@ -23,7 +23,6 @@
   "files": [
     "dist",
     "templates",
-    "templates/.gitignore",
     "LICENSE",
     "package.json",
     "README.md"

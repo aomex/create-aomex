@@ -7,6 +7,7 @@ import {
   mkdir,
   readdir,
   readFile,
+  rename,
   stat,
   writeFile,
 } from 'node:fs/promises';
@@ -68,6 +69,11 @@ const { error } = await terminal.runTasks([
         });
         await writeFile(fileAbsolutePath, fileContent);
       }
+      // .gitignore这个文件在安装的时候总是被忽略
+      await rename(
+        path.join(targetDir, 'gitignore'),
+        path.join(targetDir, '.gitignore'),
+      );
       await setTimeout(500);
     },
   },
