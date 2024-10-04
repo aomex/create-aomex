@@ -20,7 +20,7 @@ export class UserService extends Service {
     return prisma.user.findUnique({ where: { id: userId } });
   }
 
-  async createUser(data: Prisma.UserCreateArgs['data']) {
+  async createUser(data: Prisma.userCreateArgs['data']) {
     await prisma.user.create({
       data: data,
     });
