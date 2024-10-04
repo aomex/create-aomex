@@ -8,10 +8,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
+model user {
   id         Int      @id @default(autoincrement())
-  name       String
-  age        Int
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt()
+  name       String   @unique
+  age        Int      @default(17)
+  address    String?
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt() @db.Timestamp(0)
 }

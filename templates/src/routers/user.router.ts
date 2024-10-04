@@ -14,6 +14,7 @@ router.get('/', {
         id: rule.int(),
         name: rule.string(),
         age: rule.int(),
+        address: rule.string().nullable(),
       }),
     }),
   ],
@@ -34,6 +35,7 @@ router.get('/:id', {
         id: rule.int(),
         name: rule.string(),
         age: rule.int(),
+        address: rule.string().nullable(),
       },
     }),
     response({
@@ -56,14 +58,14 @@ router.post('/', {
     body({
       name: rule.string(),
       age: rule.number(),
+      address: rule.string().optional(),
     }),
     response({
       statusCode: 201,
     }),
   ],
   action: async (ctx) => {
-    const { name, age } = ctx.body;
-    await services.user.createUser(name, age);
+    await services.user.createUser(ctx.body);
     ctx.send(201, null);
   },
 });

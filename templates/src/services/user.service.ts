@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { traceMethod } from '@aomex/async-trace';
 
 export class UserService extends Service {
-  @traceMethod('User.findAll')
+  @traceMethod()
   async findAll() {
     return prisma.user.findMany({
       orderBy: [
@@ -20,12 +20,9 @@ export class UserService extends Service {
     return prisma.user.findUnique({ where: { id: userId } });
   }
 
-  async createUser(name: string, age: number) {
+  async createUser(data: Prisma.UserCreateArgs['data']) {
     await prisma.user.create({
-      data: {
-        name,
-        age,
-      },
+      data: data,
     });
   }
 }
