@@ -3,8 +3,8 @@ services:
     image: mysql:8.4
     environment:
       # 修改后需要同步修改.env里的参数
-      MYSQL_DATABASE: aomex_db
-      MYSQL_ROOT_PASSWORD: abcde
+      MYSQL_DATABASE: '{{projectName}}'
+      MYSQL_ROOT_PASSWORD: 'abcde'
     volumes:
       - ./volumes/mysql:/var/lib/mysql
     ports:
