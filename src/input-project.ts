@@ -1,8 +1,18 @@
 import { terminal } from '@aomex/console';
 import { input } from '@inquirer/prompts';
 import { existsSync, readdirSync } from 'node:fs';
-import kebabCase from 'lodash.kebabcase';
+import sanitize from 'sanitize-filename';
 import path from 'path';
+
+const kebabCase = (value: string) => {
+  value = sanitize(value);
+  if (!value.length) return '';
+  value = value[0]!.toLowerCase() + value.slice(1);
+  return value
+    .replace(/[A-Z]/g, (i) => '-' + i.toLowerCase())
+    .replace(/_/g, '-')
+    .replace(/-+/g, '-');
+};
 
 export const inputProject = async (argv: Record<string, any>) => {
   let projectName: string = argv['project'];
@@ -23,6 +33,7 @@ export const inputProject = async (argv: Record<string, any>) => {
         return kebabCase(value);
       },
     });
+    projectName = kebabCase(projectName);
   }
 
   return projectName;

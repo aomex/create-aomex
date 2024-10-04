@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=hello-aomex --pnpm --node v20.16.0",
+    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --pnpm --node v20.16.0",
     "release": "release-it --ci",
     "build": "tsup",
     "prepublishOnly": "tsup"
@@ -33,7 +33,7 @@
     "@aomex/console": "^3.3.0",
     "@aomex/core": "^3.3.0",
     "@inquirer/prompts": "^6.0.1",
-    "lodash.kebabcase": "^4.1.1",
+    "sanitize-filename": "^1.6.3",
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
