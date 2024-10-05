@@ -3,9 +3,11 @@ import { Caching } from '@aomex/cache';
 import { redisAdapter } from '@aomex/cache-redis-adapter';
 import { configs } from '@configs';
 
-export const cache = new Caching(redisAdapter(configs.redis));
+const cache = new Caching(redisAdapter(configs.redis));
 
 export class CacheService extends Service {
+  public readonly instance = cache;
+
   protected readonly demoKey = 'demo';
 
   getHotRankings() {
