@@ -6,19 +6,18 @@ import { configs } from '@configs';
 export const cache = new Caching(redisAdapter(configs.redis));
 
 export class CacheService extends Service {
-  protected readonly hotRankingKey = 'hot-rankings';
+  protected readonly demoKey = 'demo';
 
   getHotRankings() {
-    return cache.get<HotRankingItem[]>(this.hotRankingKey, []);
+    return cache.get<DemoItem[]>(this.demoKey, []);
   }
 
-  setHotRankings(value: HotRankingItem[]) {
-    return cache.set(this.hotRankingKey, value, 300_000);
+  setHotRankings(value: DemoItem[]) {
+    return cache.set(this.demoKey, value, 30_000);
   }
 }
 
-interface HotRankingItem {
+interface DemoItem {
   id: number;
   name: string;
-  ranking: number;
 }
