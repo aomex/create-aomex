@@ -27,6 +27,9 @@ importers:
       '@aomex/async-trace':
         specifier: ^3.3.0
         version: 3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))
+      '@aomex/auth':
+        specifier: ^3.4.0
+        version: 3.4.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4)))
       '@aomex/cache':
         specifier: ^3.3.0
         version: 3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))
@@ -101,6 +104,13 @@ packages:
     engines: {node: ^20.13.0 || ^22}
     peerDependencies:
       '@aomex/core': ^3.0.0
+
+  '@aomex/auth@3.4.0':
+    resolution: {integrity: sha512-tuVMfBWsJSCxWsww/mOL8dRkWZhEZ4QCdVyCdYFBxnpurcGssPvqZXBQmN0KUSCVlpXvlDorxUrEO7T2mgX1bw==}
+    engines: {node: ^20.13.0 || ^22}
+    peerDependencies:
+      '@aomex/core': ^3.0.0
+      '@aomex/web': ^3.0.0
 
   '@aomex/cache-redis-adapter@3.3.0':
     resolution: {integrity: sha512-Q/h2Gtz//FoMAH32wgavsdtWScCZnzlCek1t06h4jUVGwDyF7/joq8KnRsOdAvVDGSp8WRwqE25xTMRV8rPBGA==}
@@ -3482,6 +3492,11 @@ snapshots:
   '@aomex/async-trace@3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))':
     dependencies:
       '@aomex/core': 3.3.0(@types/node@20.14.12)(typescript@5.5.4)
+
+  '@aomex/auth@3.4.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))(@aomex/web@3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4)))':
+    dependencies:
+      '@aomex/core': 3.3.0(@types/node@20.14.12)(typescript@5.5.4)
+      '@aomex/web': 3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4))
 
   '@aomex/cache-redis-adapter@3.3.0(@aomex/cache@3.3.0(@aomex/core@3.3.0(@types/node@20.14.12)(typescript@5.5.4)))(ioredis@5.4.1)':
     dependencies:

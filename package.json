@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@aomex/async-trace": "^3.3.0",
+    "@aomex/auth": "^3.4.0",
     "@aomex/cache": "^3.3.0",
     "@aomex/cache-redis-adapter": "^3.3.0",
     "@aomex/compress": "^3.3.0",
