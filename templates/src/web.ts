@@ -5,38 +5,21 @@ import { httpLogger } from '@aomex/http-logger';
 import { etag } from '@aomex/etag';
 import { helmet } from '@aomex/helmet';
 import { responseTime } from '@aomex/response-time';
-import { traceMiddleware } from '@aomex/async-trace';
-import { swaggerUI } from '@aomex/swagger-ui';
-import { generateOpenapi } from '@aomex/openapi';
-import { I18n, middleware } from '@aomex/core';
+import { swagger } from '@middleware/swagger.md';
+import { i18nProvider } from '@middleware/i18n-provider.md';
+import { trace } from '@middleware/trace.md';
 
 export const app = new WebApp({
   language: 'zh_CN',
   mount: [
-    middleware.web((ctx, next) => {
-      // 动态选择i18n语言包
-      return I18n.provider(ctx.request.accept.language()[0] || 'zh_CN', next);
-    }),
+    i18nProvider,
     httpLogger(),
     responseTime,
-    traceMiddleware('生命周期', async (_record) => {
-      // 根据 record.delta 上报慢日志
-      // console.log(record);
-    }),
+    trace,
     cors(),
     compress(),
     etag(),
-    // 访问 http://localhost:3000/swagger 可以查看文档
-    swaggerUI({
-      openapi: () => {
-        return generateOpenapi({
-          routers: './src/routers',
-          docs: {
-            servers: [{ url: 'http://localhost:3000', description: 'Local' }],
-          },
-        });
-      },
-    }),
+    swagger,
     helmet(),
     routers('./src/routers'),
   ],
