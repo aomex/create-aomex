@@ -5,12 +5,12 @@
 ## 初始化
 
 - 安装 docker 或者 orbstack
-- 执行 {{packageManager}} install
+- 执行 pnpm install
 
 ## 启动服务
 
 ```bash
-{{packageManager}} start
+pnpm start
 ```
 
 ## Swagger 文档
@@ -22,13 +22,13 @@
 ## 在集成环境服务器下部署
 
 ```bash
-{{packageManager}} deploy:integration
+pnpm deploy:integration
 ```
 
 ## 在生产环境服务器下部署
 
 ```bash
-{{packageManager}} deploy:production
+pnpm deploy:production
 ```
 
 ## 目录结构

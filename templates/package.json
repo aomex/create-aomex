@@ -11,7 +11,7 @@
     "deploy:production": "sh scripts/deploy.sh production",
     "deploy:integration": "sh scripts/deploy.sh integration",
     "prepare": "npx husky",
-    "preinstall": "npx only-allow {{packageManager}}"
+    "preinstall": "npx only-allow pnpm"
   },
-  "packageManager": "{{packageManager}}@{{packageManagerVersion}}"
+  "packageManager": "pnpm@{{pnpmVersion}}"
 }

@@ -15,7 +15,6 @@ import { terminal } from '@aomex/console';
 import { execSync, spawn } from 'node:child_process';
 import { setTimeout } from 'node:timers/promises';
 import { inputProject } from './input-project';
-import { selectPackageManager } from './select-package-manager';
 import { selectNodeVersion } from './select-node-version';
 
 const runShell = async (command: string) => {
@@ -33,9 +32,11 @@ const runShell = async (command: string) => {
 const argv = yargsParser(process.argv.slice(2));
 const templateDir = path.join(import.meta.dirname, '..', 'templates');
 const projectName = await inputProject(argv);
-const { packageManager, packageManagerVersion } = await selectPackageManager(
-  argv,
-);
+const pnpmVersion =
+  execSync(`npm view pnpm version`, {
+    encoding: 'utf8',
+  }).replaceAll('\n', '') || '0.0.0';
+
 const nodeVersion = await selectNodeVersion(argv);
 const targetDir = path.resolve(projectName);
 
@@ -53,9 +54,8 @@ const { error } = await terminal.runTasks([
     task: async () => {
       const variables = {
         projectName,
-        packageManager,
         nodeVersion,
-        packageManagerVersion,
+        pnpmVersion,
       };
       await cp(templateDir, targetDir, { recursive: true });
       const files = await readdir(targetDir, { recursive: true });
@@ -94,9 +94,7 @@ const { error } = await terminal.runTasks([
     },
     task: async () => {
       await runShell(`volta pin node@${nodeVersion}`);
-      if (packageManager !== 'npm') {
-        await runShell(`volta pin ${packageManager}@${packageManagerVersion}`);
-      }
+      await runShell(`volta pin pnpm@${pnpmVersion}`);
     },
   },
   {
@@ -145,17 +143,11 @@ const { error } = await terminal.runTasks([
           dev: true,
         },
       ];
-      const action = packageManager === 'npm' ? 'install' : 'add';
-      const devSuffix = packageManager === 'npm' ? '--save-dev' : '-D';
 
       for (let i = 0; i < packages.length; ++i) {
         const { pkgs, dev, label } = packages[i]!;
         task.suffix = terminal.style('gray', label);
-        await runShell(
-          `${packageManager} ${action} ${pkgs.join(' ')} ${
-            dev ? devSuffix : ''
-          }`,
-        );
+        await runShell(`pnpm add ${pkgs.join(' ')} ${dev ? '-D' : ''}`);
       }
       task.suffix = '';
     },
@@ -176,6 +168,6 @@ console.log(
     '\n' +
     '启动项目可执行如下指令：' +
     '\n\n' +
-    terminal.style('green', `cd ${projectName} && ${packageManager} start`) +
+    terminal.style('green', `cd ${projectName} && pnpm start`) +
     '\n',
 );
