@@ -1,7 +1,7 @@
 services:
   migration:
     image: {{projectName}}:integration
-    command: prisma migrate deploy
+    command: npx prisma migrate deploy
   api:
     image: {{projectName}}:integration
     restart: always
@@ -10,4 +10,4 @@ services:
   cron:
     image: {{projectName}}:integration
     container_name: {{projectName}}-cron-integration
-    command: aomex cron:start
+    command: npx aomex cron:start
