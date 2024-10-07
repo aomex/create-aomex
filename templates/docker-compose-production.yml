@@ -9,5 +9,4 @@ services:
       - 3000:3000
   cron:
     image: {{projectName}}:production
-    container_name: {{projectName}}-cron-production
     command: npx aomex cron:start

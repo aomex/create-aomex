@@ -3,15 +3,16 @@
 set -ex
 
 env="$1"
-projectName="{{projectName}}"
+project_name="{{projectName}}"
+docker_compose_file="docker-compose-$env.yml"
 
-sudo docker build --tag "$projectName:$env" --file "Dockerfile.$env" .
+sudo docker build --tag "$project_name:$env" --file "Dockerfile.$env" .
 
-cron_container_name="$projectName-cron-$env"
-container_exist=$(sudo docker ps | { grep $cron_container_name || :; })
-if [ -n "$container_exist" ];
+cron_service_name=cron
+if [ -n "$(sudo docker compose --file $docker_compose_file ps | { grep $cron_service_name || :; })" ]
 then
-  sudo docker exec -it $cron_container_name /bin/sh -c "npx aomex cron:stop"
+  # exit 137 SIGKILL
+  { sudo docker compose --file $docker_compose_file exec -it $cron_service_name /bin/sh -c "npx aomex cron:stop" || :; }
 fi
 
-sudo docker compose --file "docker-compose-$env.yml" up -d --timeout=1 --remove-orphans
+sudo docker compose --file $docker_compose_file up -d --timeout=1 --remove-orphans
