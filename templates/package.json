@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node scripts/start.mjs",
+    "cron:stats": "sh scripts/docker-cron-stats.sh",
     "deploy:production": "sh scripts/deploy.sh production",
     "deploy:integration": "sh scripts/deploy.sh integration",
     "prepare": "npx husky",
