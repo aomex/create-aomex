@@ -3,7 +3,7 @@
 set -ex
 
 corepack enable # package.json => packageManager
-pnpm install
+pnpm install --no-prod
 pnpm exec prisma generate
 pnpm exec tsc
 pnpm exec tsc-alias --resolve-full-paths
