@@ -10,4 +10,5 @@ pnpm exec tsc-alias --resolve-full-paths
 rm -rf src
 mv build/src .
 pnpm install --prod
+pnpm store prune
 rm -rf node_modules/@types node_modules/*/*.d.ts
