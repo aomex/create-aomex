@@ -19,9 +19,11 @@ services:
       - ./volumes/mongo:/data/db
     ports:
       - 27017:27017
+    command: --logpath /dev/null
   redis:
     image: redis:7
     volumes:
       - ./volumes/redis:/data
     ports:
       - 6379:6379
+    command: --requirepass abcde

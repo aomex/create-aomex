@@ -8,7 +8,7 @@ export const development: Config = {
   redis: <RedisOptions>{
     host: 'localhost',
     port: 6379,
-    password: undefined,
+    password: 'abcde',
     db: 0,
   },
 };
