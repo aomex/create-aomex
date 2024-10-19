@@ -1,14 +1,14 @@
 import { commanders, ConsoleApp } from '@aomex/console';
 import { crons } from '@aomex/cron';
 import { traceMiddleware } from '@aomex/async-trace';
-import { cache } from './services/cache.service';
+import { services } from '@services';
 
 const app = new ConsoleApp({
   language: 'zh_CN',
   mount: [
     crons({
       commanders: './src/commanders',
-      cache: cache,
+      cache: services.cache.instance,
     }),
     traceMiddleware('生命周期', async (_record) => {
       // 根据 record.delta 上报慢日志
