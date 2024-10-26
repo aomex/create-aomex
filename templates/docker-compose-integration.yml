@@ -4,9 +4,10 @@ services:
     command: npx prisma migrate deploy
   api:
     image: {{projectName}}:integration
-    restart: always
     ports:
       - 3000:3000
   cron:
     image: {{projectName}}:integration
     command: npx aomex cron:start
+    environment:
+      - NODE_COMPILE_CACHE=/tmp
