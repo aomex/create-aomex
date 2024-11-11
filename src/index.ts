@@ -104,7 +104,7 @@ const { error } = await terminal.runTasks([
         {
           label: 'dependencies',
           pkgs: [
-            '@aomex/core',
+            '@aomex/common',
             '@aomex/web',
             '@aomex/cors',
             '@aomex/etag',

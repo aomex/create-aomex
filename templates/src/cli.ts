@@ -1,26 +1,23 @@
 import { commanders, ConsoleApp } from '@aomex/console';
 import { crons } from '@aomex/cron';
-import { traceMiddleware } from '@aomex/async-trace';
-import { services } from '@services';
+import { redisCache } from '@services/cache.service';
+import { openapi } from '@aomex/openapi';
+import { logger } from '@services/logger';
 
 const app = new ConsoleApp({
   language: 'zh_CN',
   mount: [
     crons({
       commanders: './src/commanders',
-      cache: services.cache.instance,
+      cache: redisCache,
     }),
-    traceMiddleware('生命周期', async (_record) => {
-      // 根据 record.delta 上报慢日志
-      // console.log(record);
-    }),
+    openapi({ routers: './src/routers' }),
     commanders('./src/commanders'),
   ],
 });
 
 app.on('error', (err) => {
-  // 上报错误日志
-  app.log(err);
+  logger.error(err.stack || '');
 });
 
 const code = await app.run();

@@ -1,33 +1,33 @@
 import { routers, WebApp } from '@aomex/web';
 import { cors } from '@aomex/cors';
 import { compress } from '@aomex/compress';
-import { httpLogger } from '@aomex/http-logger';
 import { etag } from '@aomex/etag';
 import { helmet } from '@aomex/helmet';
 import { responseTime } from '@aomex/response-time';
 import { swagger } from '@middleware/swagger.md';
 import { i18nProvider } from '@middleware/i18n-provider.md';
 import { trace } from '@middleware/trace.md';
+import { httpLogger } from '@middleware/http-logger.md';
+import { logger } from '@services/logger';
 
 export const app = new WebApp({
   language: 'zh_CN',
   mount: [
     i18nProvider,
-    httpLogger(),
+    httpLogger,
     responseTime,
-    trace,
     cors(),
     compress(),
     etag(),
     swagger,
     helmet(),
+    trace,
     routers('./src/routers'),
   ],
 });
 
 app.on('error', (err, ctx) => {
-  // 上报错误日志
-  app.log(err, ctx);
+  logger.error(err.stack || '');
   ctx.response.body = {
     status: ctx.response.statusCode,
     message: ctx.response.body,

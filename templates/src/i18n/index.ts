@@ -1,4 +1,4 @@
-import { I18n } from '@aomex/core';
+import { I18n } from '@aomex/common';
 import { resources } from './locales';
 
 export const i18n = new I18n({

@@ -1,4 +1,4 @@
-import { rule } from '@aomex/core';
+import { rule } from '@aomex/common';
 import { response, Router } from '@aomex/web';
 import { counter } from '@middleware/counter.md';
 import { i18n } from '../i18n';

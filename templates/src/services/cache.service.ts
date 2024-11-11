@@ -1,25 +1,8 @@
-import { Service } from '@aomex/core';
+import { Service } from '@aomex/common';
 import { Caching } from '@aomex/cache';
 import { redisAdapter } from '@aomex/cache-redis-adapter';
 import { configs } from '@configs';
 
-const cache = new Caching(redisAdapter(configs.redis));
+export const redisCache = new Caching(redisAdapter(configs.redis));
 
-export class CacheService extends Service {
-  public readonly instance = cache;
-
-  protected readonly demoKey = 'demo';
-
-  getHotRankings() {
-    return cache.get<DemoItem[]>(this.demoKey, []);
-  }
-
-  setHotRankings(value: DemoItem[]) {
-    return cache.set(this.demoKey, value, 30_000);
-  }
-}
-
-interface DemoItem {
-  id: number;
-  name: string;
-}
+export class CacheService extends Service {}

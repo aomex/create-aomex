@@ -1,4 +1,4 @@
-import { middleware, I18n } from '@aomex/core';
+import { middleware, I18n } from '@aomex/common';
 
 export const i18nProvider = middleware.web((ctx, next) => {
   // 动态选择i18n语言包

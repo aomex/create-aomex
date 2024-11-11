@@ -1,4 +1,4 @@
-import { middleware } from '@aomex/core';
+import { middleware } from '@aomex/common';
 
 let _counter = 0;
 

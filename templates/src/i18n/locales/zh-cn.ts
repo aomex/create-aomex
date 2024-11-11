@@ -1,4 +1,4 @@
-import { I18n } from '@aomex/core';
+import { I18n } from '@aomex/common';
 
 export const zh = I18n.define({
   hello: I18n.message('你好，世界。{{count}}', {

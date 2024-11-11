@@ -1,5 +1,5 @@
 import { Commander, options } from '@aomex/console';
-import { rule } from '@aomex/core';
+import { rule } from '@aomex/common';
 import { cron } from '@aomex/cron';
 import timers from 'node:timers/promises';
 
