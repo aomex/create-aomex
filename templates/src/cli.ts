@@ -10,6 +10,7 @@ const app = new ConsoleApp({
     crons({
       commanders: './src/commanders',
       cache: redisCache,
+      port: {{cronPort}},
     }),
     openapi({ routers: './src/routers' }),
     commanders('./src/commanders'),
@@ -21,6 +22,7 @@ app.on('error', (err) => {
 });
 
 const code = await app.run();
+await logger.promise();
 process.exit(code);
 
 declare module '@aomex/console' {

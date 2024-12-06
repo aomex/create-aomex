@@ -52,10 +52,16 @@ const { error } = await terminal.runTasks([
   {
     title: '复制模板文件',
     task: async () => {
+      let cronPort = '' + Math.max(1, Math.floor(3 * Math.random()));
+      for (let i = 0; i < 4; ++i) {
+        cronPort += Math.floor(10 * Math.random());
+      }
+
       const variables = {
         projectName,
         nodeVersion,
         pnpmVersion,
+        cronPort,
       };
       await cp(templateDir, targetDir, { recursive: true });
       const files = await readdir(targetDir, { recursive: true });
