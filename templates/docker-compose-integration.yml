@@ -9,5 +9,6 @@ services:
   cron:
     image: {{projectName}}:integration
     command: npx aomex cron:start
+    restart: always
     environment:
       - NODE_COMPILE_CACHE=/tmp
