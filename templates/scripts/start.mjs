@@ -1,9 +1,9 @@
 import { execSync, spawn } from 'node:child_process';
 import process from 'node:process';
 
-execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
+execSync('docker compose -f docker-compose.yml down --timestamps', { stdio: 'inherit' });
 
-const docker = spawn('docker compose -f docker-compose.yml up --timestamps --wait', {
+const docker = spawn('docker compose -f docker-compose.yml up --wait', {
   stdio: ['inherit', 'inherit', 'pipe'],
   shell: true,
 });
@@ -19,7 +19,7 @@ await new Promise((resolve) => {
 });
 
 const server = spawn(
-  'npx prisma migrate deploy && npx prisma generate && node --import tsx/esm --watch src/web.ts',
+  'npx prisma generate && npx prisma migrate deploy && node --import tsx/esm --watch src/web.ts',
   { stdio: 'inherit', shell: true },
 );
 
