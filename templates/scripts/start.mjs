@@ -3,15 +3,16 @@ import process from 'node:process';
 
 execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
 
-const docker = spawn('docker compose -f docker-compose.yml up', {
+const docker = spawn('docker compose -f docker-compose.yml up --timestamps --wait', {
   stdio: ['inherit', 'inherit', 'pipe'],
   shell: true,
 });
 
 await new Promise((resolve) => {
+  const reg = /mysql.+?healthy/i;
   docker.stderr.on('data', (chunk) => {
     process.stderr.write(chunk);
-    if (chunk.toString().includes('port: 3306  MySQL Community Server - GPL.')) {
+    if (reg.test(chunk.toString())) {
       resolve();
     }
   });
