@@ -10,4 +10,4 @@ ENV NODE_ENV=production
 
 RUN sh scripts/build-in-docker.sh
 
-CMD ["node", "--enable-source-maps", "src/web.js"]
+CMD ["node", "--enable-source-maps", "--stack-trace-limit=100", "src/web.js"]
