@@ -1,7 +1,7 @@
 import { execSync, spawn } from 'node:child_process';
 import process from 'node:process';
 
-execSync('docker compose -f docker-compose.yml down --timestamps', { stdio: 'inherit' });
+execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
 
 const docker = spawn('docker compose -f docker-compose.yml up --wait', {
   stdio: ['inherit', 'inherit', 'pipe'],
