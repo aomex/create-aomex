@@ -3,7 +3,7 @@
 set -ex
 
 corepack enable # package.json => packageManager
-pnpm install --no-prod
+pnpm install --no-prod --frozen-lockfile
 pnpm exec prisma generate
 pnpm exec tsc
 pnpm exec tsc-alias --resolve-full-paths
