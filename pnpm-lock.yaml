@@ -57,6 +57,9 @@ importers:
       '@aomex/openapi':
         specifier: ^3.12.0
         version: 3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3))(@aomex/console@3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3)))(@aomex/web@3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3)))
+      '@aomex/prisma':
+        specifier: ^3.13.0
+        version: 3.13.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3))(@prisma/client@5.22.0(prisma@5.22.0))(prisma@5.22.0)
       '@aomex/response-time':
         specifier: ^3.12.0
         version: 3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3))(@aomex/web@3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3)))
@@ -215,6 +218,14 @@ packages:
     peerDependenciesMeta:
       '@aomex/console':
         optional: true
+
+  '@aomex/prisma@3.13.0':
+    resolution: {integrity: sha512-tK93HE+DR0E82SjhVsvp1sDu5gDYbHzXsHAKp5xE0qWHu7NxdJaochkPIQzx1N9hE/S6BZhELC+HrCKtUYsSiQ==}
+    hasBin: true
+    peerDependencies:
+      '@aomex/common': ^3.0.0
+      '@prisma/client': '>=5'
+      prisma: '>=6'
 
   '@aomex/response-time@3.12.0':
     resolution: {integrity: sha512-qIUN2Xtain2jJXx61He838LFjqVJexoaNC/tYRSmId/xmUOuS1C2EMXYNhebkw5Pi6oLjBvKSF6WnE9+6rWkHQ==}
@@ -780,6 +791,9 @@ packages:
   '@prisma/debug@5.22.0':
     resolution: {integrity: sha512-AUt44v3YJeggO2ZU5BkXI7M4hu9BF2zzH2iF2V5pyXT/lRTyWiElZ7It+bRH1EshoMRxHgpYg4VB6rCM+mG5jQ==}
 
+  '@prisma/debug@6.1.0':
+    resolution: {integrity: sha512-0himsvcM4DGBTtvXkd2Tggv6sl2JyUYLzEGXXleFY+7Kp6rZeSS3hiTW9mwtUlXrwYbJP6pwlVNB7jYElrjWUg==}
+
   '@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2':
     resolution: {integrity: sha512-2PTmxFR2yHW/eB3uqWtcgRcgAbG1rwG9ZriSvQw+nnb7c4uCr3RAcGMb6/zfE88SKlC1Nj2ziUvc96Z379mHgQ==}
 
@@ -788,6 +802,9 @@ packages:
 
   '@prisma/fetch-engine@5.22.0':
     resolution: {integrity: sha512-bkrD/Mc2fSvkQBV5EpoFcZ87AvOgDxbG99488a5cexp5Ccny+UM6MAe/UFkUC0wLYD9+9befNOqGiIJhhq+HbA==}
+
+  '@prisma/generator-helper@6.1.0':
+    resolution: {integrity: sha512-drHaTKRmRsz6esHk2dpn7aPoxfttoqkYWSaI7zXsL5YQz73jww1YgJpGbPgOUiblriJAtdT4o7mibMqnf8TOsA==}
 
   '@prisma/get-platform@5.22.0':
     resolution: {integrity: sha512-pHhpQdr1UPFpt+zFfnPazhulaZYCUqeIcPpJViYoq9R+D/yw4fjE+CtnsnKzPYm0ddUbeXUzjGVGIRVgPDCk4Q==}
@@ -2175,6 +2192,9 @@ packages:
     resolution: {integrity: sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  lodash.camelcase@4.3.0:
+    resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
+
   lodash.capitalize@4.2.1:
     resolution: {integrity: sha512-kZzYOKspf8XVX5AvmQF94gQW0lejFVgb80G85bU4ZWzoJ6C03PQg3coYAUpSTpQWelrZELd3XWgHzw4Ck5kaIw==}
 
@@ -2210,6 +2230,9 @@ packages:
 
   lodash.uniqby@4.7.0:
     resolution: {integrity: sha512-e/zcLx6CSbmaEgFHCA7BnoQKyCtKMxnuWrJygbwPs/AIn+IMKl66L8/s+wBUn5LRw2pZx3bUHibiV1b6aTWIww==}
+
+  lodash.upperfirst@4.3.1:
+    resolution: {integrity: sha512-sReKOYJIJf74dhJONhU4e0/shzi1trVbSWDOhKYE5XV2O+H7Sb2Dihwuc7xWxVl+DgFPyTqIN3zMfT9cq5iWDg==}
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -3487,6 +3510,15 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@aomex/prisma@3.13.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3))(@prisma/client@5.22.0(prisma@5.22.0))(prisma@5.22.0)':
+    dependencies:
+      '@aomex/common': 3.12.0(@types/node@22.9.0)(typescript@5.6.3)
+      '@prisma/client': 5.22.0(prisma@5.22.0)
+      '@prisma/generator-helper': 6.1.0
+      lodash.camelcase: 4.3.0
+      lodash.upperfirst: 4.3.1
+      prisma: 5.22.0
+
   '@aomex/response-time@3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3))(@aomex/web@3.12.0(@aomex/common@3.12.0(@types/node@22.9.0)(typescript@5.6.3)))':
     dependencies:
       '@aomex/common': 3.12.0(@types/node@22.9.0)(typescript@5.6.3)
@@ -3953,6 +3985,8 @@ snapshots:
 
   '@prisma/debug@5.22.0': {}
 
+  '@prisma/debug@6.1.0': {}
+
   '@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2': {}
 
   '@prisma/engines@5.22.0':
@@ -3967,6 +4001,10 @@ snapshots:
       '@prisma/debug': 5.22.0
       '@prisma/engines-version': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
       '@prisma/get-platform': 5.22.0
+
+  '@prisma/generator-helper@6.1.0':
+    dependencies:
+      '@prisma/debug': 6.1.0
 
   '@prisma/get-platform@5.22.0':
     dependencies:
@@ -5707,6 +5745,8 @@ snapshots:
 
   load-tsconfig@0.2.5: {}
 
+  lodash.camelcase@4.3.0: {}
+
   lodash.capitalize@4.2.1: {}
 
   lodash.debounce@4.0.8: {}
@@ -5730,6 +5770,8 @@ snapshots:
   lodash.truncate@4.4.2: {}
 
   lodash.uniqby@4.7.0: {}
+
+  lodash.upperfirst@4.3.1: {}
 
   lodash@4.17.21: {}
 

@@ -127,6 +127,7 @@ const { error } = await terminal.runTasks([
             '@aomex/cache',
             '@aomex/cache-redis-adapter',
             '@aomex/auth',
+            '@aomex/prisma',
             'ioredis',
           ],
         },
