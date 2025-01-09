@@ -129,12 +129,12 @@ const { error } = await terminal.runTasks([
             '@aomex/auth',
             '@aomex/prisma',
             'ioredis',
+            'prisma', // docker prisma migrate 要用，放dev会导致二进制不存在
           ],
         },
         {
           label: 'dev dependencies',
           pkgs: [
-            'prisma',
             'typescript',
             'tsx',
             'tsc-alias',
