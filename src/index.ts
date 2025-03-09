@@ -128,6 +128,7 @@ const { error } = await terminal.runTasks([
             '@aomex/cache-redis-adapter',
             '@aomex/auth',
             '@aomex/prisma',
+            '@aomex/logger',
             'ioredis',
             'prisma', // docker prisma migrate 要用，放dev会导致二进制不存在
           ],

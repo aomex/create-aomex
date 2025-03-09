@@ -1,7 +1,6 @@
 import { Commander, options } from '@aomex/console';
-import { rule } from '@aomex/common';
+import { rule, sleep } from '@aomex/common';
 import { cron } from '@aomex/cron';
-import timers from 'node:timers/promises';
 
 export const commander = new Commander();
 
@@ -52,6 +51,6 @@ commander.create('hello:cron', {
   action: async (ctx) => {
     const { user } = ctx.options;
     console.log(`Hello ${user}`);
-    await timers.setTimeout(5_000);
+    await sleep(5_000);
   },
 });

@@ -22,7 +22,7 @@ app.on('error', (err) => {
 });
 
 const code = await app.run();
-await logger.promise();
+await logger.complete();
 process.exit(code);
 
 declare module '@aomex/console' {
