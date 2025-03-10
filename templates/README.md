@@ -53,7 +53,6 @@ pnpm deploy:production
 ├─ .env.production                  生产环境下的mysql配置
 ├─ .commitlintrc.yml                commitlint配置
 ├─ .dockerignore                    打包docker镜像时忽略的文件
-├─ .eslintrc.yml                    eslint配置
 ├─ .gitignore                       git忽略指定文件和目录
 ├─ .prettierignore                  prettier忽略指定文件和目录
 ├─ .prettierrc.yml                  prettier配置
