@@ -25,3 +25,8 @@ services:
     ports:
       - 6379:6379
     command: --requirepass abcde
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'abcde', 'ping']
+      interval: 3s
+      timeout: 5s
+      retries: 10
