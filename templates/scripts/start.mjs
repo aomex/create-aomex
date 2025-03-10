@@ -1,10 +1,9 @@
 import { execSync, spawn } from 'node:child_process';
 import process from 'node:process';
 
-execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
 execSync('docker compose -f docker-compose.yml up --wait', { stdio: 'inherit' });
-const ps = execSync('docker compose -f docker-compose.yml ps', { stdio: 'pipe', encoding: 'utf8' });
-if (ps.includes('unhealthy')) process.exit(1);
+const healthCheck = execSync('docker compose -f docker-compose.yml ps', { encoding: 'utf8' });
+if (healthCheck.includes('unhealthy')) process.exit(1);
 
 execSync('npx prisma generate', { stdio: 'inherit' });
 execSync('npx prisma migrate deploy', { stdio: 'inherit' });
