@@ -13,6 +13,8 @@ if [ -n "$(sudo docker compose --file $docker_compose_file ps | { grep $cron_ser
 then
   # exit 137 SIGKILL
   { sudo docker compose --file $docker_compose_file exec -it $cron_service_name /bin/sh -c "npx aomex cron:stop" || :; }
+  # against restart=always
+  sudo docker compose --file $docker_compose_file stop $cron_service_name
 fi
 
 sudo docker compose --file $docker_compose_file up -d --timeout=1 --remove-orphans
