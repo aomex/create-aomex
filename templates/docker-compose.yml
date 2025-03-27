@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8
+    image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: 'abcde'
       # 修改后需要同步修改.env里的参数
@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 10
   redis:
-    image: redis:7
+    image: redis:8.0-M04
     volumes:
       - ./volumes/redis:/data
     ports:
