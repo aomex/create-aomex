@@ -4,6 +4,10 @@ services:
     command: npx prisma migrate deploy
   api:
     image: {{projectName}}:production
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     ports:
       - 3000:3000
   cron:
