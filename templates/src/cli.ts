@@ -1,7 +1,9 @@
+import { Caching } from '@aomex/cache';
+import { redisAdapter } from '@aomex/cache-redis-adapter';
 import { commanders, ConsoleApp } from '@aomex/console';
 import { crons } from '@aomex/cron';
-import { redisCache } from '@services/cache.service';
 import { openapi } from '@aomex/openapi';
+import { configs } from '@configs';
 import { logger } from '@services/logger';
 
 const app = new ConsoleApp({
@@ -9,7 +11,7 @@ const app = new ConsoleApp({
   mount: [
     crons({
       commanders: './src/commanders',
-      cache: redisCache,
+      cache: new Caching(redisAdapter(configs.redis)),
       port: {{cronPort}},
     }),
     openapi({ routers: './src/routers' }),
