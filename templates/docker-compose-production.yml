@@ -1,7 +1,7 @@
 services:
   migration:
     image: {{projectName}}:production
-    command: npx prisma migrate deploy
+    command: prisma migrate deploy
   api:
     image: {{projectName}}:production
     ulimits:
@@ -12,7 +12,7 @@ services:
       - 3000:3000
   cron:
     image: {{projectName}}:production
-    command: npx aomex cron:start
+    command: aomex cron:start
     restart: always
     environment:
       - NODE_COMPILE_CACHE=/tmp
