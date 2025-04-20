@@ -1,6 +1,6 @@
 {
   "name": "create-aomex",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "repository": "git@github.com:aomex/create-aomex.git",
   "license": "MIT",
   "type": "module",
