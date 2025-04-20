@@ -10,5 +10,3 @@ services:
     image: {{projectName}}:integration
     command: aomex cron:start
     restart: always
-    environment:
-      - NODE_COMPILE_CACHE=/tmp

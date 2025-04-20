@@ -44,8 +44,8 @@ const fetchNodes = async () => {
     })
     .filter((item) => {
       if (!item.lts) return false;
-      if (item.versions[0] === 20 && item.versions[1] >= 13) return true;
-      if (item.versions[0] >= 22) return true;
+      if (item.versions[0] === 22 && item.versions[1] >= 8) return true;
+      if (item.versions[0] >= 24) return true;
       return false;
     });
 };
