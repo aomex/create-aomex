@@ -18,7 +18,7 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    // "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": true,
     "allowJs": false,
     "checkJs": false,
     "declaration": true,

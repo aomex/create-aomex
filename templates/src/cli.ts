@@ -20,7 +20,7 @@ const app = new ConsoleApp({
 });
 
 app.on('error', (err) => {
-  logger.error(err.stack || '');
+  logger.error(err.stack!);
 });
 
 const code = await app.run();

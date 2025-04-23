@@ -5,18 +5,19 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --node v20.16.0",
+    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --node v22.8.0",
     "release": "release-it --ci",
     "build": "tsup",
     "prepublishOnly": "tsup"
   },
   "volta": {
-    "node": "20.15.0",
-    "pnpm": "9.4.0"
+    "node": "22.8.0",
+    "pnpm": "10.8.1"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">=22.8.0"
   },
+  "packageManager": "pnpm@10.8.1",
   "publishConfig": {
     "access": "public"
   },
@@ -28,40 +29,39 @@
     "README.md"
   ],
   "bin": "dist/index.js",
-  "packageManager": "pnpm@9.4.0",
   "dependencies": {
-    "@aomex/common": "^3.17.1",
-    "@aomex/console": "^3.17.1",
-    "@inquirer/prompts": "^7.1.0",
+    "@aomex/common": "^3.25.0",
+    "@aomex/console": "^3.25.0",
+    "@inquirer/prompts": "^7.4.1",
     "sanitize-filename": "^1.6.3",
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
-    "@aomex/async-trace": "^3.17.1",
-    "@aomex/auth": "^3.17.1",
-    "@aomex/cache": "^3.17.1",
-    "@aomex/cache-redis-adapter": "^3.17.1",
-    "@aomex/compress": "^3.17.1",
-    "@aomex/cors": "^3.17.1",
-    "@aomex/cron": "^3.17.1",
-    "@aomex/etag": "^3.17.1",
-    "@aomex/helmet": "^3.17.1",
-    "@aomex/http-logger": "^3.17.1",
-    "@aomex/logger": "^3.17.1",
-    "@aomex/openapi": "^3.17.1",
-    "@aomex/prisma": "^3.17.1",
-    "@aomex/response-time": "^3.17.1",
-    "@aomex/swagger-ui": "^3.17.1",
-    "@aomex/web": "^3.17.1",
-    "@prisma/client": "^5.22.0",
+    "@aomex/async-trace": "^3.25.0",
+    "@aomex/auth": "^3.25.0",
+    "@aomex/cache": "^3.25.0",
+    "@aomex/cache-redis-adapter": "^3.25.0",
+    "@aomex/compress": "^3.25.0",
+    "@aomex/cors": "^3.25.0",
+    "@aomex/cron": "^3.25.0",
+    "@aomex/etag": "^3.25.0",
+    "@aomex/helmet": "^3.25.0",
+    "@aomex/http-logger": "^3.25.0",
+    "@aomex/logger": "^3.25.0",
+    "@aomex/openapi": "^3.25.0",
+    "@aomex/prisma": "^3.25.0",
+    "@aomex/response-time": "^3.25.0",
+    "@aomex/swagger-ui": "^3.25.0",
+    "@aomex/web": "^3.25.0",
+    "@prisma/client": "^6.6.0",
     "@types/lodash.kebabcase": "^4.1.9",
-    "@types/node": "^22.9.0",
+    "@types/node": "^22.14.1",
     "@types/yargs-parser": "^21.0.3",
-    "ioredis": "^5.4.1",
-    "prisma": "^5.22.0",
-    "release-it": "^17.10.0",
-    "tsup": "^8.3.5",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "ioredis": "^5.6.1",
+    "prisma": "^6.6.0",
+    "release-it": "^19.0.1",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
   }
 }

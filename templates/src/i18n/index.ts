@@ -15,4 +15,4 @@ export const i18n = new I18n({
 });
 
 // 检查不同语言包的缺失字段（相对于默认语言）
-export type I18nMissingKeys = typeof i18n.missingKeys;
+export type I18nMissingKeys = typeof i18n.missingPath;
