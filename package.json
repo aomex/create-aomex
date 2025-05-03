@@ -5,19 +5,19 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --node v22.8.0",
+    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --node v22.15.0",
     "release": "release-it --ci",
     "build": "tsup",
     "prepublishOnly": "tsup"
   },
   "volta": {
-    "node": "22.8.0",
-    "pnpm": "10.8.1"
+    "node": "22.15.0",
+    "pnpm": "10.10.0"
   },
   "engines": {
-    "node": ">=22.8.0"
+    "node": ">=22.15.0"
   },
-  "packageManager": "pnpm@10.8.1",
+  "packageManager": "pnpm@10.10.0",
   "publishConfig": {
     "access": "public"
   },
