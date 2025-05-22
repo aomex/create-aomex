@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@aomex/common':
-        specifier: ^3.25.0
-        version: 3.25.0(typescript@5.8.3)
+        specifier: ^3.27.1
+        version: 3.27.1(typescript@5.8.3)
       '@aomex/console':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       '@inquirer/prompts':
         specifier: ^7.4.1
         version: 7.4.1(@types/node@22.14.1)
@@ -25,53 +25,53 @@ importers:
         version: 21.1.1
     devDependencies:
       '@aomex/async-trace':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       '@aomex/auth':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/cache':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       '@aomex/cache-redis-adapter':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/cache@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))(ioredis@5.6.1)
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/cache@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))(ioredis@5.6.1)
       '@aomex/compress':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/cors':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/cron':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/console@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/console@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/etag':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/helmet':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/http-logger':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/logger':
-        specifier: ^3.25.0
-        version: 3.25.0
+        specifier: ^3.27.1
+        version: 3.27.1
       '@aomex/openapi':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/console@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/console@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/prisma':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@prisma/client@6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.6.0(typescript@5.8.3))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@prisma/client@6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.6.0(typescript@5.8.3))
       '@aomex/response-time':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/swagger-ui':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
       '@aomex/web':
-        specifier: ^3.25.0
-        version: 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+        specifier: ^3.27.1
+        version: 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       '@prisma/client':
         specifier: ^6.6.0
         version: 6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3)
@@ -105,96 +105,96 @@ importers:
 
 packages:
 
-  '@aomex/async-trace@3.25.0':
-    resolution: {integrity: sha512-kR8Sg7wStfSXEKJCzM+44Tqx2O77vn4V0716F4eIJvNEcUmFCMdXXB/dAfqpDqX2sc8ZK3WiJSAHj0E4+bgasQ==}
+  '@aomex/async-trace@3.27.1':
+    resolution: {integrity: sha512-zxzhiae9MYze9hOFtxz3xG4FbBrON4YpgTWmSE4lC53pBfz5AMCX7siBdnR7JSApgkovIHwms/A2EyW8CCSQJA==}
     peerDependencies:
       '@aomex/common': ^3.0.0
 
-  '@aomex/auth@3.25.0':
-    resolution: {integrity: sha512-Tvj5iLYkBvQd2YFZBx840AYhX8Jc+YhSk61AmhMgaT47V3Q6LQ4oNYATRQedLVwV0bztLIBPa5C98lQwTfDUbw==}
+  '@aomex/auth@3.27.1':
+    resolution: {integrity: sha512-T2KWdQanY6CQdcA8zwcDQZ2VFK2EZGvroRzuwschkcAZdpXj/j3ILyDG9Jo16fKN315RzSYtunvkUTAkqlBSFg==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/cache-redis-adapter@3.25.0':
-    resolution: {integrity: sha512-j2T8ovyYqJ0rxprqzKWt4753DiEG0t5TmxmfrXCsZ36fJXcihemOsem7vHyuPb47xivNFkoNedKIi6xzFwBCqQ==}
+  '@aomex/cache-redis-adapter@3.27.1':
+    resolution: {integrity: sha512-AJ4KFeuxsDqR0TLPylITbHKVcMD/mINOfOuIUkvuACE6x6PZvmRRhlAhOaL6vojOXntSEOoY+70sVfpWkLTbyg==}
     peerDependencies:
       '@aomex/cache': ^3.0.0
       ioredis: '>=5'
 
-  '@aomex/cache@3.25.0':
-    resolution: {integrity: sha512-C8mTJLxQLPjU4g74OtITxprVabJ9pj9w60bWEsqkzRpcwdzNN02cacC/Li/ntTnSdZkR+fA/eU8kKkh2z2i55g==}
+  '@aomex/cache@3.27.1':
+    resolution: {integrity: sha512-W60imEYdanF4n1OtczvlfnxSPXJu0+00EAzapdx+liyosMfT1Hr2z9dGq/bo5KiAAT3ei7PcrLZa6udgg5vQnQ==}
     peerDependencies:
       '@aomex/common': ^3.0.0
 
-  '@aomex/common-middleware@3.25.0':
-    resolution: {integrity: sha512-CQR839R9KsJUl5HE7Up2aSv77k4E/lpqW64Ma0DtjRqWTi2COVuj3Bfj/rSf1Mm/q13nupNX0jxXgeDkcKNEOg==}
+  '@aomex/common-middleware@3.27.1':
+    resolution: {integrity: sha512-U0rWZu+uFESlVlBnC43CjfeMcaXi6CIxfur+mI77y9HpyMyF86qiG8+WbLbEj10v4fmgidV2+JxHcPSJZh7k2g==}
 
-  '@aomex/common-service@3.25.0':
-    resolution: {integrity: sha512-H3UllQvBZTin4zRx7X+sP5U1ENx6CsnLOu1Y4Aa+VpPpi2i2hJJUb8cgOmVheesL2l8ynSYqiSWYMJVNjIFE/A==}
+  '@aomex/common-service@3.27.1':
+    resolution: {integrity: sha512-fSBp6WQckyBpQFv2B6nyHbm0Xyb0itc8PF2eLZAh5yqPJ7D3nIj87d6bwEvHdI6aVziQzfr+PGO/iAABZ/m+fQ==}
 
-  '@aomex/common-validator@3.25.0':
-    resolution: {integrity: sha512-6PKZLwRche7oijETHuur9SsTFxFV0kIohhiK0B1up9T7SXU32F2m62IOw3NSvKp7To/ikqvyugXyiOGna5QTlw==}
+  '@aomex/common-validator@3.27.1':
+    resolution: {integrity: sha512-eeuZly615hJzEVPGZEtXW5VcWhbK+LzQ5Tt++NdnvhTbt3j4GwGwdu4zdtrx7HfrQ3yRSgJe6ykgT4IELYIQNQ==}
 
-  '@aomex/common@3.25.0':
-    resolution: {integrity: sha512-ONVuBYyxA598fQyqUO6YB2VxbfwbaUmTPHTkEpcCZVdRoxvIeHo8WV5G6eu33hufzcNisiDwUNgUmLZy/lKI3Q==}
-    engines: {node: '>=22.8.0'}
+  '@aomex/common@3.27.1':
+    resolution: {integrity: sha512-FELHm938ljUsOrLmsIYR0kVYaxRHdoqDWouESQ/QCR3epS14Oh+X52KFNrE/hANGIlgcskmEdHdCEZ2YSCIGhw==}
+    engines: {node: '>=22.15.0'}
     peerDependencies:
       typescript: '>=5.5'
 
-  '@aomex/compress@3.25.0':
-    resolution: {integrity: sha512-qSJNrum3XTVzu3v08Hi1uc9aggqCuWi9JrA3Q/taN/XeWrbv4i4XxsuXXO5ouaVovHZTctemgloSUyMRdeVC1g==}
+  '@aomex/compress@3.27.1':
+    resolution: {integrity: sha512-WsqS7BgoepwFWML4uaaJy6WLiYNyfO06VkfMvZnWsLRVv7Tfta1h4tqU7t3dBiKoePqydcGzovHbo/y6APkylg==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/console@3.25.0':
-    resolution: {integrity: sha512-9gsGlSX/PjIAWXysiXjbGJpXYPSpXD3t/bQtaWJy0CX88hRykQ+e6JtZs68OrkoPhEwO9w+93edB4UYzGVUgIQ==}
+  '@aomex/console@3.27.1':
+    resolution: {integrity: sha512-v+G8mUbhdUS81TpaGUNgkJSxuB8njqHgjO1iIUXECBQ/siV+MrblxVD9kZvLrnHhxahhOBI4PmrEyvt3lUCjQA==}
     hasBin: true
     peerDependencies:
       '@aomex/common': ^3.0.0
 
-  '@aomex/cors@3.25.0':
-    resolution: {integrity: sha512-5d5gvw1aaTqhCdnQn2IfEcgZWtmhvBx6Kc8sBL0DZ6S4LYu566A8YrloHWrUaBF7PwmvjFuvm8xMIeJbytiFog==}
+  '@aomex/cors@3.27.1':
+    resolution: {integrity: sha512-NSBkMCHqGKcBKdQF2Hqo03s2HzXN4uv7ZxOMhp0bzL/A1tF1wqemNjBpoGxhBFBfFoznTA6u+X6G3g62F+usIw==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/cron@3.25.0':
-    resolution: {integrity: sha512-wO7h7uf9wKQPWHdvpxkQmJjGcAIIFIjDmeWdP3K5f6O9EUsvRLNtE69ze7k/hFZpA5MJdXdWOkWJigocUyYr8g==}
+  '@aomex/cron@3.27.1':
+    resolution: {integrity: sha512-+POGQSZwn3Yxq+Dnt5zLY98+Wt6MVVgx2zzwxvcOK5ozesPLN8HhSkTEAz9wPylPtf88mrlPz8QJqKCkN8Pfrw==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/console': ^3.2.0
 
-  '@aomex/etag@3.25.0':
-    resolution: {integrity: sha512-2rrno//sM1iqnbOt8lvJOd4V0tLNHL3EoXI/G3PFjKQKkRTlnWqjfv/Sd/Idr7vIxSkrlIMwu0uzZb127mQA/g==}
+  '@aomex/etag@3.27.1':
+    resolution: {integrity: sha512-Xw4hx/ac9+wylH6iTiXb0epgiyOcEu+GHfp1bRPbL4qBnWLXEDlZwytWmpx76PHo+7239iExjmPylFnjE6btdw==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/helmet@3.25.0':
-    resolution: {integrity: sha512-RyoBgF0ggHPfrboUFD+rqRFl1nf74feMpcG+0hrjSZriRzn33P8QFqpFcLiC5yaU2BURlk9z3kEqxy4P1mYtMQ==}
+  '@aomex/helmet@3.27.1':
+    resolution: {integrity: sha512-z7K2TWAfDBf8ACrwG1insR7cZeJ2hsJ1hD9n/uRFTrL7mtgRCKKpdDIOItC7eU8rwcmckn4F53LtWsK5q63JUw==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/http-logger@3.25.0':
-    resolution: {integrity: sha512-bFDhu+2SW2uscXHrxHT3fDxk/G/ZphXHH4bSv8oTn0iQEcYqMuGpqCXCklDZvOlzDbyHC1wUNA4zZI72Xzwnqw==}
+  '@aomex/http-logger@3.27.1':
+    resolution: {integrity: sha512-rtxJt5Ejipq8pyszVEkGP9rp1JLRhAO0e7oznCGl2RyEykBi4Brfdm7NJY14f1YxVmN+p0YbH/Bj4vCAzTNkTA==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/internal-file-import@3.25.0':
-    resolution: {integrity: sha512-8XpvVnfVJH8zjpz75WG3N4KSBraPhPF3QSdswmqQ3DSnJMDcEAyj4KIPFp88/Jn5JHMI0iylK0B7j1ZZWl4H1w==}
+  '@aomex/internal-file-import@3.27.1':
+    resolution: {integrity: sha512-sEo0bXE/RK9W+rBakPP5EhZtmClQMsuYkbv6k2SvAJO0IuvOAQ5qEewpX5JAn68Bmr8fbu6ApKzu+gQr69+P+w==}
 
-  '@aomex/internal-tools@3.25.0':
-    resolution: {integrity: sha512-45S+czqlBK/vJMfhLCy9tF1latkf3u1+9N4lV+FN8KYsEqrLmuh/9cTHMNq6/CbasnxWLaCVRgBJcyGbzqBB+Q==}
+  '@aomex/internal-tools@3.27.1':
+    resolution: {integrity: sha512-jpmfki99zeTGrc8tSMbAuNe3Ogj97p1KzAFtzdlIPM8Q0WYzbzlE/iEmXPX0XxVvAoCj6BboR6nJXnof/xlU9Q==}
 
-  '@aomex/logger@3.25.0':
-    resolution: {integrity: sha512-4OzRj5G0Ahcbs2ENZCvbeW+3rqtnPxHYqefEkajSMpkN5PEVew1TjkWa9Sr3FXsT9ASuGqQWwBxbc/D+z9SAIg==}
+  '@aomex/logger@3.27.1':
+    resolution: {integrity: sha512-xd1nX84BkL3a72nBOOzMBZRT2PpfTqmSBKnV/EqMEAtluB+2W99poBudVwolE1iaE8Bb9RMRcecrlKDJbGn6DA==}
 
-  '@aomex/openapi@3.25.0':
-    resolution: {integrity: sha512-FUyQL/cQ7OuVIoI8bQVtWHSpDbCB9574/5muOh3wsgXnaQJmpZpCPBQIxj58WXLTULQa+SwRclsNlhve/IhicQ==}
+  '@aomex/openapi@3.27.1':
+    resolution: {integrity: sha512-TGgci96ROExlA2aakFwUNl6db6puM+vgrwhJVPWh9hcey2x78UPRDvDYtY9MttpIAOPxUiCH0LJttZPN+bejeA==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/console': ^3.2.0
@@ -203,34 +203,34 @@ packages:
       '@aomex/console':
         optional: true
 
-  '@aomex/prisma@3.25.0':
-    resolution: {integrity: sha512-toZrodKevBR4jDxSPqT8iUfpcAvwueU1gBTrmTJ53Ft4ntBBLOdoLT2fXzAvCow3FsUKbZEVqs/UVXtfjsEMFA==}
+  '@aomex/prisma@3.27.1':
+    resolution: {integrity: sha512-0+6BRXiUOFLLqhiLD2jWH0CgFbdzrMIDO/rxdNJJ2LkoZ35Mgtep5SGSoIveBF6+OHJ3TIQ8/sM+vIOm/AMzhw==}
     hasBin: true
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@prisma/client': '>=5'
       prisma: '>=5'
 
-  '@aomex/response-time@3.25.0':
-    resolution: {integrity: sha512-gWPuliammNFz8G5+yOvaYFQ+MRDqkm2CNwMGVku8JFpeiiGuCGP6eNjFzpL3/WwYB5VZjygPX3KejqwpUpqqQA==}
+  '@aomex/response-time@3.27.1':
+    resolution: {integrity: sha512-eHyCILw8s9t/R3hw3n1BfM50/tessO8k9Awm/ABblxIFxpNsnGbDGvo4jh8D5gAesD5v0qXigtx1LpdFwzen0g==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/serve-static@3.25.0':
-    resolution: {integrity: sha512-G2PWPj4jFf8i9/2UaSdWl+8jKusc0cyaE2qG71CZjmYamseG6yiwMeIYXwgXuZDT9eSmLrs5H8Hj+yUsZWR/1w==}
+  '@aomex/serve-static@3.27.1':
+    resolution: {integrity: sha512-8Uac+7zf8UqlOYweub6GfIArmgBYjAy7yMUJFOYWjxgc0zyBvRUY2V9tSwaqyRtGrphk2f5v8Ecv54RbzpdN5g==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/swagger-ui@3.25.0':
-    resolution: {integrity: sha512-H6Co9jaSFk1qBQqWiKTfHXi7XGg/TXFWjT45oqOm+BJ07Q+3mARO2zJ9rWIEzjTuBmieLHC4+/AFFmlhY0j4xw==}
+  '@aomex/swagger-ui@3.27.1':
+    resolution: {integrity: sha512-LKXQp2hoh7JkMgoK38JHd8YSDmlB1Z4Y+V1j6r+V9XcxQ77g6TSwScuPdMlVz24GDGcbzvzEZDmvdDR/waKsYA==}
     peerDependencies:
       '@aomex/common': ^3.0.0
       '@aomex/web': ^3.0.0
 
-  '@aomex/web@3.25.0':
-    resolution: {integrity: sha512-YOZxYbzJhRfk8fbigZjidI2u/zwg4AmLE5rMo+zNXR5gIR18F5WKHuEyicqFaH89PPwjF45UFOxqJvswEEfa2A==}
+  '@aomex/web@3.27.1':
+    resolution: {integrity: sha512-xep+VsF8CRgr8kjr94lGzzPj/9cn+C5ZM0e6pb2XfAqItBmRttKQK53+JXcf2MBKXLsrdItHn9qXVHvqm4+lyA==}
     peerDependencies:
       '@aomex/common': ^3.0.0
 
@@ -1299,8 +1299,8 @@ packages:
   core-js-pure@3.41.0:
     resolution: {integrity: sha512-71Gzp96T9YPk63aUvE5Q5qP+DryB4ZloUZPSOebGM88VNw8VNfvdA7z6kGA8iGOTEzAomsRidp4jXSmUIJsL+Q==}
 
-  cron-parser@5.1.1:
-    resolution: {integrity: sha512-xNhwjTUTJcvevF4EvOxB3xYpEKC/qOAmykR+2Qf91ARIfdbjStUwo8qpem6jjzdwFgoo4pnf3sS264xG0G858w==}
+  cron-parser@5.2.0:
+    resolution: {integrity: sha512-ED2qJtcjelmUEuoV3btwxiOm3NI8H4/eCZNX3adUkrm+/b3Xq05+YoDXyjIN57VGhskuHx/KzC367GAklo1lRg==}
     engines: {node: '>=18'}
 
   cross-spawn@7.0.6:
@@ -3026,57 +3026,57 @@ packages:
 
 snapshots:
 
-  '@aomex/async-trace@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))':
+  '@aomex/async-trace@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
+      '@aomex/common': 3.27.1(typescript@5.8.3)
 
-  '@aomex/auth@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/auth@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
 
-  '@aomex/cache-redis-adapter@3.25.0(@aomex/cache@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))(ioredis@5.6.1)':
+  '@aomex/cache-redis-adapter@3.27.1(@aomex/cache@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))(ioredis@5.6.1)':
     dependencies:
-      '@aomex/cache': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/cache': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       ioredis: 5.6.1
 
-  '@aomex/cache@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))':
+  '@aomex/cache@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))':
     dependencies:
-      '@aomex/async-trace': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
-      '@aomex/common': 3.25.0(typescript@5.8.3)
+      '@aomex/async-trace': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
 
-  '@aomex/common-middleware@3.25.0':
+  '@aomex/common-middleware@3.27.1':
     dependencies:
-      '@aomex/internal-tools': 3.25.0
+      '@aomex/internal-tools': 3.27.1
 
-  '@aomex/common-service@3.25.0': {}
+  '@aomex/common-service@3.27.1': {}
 
-  '@aomex/common-validator@3.25.0':
+  '@aomex/common-validator@3.27.1':
     dependencies:
-      '@aomex/internal-tools': 3.25.0
+      '@aomex/internal-tools': 3.27.1
       email-validator: 2.0.4
       luxon: 3.6.1
 
-  '@aomex/common@3.25.0(typescript@5.8.3)':
+  '@aomex/common@3.27.1(typescript@5.8.3)':
     dependencies:
-      '@aomex/common-middleware': 3.25.0
-      '@aomex/common-service': 3.25.0
-      '@aomex/common-validator': 3.25.0
-      '@aomex/internal-tools': 3.25.0
+      '@aomex/common-middleware': 3.27.1
+      '@aomex/common-service': 3.27.1
+      '@aomex/common-validator': 3.27.1
+      '@aomex/internal-tools': 3.27.1
       typescript: 5.8.3
 
-  '@aomex/compress@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/compress@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/internal-tools': 3.25.0
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/internal-tools': 3.27.1
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       compressible: 2.0.18
 
-  '@aomex/console@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))':
+  '@aomex/console@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/internal-file-import': 3.25.0
-      '@aomex/internal-tools': 3.25.0
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/internal-file-import': 3.27.1
+      '@aomex/internal-tools': 3.27.1
       ansi-escapes: 7.0.0
       glob: 10.4.5
       is-unicode-supported: 2.1.0
@@ -3088,106 +3088,106 @@ snapshots:
       yargs: 17.7.2
       yargs-parser: 21.1.1
 
-  '@aomex/cors@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/cors@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       vary: 1.1.2
 
-  '@aomex/cron@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/console@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/cron@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/console@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/cache': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/console': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
-      '@aomex/internal-file-import': 3.25.0
-      '@aomex/internal-tools': 3.25.0
-      cron-parser: 5.1.1
+      '@aomex/cache': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/console': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
+      '@aomex/internal-file-import': 3.27.1
+      '@aomex/internal-tools': 3.27.1
+      cron-parser: 5.2.0
       format-duration: 3.0.2
       pidusage: 4.0.0
 
-  '@aomex/etag@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/etag@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       etag: 1.8.1
 
-  '@aomex/helmet@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/helmet@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       helmet: 8.1.0
 
-  '@aomex/http-logger@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/http-logger@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/internal-tools': 3.25.0
-      '@aomex/logger': 3.25.0
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/internal-tools': 3.27.1
+      '@aomex/logger': 3.27.1
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       pretty-time: 1.1.0
 
-  '@aomex/internal-file-import@3.25.0':
+  '@aomex/internal-file-import@3.27.1':
     dependencies:
       glob: 10.4.5
 
-  '@aomex/internal-tools@3.25.0':
+  '@aomex/internal-tools@3.27.1':
     dependencies:
       '@i18nx/node': 0.3.0
       '@types/bytes': 3.1.5
       bytes: 3.1.2
       openapi-types: 12.1.3
 
-  '@aomex/logger@3.25.0': {}
+  '@aomex/logger@3.27.1': {}
 
-  '@aomex/openapi@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/console@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/openapi@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/console@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/internal-file-import': 3.25.0
-      '@aomex/internal-tools': 3.25.0
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/internal-file-import': 3.27.1
+      '@aomex/internal-tools': 3.27.1
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       '@stoplight/spectral-core': 1.20.0
       '@stoplight/spectral-rulesets': 1.22.0
       lodash.snakecase: 4.1.1
       yaml: 2.7.1
     optionalDependencies:
-      '@aomex/console': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/console': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
     transitivePeerDependencies:
       - encoding
 
-  '@aomex/prisma@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@prisma/client@6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.6.0(typescript@5.8.3))':
+  '@aomex/prisma@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@prisma/client@6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.6.0(typescript@5.8.3))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
+      '@aomex/common': 3.27.1(typescript@5.8.3)
       '@prisma/client': 6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3)
       '@prisma/generator-helper': 6.6.0
       lodash.camelcase: 4.3.0
       lodash.upperfirst: 4.3.1
       prisma: 6.6.0(typescript@5.8.3)
 
-  '@aomex/response-time@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/response-time@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
 
-  '@aomex/serve-static@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/serve-static@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
 
-  '@aomex/swagger-ui@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))':
+  '@aomex/swagger-ui@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/serve-static': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))(@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3)))
-      '@aomex/web': 3.25.0(@aomex/common@3.25.0(typescript@5.8.3))
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/serve-static': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))(@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3)))
+      '@aomex/web': 3.27.1(@aomex/common@3.27.1(typescript@5.8.3))
       swagger-ui: 5.21.0
       yaml: 2.7.1
     transitivePeerDependencies:
       - '@types/react'
       - debug
 
-  '@aomex/web@3.25.0(@aomex/common@3.25.0(typescript@5.8.3))':
+  '@aomex/web@3.27.1(@aomex/common@3.27.1(typescript@5.8.3))':
     dependencies:
-      '@aomex/common': 3.25.0(typescript@5.8.3)
-      '@aomex/internal-file-import': 3.25.0
-      '@aomex/internal-tools': 3.25.0
+      '@aomex/common': 3.27.1(typescript@5.8.3)
+      '@aomex/internal-file-import': 3.27.1
+      '@aomex/internal-tools': 3.27.1
       '@types/accepts': 1.3.7
       '@types/formidable': 3.4.5
       '@types/http-errors': 2.0.4
@@ -3667,7 +3667,7 @@ snapshots:
     dependencies:
       '@stoplight/json': 3.21.7
       '@stoplight/path': 1.3.2
-      '@stoplight/types': 13.6.0
+      '@stoplight/types': 13.20.0
       '@types/urijs': 1.19.25
       dependency-graph: 0.11.0
       fast-memoize: 2.5.2
@@ -3680,7 +3680,7 @@ snapshots:
     dependencies:
       '@stoplight/ordered-object-literal': 1.0.5
       '@stoplight/path': 1.3.2
-      '@stoplight/types': 13.6.0
+      '@stoplight/types': 13.20.0
       jsonc-parser: 2.2.1
       lodash: 4.17.21
       safe-stable-stringify: 1.1.1
@@ -3781,7 +3781,7 @@ snapshots:
     dependencies:
       '@stoplight/json': 3.21.7
       '@stoplight/path': 1.3.2
-      '@stoplight/types': 13.6.0
+      '@stoplight/types': 13.20.0
       abort-controller: 3.0.0
       lodash: 4.17.21
       node-fetch: 2.7.0
@@ -4486,7 +4486,7 @@ snapshots:
 
   core-js-pure@3.41.0: {}
 
-  cron-parser@5.1.1:
+  cron-parser@5.2.0:
     dependencies:
       luxon: 3.6.1
 
