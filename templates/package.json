@@ -11,8 +11,8 @@
     "cron:stats": "sh scripts/docker-cron-stats.sh",
     "commit:main": "sh scripts/commit-develop-to-main.sh",
     "deploy:production": "sh scripts/deploy.sh production",
-    "deploy:production:api": "sh scripts/deploy-api.sh production",
-    "deploy:production:cron": "sh scripts/deploy-cron.sh production",
+    "deploy:api": "sh scripts/deploy-api.sh production",
+    "deploy:cron": "sh scripts/deploy-cron.sh production",
     "deploy:integration": "sh scripts/deploy.sh integration",
     "prepare": "npx husky",
     "preinstall": "npx only-allow pnpm"
