@@ -8,6 +8,8 @@ import { swagger } from '@middleware/swagger.md';
 import { slowTrace } from '@middleware/slow-trace.md';
 import { httpLogger } from '@middleware/http-logger.md';
 import { logger } from '@services/logger';
+import cluster from 'node:cluster';
+import { cpus } from 'node:os';
 
 export const app = new WebApp({
   language: 'zh_CN',
@@ -24,18 +26,36 @@ export const app = new WebApp({
   ],
 });
 
-app.on('error', (err, ctx) => {
+process.on('uncaughtException', (err) => {
   logger.error(err.stack!);
-  ctx.response.body = {
-    status: ctx.response.statusCode,
-    message: ctx.response.body,
-  };
 });
 
-const port = process.env['PORT'] || 3000;
-app.listen(port, () => {
-  console.log(`服务已启动，点击 http://localhost:${port} 访问`);
-});
+if (cluster.isWorker) {
+  app.on('error', (err, ctx) => {
+    logger.error(err.stack!);
+    ctx.response.body = {
+      status: ctx.response.statusCode,
+      message: ctx.response.body,
+    };
+  });
+  app.listen(process.env['PORT'] || 3000);
+}
+
+if (cluster.isPrimary) {
+  for (let i = cpus().length; i-- > 0; ) {
+    cluster.fork();
+  }
+
+  cluster
+    .on('listening', (worker, address) => {
+      const href = `http://${address.address || 'localhost'}:${address.port}`;
+      logger.info(`Worker ${worker.id} is listening ${href}`);
+    })
+    .on('exit', (worker, code, signal) => {
+      logger.error(`Worker ${worker.id} exit with code '${code}' and signal '${signal}'`);
+      cluster.fork();
+    });
+}
 
 declare module '@aomex/web' {
   namespace WebApp {

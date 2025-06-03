@@ -19,6 +19,10 @@ const app = new ConsoleApp({
   ],
 });
 
+process.on('uncaughtException', (err) => {
+  logger.error(err.stack!);
+});
+
 app.on('error', (err) => {
   logger.error(err.stack!);
 });
