@@ -5,8 +5,6 @@ services:
       MYSQL_ROOT_PASSWORD: 'abcde'
       # 修改后需要同步修改.env里的参数
       MYSQL_DATABASE: '{{projectName}}'
-      MYSQL_USER: 'my_user'
-      MYSQL_PASSWORD: 'my_pwd'
     volumes:
       - ./volumes/mysql:/var/lib/mysql
     ports:
@@ -19,7 +17,7 @@ services:
       timeout: 3s
       retries: 10
   redis:
-    image: redis:8.0-M04
+    image: redis:8.0
     volumes:
       - ./volumes/redis:/data
     ports:

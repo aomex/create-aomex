@@ -52,7 +52,8 @@ if (cluster.isPrimary) {
       logger.info(`Worker ${worker.id} is listening ${href}`);
     })
     .on('exit', (worker, code, signal) => {
-      logger.error(`Worker ${worker.id} exit with code '${code}' and signal '${signal}'`);
+      const msg = `Worker ${worker.id} exit with code '${code}' and signal '${signal}'`;
+      logger.error(msg);
       cluster.fork();
     });
 }

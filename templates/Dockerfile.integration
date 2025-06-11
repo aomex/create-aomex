@@ -7,9 +7,8 @@ RUN mv .env.integration .env
 ENV TZ=Asia/Shanghai
 ENV PORT=3000
 ENV NODE_ENV=integration
-ENV NODE_OPTIONS='--enable-source-maps --stack-trace-limit=50'
 ENV PATH="$PATH:/codes/node_modules/.bin"
 
 RUN sh scripts/build-in-docker.sh
 
-CMD ["node", "src/web.js"]
+CMD ["node", "--enable-source-maps", "--stack-trace-limit=50", "src/web.js"]
