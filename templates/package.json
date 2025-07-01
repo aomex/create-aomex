@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node scripts/start.mjs",
     "cron:stats": "sh scripts/docker-cron-stats.sh",
-    "commit:main": "sh scripts/commit-develop-to-main.sh",
+    "cron:stop": "sh scripts/docker-stop-cron.sh",
     "deploy:production": "sh scripts/deploy.sh production",
     "deploy:api": "sh scripts/deploy-api.sh production",
     "deploy:cron": "sh scripts/deploy-cron.sh production",
