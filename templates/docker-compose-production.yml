@@ -4,6 +4,7 @@ services:
     command: prisma migrate deploy
   api:
     image: {{projectName}}:production
+    restart: always
     ulimits:
       nofile:
         soft: 65535
