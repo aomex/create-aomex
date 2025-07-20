@@ -1,9 +1,11 @@
 import { Caching } from '@aomex/cache';
 import { redisAdapter } from '@aomex/cache-redis-adapter';
+import { destroyServices } from '@aomex/common';
 import { commanders, ConsoleApp } from '@aomex/console';
 import { crons } from '@aomex/cron';
 import { openapi } from '@aomex/openapi';
 import { configs } from '@configs';
+import { services } from '@services';
 import { logger } from '@services/logger';
 
 const app = new ConsoleApp({
@@ -29,6 +31,7 @@ app.on('error', (err) => {
 
 const code = await app.run();
 await logger.complete();
+await destroyServices(services);
 process.exit(code);
 
 declare module '@aomex/console' {
