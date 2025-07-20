@@ -15,7 +15,7 @@ export const app = new WebApp({
   language: 'zh_CN',
   mount: [
     httpLogger,
-    responseTime,
+    responseTime(),
     slowTrace,
     cors(),
     compress(),
@@ -34,7 +34,7 @@ if (cluster.isWorker) {
   app.on('error', (err, ctx) => {
     logger.error(err.stack!);
     ctx.response.body = {
-      status: ctx.response.statusCode,
+      code: ctx.response.statusCode,
       message: ctx.response.body,
     };
   });
