@@ -38,6 +38,7 @@ const pnpmVersion =
   }).replaceAll('\n', '') || '0.0.0';
 
 const nodeVersion = await selectNodeVersion(argv);
+const nodeMajorVersion = nodeVersion.split('.')[0]!;
 const targetDir = path.resolve(projectName);
 
 const { error } = await terminal.runTasks([
@@ -62,6 +63,7 @@ const { error } = await terminal.runTasks([
         nodeVersion,
         pnpmVersion,
         cronPort,
+        nodeMajorVersion,
       };
       await cp(templateDir, targetDir, { recursive: true });
       const files = await readdir(targetDir, { recursive: true });
@@ -144,6 +146,7 @@ const { error } = await terminal.runTasks([
             'prettier',
             '@commitlint/cli',
             '@commitlint/config-conventional',
+            `@tsconfig/node${nodeMajorVersion}`,
           ],
           dev: true,
         },

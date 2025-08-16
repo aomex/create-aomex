@@ -1,12 +1,11 @@
 {
+  "extends": ["@tsconfig/node{{nodeMajorVersion}}"],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node10",
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": false,
