@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { type RedisOptions } from 'ioredis';
 
 // 正式环境。对应 main 分支

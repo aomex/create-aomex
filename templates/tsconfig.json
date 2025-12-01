@@ -1,6 +1,7 @@
 {
-  "extends": ["@tsconfig/node{{nodeMajorVersion}}"],
   "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -31,6 +32,7 @@
     "noImplicitThis": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "typeRoots": ["./typings", "node_modules/@types"],
     "paths": {
       "@configs": ["./src/configs/index.ts"],
       "@configs/*": ["./src/configs/*"],

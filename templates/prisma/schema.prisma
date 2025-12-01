@@ -1,21 +1,27 @@
 datasource db {
   provider     = "mysql"
-  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+generator json {
+  provider  = "prisma-json-types-generator"
+  namespace = "PrismaJson"
 }
 
 generator aomex {
   provider = "aomex-prisma"
+  output   = "../src/generated/aomex/prisma"
 }
 
 model user {
   id         Int      @id @default(autoincrement())
   name       String   @unique
   age        Int      @default(17)
-  created_at DateTime @default(now()) @db.Timestamp(0)
-  updated_at DateTime @default(now()) @updatedAt() @db.Timestamp(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt()
 }

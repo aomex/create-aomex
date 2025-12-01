@@ -133,6 +133,8 @@ const { error } = await terminal.runTasks([
             '@aomex/logger',
             'ioredis',
             'prisma', // docker prisma migrate 要用，放dev会导致二进制不存在
+            '@prisma/adapter-mariadb',
+            'dotenv',
           ],
         },
         {
@@ -146,7 +148,7 @@ const { error } = await terminal.runTasks([
             'prettier',
             '@commitlint/cli',
             '@commitlint/config-conventional',
-            `@tsconfig/node${nodeMajorVersion}`,
+            'prisma-json-types-generator',
           ],
           dev: true,
         },
