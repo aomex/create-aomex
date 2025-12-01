@@ -41,7 +41,8 @@
       "@services/*": ["./src/services/*"],
       "@constants/*": ["./src/constants/*"],
       "@models/*": ["./src/models/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@generated/*": ["./src/generated/*"]
     }
   }
 }
