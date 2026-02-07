@@ -4,10 +4,10 @@ import { compress } from '@aomex/compress';
 import { etag } from '@aomex/etag';
 import { helmet } from '@aomex/helmet';
 import { responseTime } from '@aomex/response-time';
-import { swagger } from '@middleware/swagger.md';
-import { slowTrace } from '@middleware/slow-trace.md';
-import { httpLogger } from '@middleware/http-logger.md';
-import { logger } from '@services/logger';
+import { swagger } from '@/middleware/swagger.md';
+import { slowTrace } from '@/middleware/slow-trace.md';
+import { httpLogger } from '@/middleware/http-logger.md';
+import { logger } from '@/services/logger';
 import cluster from 'node:cluster';
 import { cpus } from 'node:os';
 
@@ -38,11 +38,16 @@ if (cluster.isWorker) {
       message: ctx.response.body,
     };
   });
-  app.listen(process.env['PORT'] || 3000);
+  app
+    .http({
+      // 对应 nginx 的 keepalive_timeout
+      keepAliveTimeout: 60_000,
+    })
+    .listen(process.env['PORT'] || 3000);
 }
 
 if (cluster.isPrimary) {
-  for (let i = cpus().length; i-- > 0; ) {
+  for (let i = Math.max(5, Math.min(2, cpus().length)); i-- > 0; ) {
     cluster.fork();
   }
 

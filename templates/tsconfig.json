@@ -34,15 +34,7 @@
     "resolveJsonModule": true,
     "typeRoots": ["./typings", "node_modules/@types"],
     "paths": {
-      "@configs": ["./src/configs/index.ts"],
-      "@configs/*": ["./src/configs/*"],
-      "@middleware/*": ["./src/middleware/*"],
-      "@services": ["./src/services/index.ts"],
-      "@services/*": ["./src/services/*"],
-      "@constants/*": ["./src/constants/*"],
-      "@models/*": ["./src/models/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@generated/*": ["./src/generated/*"]
+      "@/*": ["./src/*"]
     }
   }
 }

@@ -1,7 +1,7 @@
 import { rule } from '@aomex/common';
 import { body, response, Router } from '@aomex/web';
-import { services } from '@services';
-import { prismaInput, prismaOutput } from '../generated/aomex/prisma';
+import { services } from '@/services';
+import { prismaInput, prismaOutput } from '@/generated/aomex/prisma';
 
 export const router = new Router({
   prefix: '/users',

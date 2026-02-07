@@ -4,9 +4,9 @@ import { destroyServices } from '@aomex/common';
 import { commanders, ConsoleApp } from '@aomex/console';
 import { crons } from '@aomex/cron';
 import { openapi } from '@aomex/openapi';
-import { configs } from '@configs';
-import { services } from '@services';
-import { logger } from '@services/logger';
+import { configs } from '@/configs';
+import { services } from '@/services';
+import { logger } from '@/services/logger';
 
 const app = new ConsoleApp({
   language: 'zh_CN',

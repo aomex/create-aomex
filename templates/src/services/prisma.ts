@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 import * as runtime from '@prisma/client/runtime/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
