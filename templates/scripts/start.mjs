@@ -1,4 +1,6 @@
 import { execSync, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
 execSync('docker compose -f docker-compose.yml up --wait', { stdio: 'inherit' });
@@ -6,7 +8,11 @@ const healthCheck = execSync('docker compose -f docker-compose.yml ps', { encodi
 if (healthCheck.includes('unhealthy')) process.exit(1);
 
 execSync('npx prisma generate', { stdio: 'inherit' });
-execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+if (existsSync(path.resolve('prisma', 'migrations'))) {
+  execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+} else if (existsSync(path.resolve('prisma', 'schema.prisma'))) {
+  execSync('npx prisma db push', { stdio: 'inherit' });
+}
 const api = spawn('node', ['--import', 'tsx/esm', '--watch', 'src/web.ts'], { stdio: 'inherit' });
 const cron = spawn('npx', ['aomex', 'cron:start'], { stdio: 'inherit' });
 
