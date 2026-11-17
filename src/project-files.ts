@@ -249,12 +249,16 @@ ${exec} commitlint --edit $1
  * 各环境文件通过 \`...shared\` 展开后，再覆盖本环境特有项。
  */
 export const shared = {};
+
+export interface SecretConfig {
+  REDIS_PASSWORD?: string;
+}
 `),
   );
   add(
     'src/configs/production.ts',
     text(`import { type RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared } from './shared';
+import { shared, type SecretConfig } from './shared';
 
 const secrets = process.env as unknown as SecretConfig;
 
@@ -270,17 +274,13 @@ export const production = {
 };
 
 export type Config = typeof production;
-
-export interface SecretConfig {
-  REDIS_PASSWORD?: string;
-}
 `),
   );
   add(
     'src/configs/development.ts',
-    text(`import type { Config, SecretConfig } from './production';
+    text(`import type { Config } from './production';
 import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared } from './shared';
+import { shared, type SecretConfig } from './shared';
 
 const secrets = process.env as unknown as SecretConfig;
 
@@ -299,8 +299,8 @@ export const development: Config = {
   add(
     'src/configs/integration.ts',
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import type { Config, SecretConfig } from './production';
-import { shared } from './shared';
+import type { Config } from './production';
+import { shared, type SecretConfig } from './shared';
 
 const secrets = process.env as unknown as SecretConfig;
 

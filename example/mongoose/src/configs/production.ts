@@ -1,5 +1,5 @@
 import { type RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared } from './shared';
+import { shared, type SecretConfig } from './shared';
 
 const secrets = process.env as unknown as SecretConfig;
 
@@ -15,7 +15,3 @@ export const production = {
 };
 
 export type Config = typeof production;
-
-export interface SecretConfig {
-  REDIS_PASSWORD?: string;
-}
