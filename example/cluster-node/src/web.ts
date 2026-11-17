@@ -29,6 +29,7 @@ clusterListen({
   // 勿与 PM2 -i / 容器多副本叠用；容器 / K8s 优先单进程 + 副本扩缩
   workers: 'max',
   listen: () => {
+    const port = process.env['PORT'] || 3000;
     app
       .http({
         // 对应 nginx upstream.keepalive_timeout=60s
@@ -36,8 +37,8 @@ clusterListen({
         keepAliveTimeout: 61_000,
         headersTimeout: 65_000,
       })
-      .listen(process.env['PORT'] || 3000, () => {
-        console.log('HTTP server is listening');
+      .listen(port, () => {
+        console.log(`HTTP server is listening, visit http://localhost:${port}`);
       });
   },
 });

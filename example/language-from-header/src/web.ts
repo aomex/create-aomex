@@ -25,6 +25,7 @@ process.on('uncaughtException', (err) => {
   void services.logger.fatal(err);
 });
 
+const port = process.env['PORT'] || 3000;
 app
   .http({
     // 对应 nginx upstream.keepalive_timeout=60s
@@ -32,8 +33,8 @@ app
     keepAliveTimeout: 61_000,
     headersTimeout: 65_000,
   })
-  .listen(process.env['PORT'] || 3000, () => {
-    console.log('HTTP server is listening');
+  .listen(port, () => {
+    console.log(`HTTP server is listening, visit http://localhost:${port}`);
   });
 
 declare module '@aomex/web' {
