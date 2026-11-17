@@ -1,0 +1,11 @@
+FROM node:24.22.0
+COPY . /codes
+WORKDIR /codes
+
+ENV PORT=3000
+ENV NODE_ENV=production
+ENV PATH="$PATH:/codes/node_modules/.bin"
+
+RUN sh scripts/build-in-docker.sh
+
+CMD ["pm2-runtime", "ecosystem.config.cjs"]

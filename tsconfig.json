@@ -7,7 +7,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
+    "types": ["node"],
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": false,
@@ -26,7 +27,6 @@
     "rootDir": "./",
     "noEmit": true,
     "importHelpers": false,
-    "downlevelIteration": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "allowSyntheticDefaultImports": true,
@@ -37,5 +37,5 @@
     "transpileOnly": true,
     "experimentalSpecifierResolution": "node"
   },
-  "exclude": ["templates"]
+  "exclude": ["hello-aomex", "112", "example"]
 }

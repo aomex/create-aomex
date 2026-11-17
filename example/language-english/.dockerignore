@@ -1,0 +1,11 @@
+volumes/
+node_modules/
+coverage/
+.git/
+.vscode/
+.cursor/
+.claude/
+.agents/
+.husky/
+.idea/
+.env*

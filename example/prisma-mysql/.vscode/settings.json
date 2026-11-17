@@ -1,0 +1,17 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "editor.tabSize": 2,
+  "editor.inlayHints.fontSize": 9,
+  "js/ts.inlayHints.parameterNames.enabled": "all",
+  "js/ts.inlayHints.enumMemberValues.enabled": true,
+  "js/ts.inlayHints.functionLikeReturnTypes.enabled": true,
+  "js/ts.preferences.quoteStyle": "single",
+  "js/ts.suggest.autoImports": true,
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.path": "./node_modules/typescript",
+  "cSpell.words": ["openapi", "aomex"]
+}

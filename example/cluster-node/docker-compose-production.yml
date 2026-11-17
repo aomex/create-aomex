@@ -1,0 +1,13 @@
+services:
+  api:
+    image: snapshot-demo:production
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    # 已用内置 clusterListen 吃满多核；勿再 --scale api / PM2 -i
+    ports:
+      - 3000:3000

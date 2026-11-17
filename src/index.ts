@@ -2,20 +2,19 @@
 
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
-import {
-  cp,
-  mkdir,
-  readdir,
-  readFile,
-  rename,
-  stat,
-  writeFile,
-} from 'node:fs/promises';
+import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { terminal } from '@aomex/console';
 import { execSync, spawn } from 'node:child_process';
 import { setTimeout } from 'node:timers/promises';
 import { inputProject } from './input-project';
 import { selectNodeVersion } from './select-node-version';
+import { selectOptions } from './select-options';
+import { applyScaffoldVariables, generateProjectFiles } from './project-files';
+import {
+  resolveAomexVersion,
+  resolvePackageManagerVersion,
+  resolvePrismaVersion,
+} from './generators';
 
 const runShell = async (command: string) => {
   await new Promise((resolve, reject) => {
@@ -30,15 +29,15 @@ const runShell = async (command: string) => {
 };
 
 const argv = yargsParser(process.argv.slice(2));
-const templateDir = path.join(import.meta.dirname, '..', 'templates');
 const projectName = await inputProject(argv);
-const pnpmVersion =
-  execSync(`npm view pnpm version`, {
-    encoding: 'utf8',
-  }).replaceAll('\n', '') || '0.0.0';
-
 const nodeVersion = await selectNodeVersion(argv);
-const nodeMajorVersion = nodeVersion.split('.')[0]!;
+const options = await selectOptions(argv);
+const packageManagerVersion = await resolvePackageManagerVersion(
+  options.packageManager,
+);
+const aomexVersion = await resolveAomexVersion();
+const prismaVersion =
+  options.orm === 'prisma' ? await resolvePrismaVersion() : undefined;
 const targetDir = path.resolve(projectName);
 
 const { error } = await terminal.runTasks([
@@ -51,37 +50,33 @@ const { error } = await terminal.runTasks([
     },
   },
   {
-    title: '复制模板文件',
+    title: '生成项目文件',
     task: async () => {
-      let cronPort = '' + Math.max(1, Math.floor(3 * Math.random()));
-      for (let i = 0; i < 4; ++i) {
-        cronPort += Math.floor(10 * Math.random());
-      }
-
-      const variables = {
+      const variables: Record<string, string> = {
         projectName,
         nodeVersion,
-        pnpmVersion,
-        cronPort,
-        nodeMajorVersion,
+        pnpmVersion: packageManagerVersion,
+        nodeMajorVersion: nodeVersion.split('.')[0]!,
       };
-      await cp(templateDir, targetDir, { recursive: true });
-      const files = await readdir(targetDir, { recursive: true });
-      for (const file of files) {
-        const isFile = (await stat(path.join(targetDir, file))).isFile();
-        if (!isFile) continue;
-        const fileAbsolutePath = path.resolve(file);
-        let fileContent = await readFile(fileAbsolutePath, 'utf8');
-        Object.entries(variables).forEach(([key, value]) => {
-          fileContent = fileContent.replaceAll(`{{${key}}}`, value);
-        });
-        await writeFile(fileAbsolutePath, fileContent);
+
+      const files = generateProjectFiles({
+        projectName,
+        options,
+        packageManagerVersion,
+        aomexVersion,
+        prismaVersion,
+      });
+
+      for (const [relPath, file] of Object.entries(files)) {
+        const content = applyScaffoldVariables(file.content, variables);
+        const abs = path.resolve(relPath);
+        await mkdir(path.dirname(abs), { recursive: true });
+        await writeFile(abs, content);
+        if (file.mode !== undefined) {
+          await chmod(abs, file.mode);
+        }
       }
-      // .gitignore这个文件在安装的时候总是被忽略
-      await rename(
-        path.join(targetDir, 'gitignore'),
-        path.join(targetDir, '.gitignore'),
-      );
+
       await setTimeout(500);
     },
   },
@@ -96,81 +91,42 @@ const { error } = await terminal.runTasks([
     },
   },
   {
-    title: '增加volta配置',
-    skip: async () => {
-      return !/\d\.\d/.test(execSync('volta -v', { encoding: 'utf8' }));
-    },
+    title: '安装依赖',
     task: async () => {
-      await runShell(`volta pin node@${nodeVersion}`);
-      await runShell(`volta pin pnpm@${pnpmVersion}`);
-    },
-  },
-  {
-    title: '安装插件',
-    task: async (_, task) => {
-      const packages: { label: string; pkgs: string[]; dev?: boolean }[] = [
-        {
-          label: 'dependencies',
-          pkgs: [
-            '@aomex/common',
-            '@aomex/web',
-            '@aomex/cors',
-            '@aomex/etag',
-            '@aomex/compress',
-            '@aomex/http-logger',
-            '@aomex/response-time',
-            '@aomex/console',
-            '@aomex/cron',
-            '@aomex/helmet',
-            '@aomex/openapi',
-            '@aomex/swagger-ui',
-            '@aomex/async-trace',
-            '@prisma/client',
-            '@aomex/cache',
-            '@aomex/cache-redis-adapter',
-            '@aomex/auth',
-            '@aomex/prisma',
-            '@aomex/logger',
-            'ioredis',
-            'prisma', // docker prisma migrate 要用，放dev会导致二进制不存在
-            '@prisma/adapter-mariadb',
-            'dotenv',
-          ],
-        },
-        {
-          label: 'dev dependencies',
-          pkgs: [
-            'typescript',
-            'tsx',
-            'tsc-alias',
-            '@types/node',
-            'husky',
-            'prettier',
-            '@commitlint/cli',
-            '@commitlint/config-conventional',
-            'prisma-json-types-generator',
-          ],
-          dev: true,
-        },
-      ];
+      const pm = options.packageManager;
+      const cmd =
+        pm === 'pnpm' ? 'pnpm install' : pm === 'yarn' ? 'yarn' : 'npm install';
+      await runShell(cmd);
 
-      for (let i = 0; i < packages.length; ++i) {
-        const { pkgs, dev, label } = packages[i]!;
-        task.suffix = terminal.style('gray', label);
-        await runShell(`pnpm add ${pkgs.join(' ')} ${dev ? '-D' : ''}`);
+      if (pm === 'pnpm') {
+        await runShell('pnpm approve-builds --all -y');
       }
-      task.suffix = '';
     },
   },
   {
     title: '生成prisma客户端',
+    skip: async () => options.orm !== 'prisma',
     task: async () => {
-      await runShell('npx prisma generate');
+      const pm = options.packageManager;
+      const exec =
+        pm === 'pnpm'
+          ? 'pnpm exec'
+          : pm === 'yarn'
+            ? 'yarn exec'
+            : 'npm exec --';
+      await runShell(`${exec} prisma generate`);
     },
   },
 ]);
 
 if (error) process.exit(1);
+
+const startCmd =
+  options.packageManager === 'npm'
+    ? `npm start`
+    : options.packageManager === 'yarn'
+      ? `yarn start`
+      : `pnpm start`;
 
 console.log(
   '\n项目创建成功：' +
@@ -178,6 +134,6 @@ console.log(
     '\n' +
     '启动项目可执行如下指令：' +
     '\n\n' +
-    terminal.style('green', `cd ${projectName} && pnpm start`) +
+    terminal.style('green', `cd ${projectName} && ${startCmd}`) +
     '\n',
 );

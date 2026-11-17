@@ -1,0 +1,24 @@
+services:
+  migration:
+    image: snapshot-demo:production
+    env_file:
+      - .env.production
+    command: prisma migrate deploy
+  api:
+    image: snapshot-demo:production
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    ports:
+      - 3000:3000
+  cron:
+    image: snapshot-demo:production
+    env_file:
+      - .env.production
+    init: true
+    command: aomex cron:start
+    restart: unless-stopped

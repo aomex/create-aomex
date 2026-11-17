@@ -1,0 +1,12 @@
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+  '@scarf/scarf': false
+  '@tree-sitter-grammars/tree-sitter-yaml': false
+  core-js-pure: false
+  tree-sitter: false
+  tree-sitter-json: false
+minimumReleaseAgeExclude:
+  - '@aomex/*'

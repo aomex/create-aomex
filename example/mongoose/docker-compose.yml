@@ -1,0 +1,19 @@
+services:
+  mongo:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: abcde
+    volumes:
+      - ./volumes/mongo:/data/db
+    ports:
+      - 27017:27017
+  redis:
+    image: redis:8.0
+    env_file:
+      - .env
+    volumes:
+      - ./volumes/redis:/data
+    ports:
+      - 6379:6379
+    command: --requirepass ${REDIS_PASSWORD}

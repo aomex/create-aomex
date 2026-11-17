@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      # 与 DATABASE_URL 保持一致；首次初始化 data 目录时自动建库（改库名需清 volumes/mysql）
+      MYSQL_ROOT_PASSWORD: abcde
+      MYSQL_DATABASE: snapshot-demo
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql
+    ports:
+      - 3306:3306
+    # 字符集/排序规则用 8.x 默认：utf8mb4 + utf8mb4_0900_ai_ci
+    command:
+      # binlog 保留 2 天（172800 秒）
+      - --binlog_expire_logs_seconds=172800
+      # 开启慢查询日志（默认写在数据目录：./volumes/mysql/<hostname>-slow.log）
+      - --slow_query_log=1
+      # 执行超过 2 秒记入慢查询
+      - --long_query_time=2
+    healthcheck:
+      test:
+        ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
+      # interval 短：再次 up --wait 几乎立刻过；首次初始化靠 start_period + retries
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+  redis:
+    image: redis:8.0
+    env_file:
+      - .env
+    volumes:
+      - ./volumes/redis:/data
+    ports:
+      - 6379:6379
+    command: --requirepass ${REDIS_PASSWORD}

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+npm exec -- prettier --cache --check .
+npm exec -- tsc

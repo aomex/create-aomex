@@ -1,0 +1,615 @@
+import type { ScaffoldOptions } from './types';
+import {
+  generateAuth,
+  generateBuildInDockerScript,
+  generateCacheService,
+  generateCli,
+  generateCookieKey,
+  generateDeployCompose,
+  createCronPort,
+  createDocsPathSecret,
+  generateDocsMiddleware,
+  generateDockerCompose,
+  generateDockerCronStatsScript,
+  generateDockerCronStopScript,
+  generateDockerDeployApiScript,
+  generateDockerDeployCronScript,
+  generateDockerDeployScript,
+  generateDockerfile,
+  generateEnvExample,
+  packageManagerExec,
+  generateHttpAccessLog,
+  generateLogger,
+  generateArticleSchema,
+  generateArticleService,
+  generateMongooseFiles,
+  generatePackageJson,
+  generatePm2Ecosystem,
+  generatePrismaClient,
+  generatePrismaSchema,
+  generatePrismaSchemaModule,
+  generatePrismaJsonUtil,
+  generatePrismaArticleRouter,
+  generateServicesIndex,
+  generateSlowTrace,
+  generateStartScript,
+  generateTsconfig,
+  generateWeb,
+} from './generators';
+import { generateReadmeFromOptions } from './scaffold-locale';
+import {
+  AOMEX_SKILL_FILE,
+  generateAgentsMd,
+  generateAomexSkill,
+} from './skills/aomex-skill';
+
+export type ProjectFile = {
+  content: string;
+  /** Unix file mode, e.g. 0o755 for shell scripts */
+  mode?: number;
+};
+
+const sh = (content: string): ProjectFile => ({ content, mode: 0o755 });
+const text = (content: string): ProjectFile => ({ content });
+
+/** 写入磁盘前替换 `{{projectName}}` / `{{nodeVersion}}` 等占位符 */
+export const applyScaffoldVariables = (
+  content: string,
+  variables: Record<string, string>,
+): string => {
+  let out = content;
+  for (const [key, value] of Object.entries(variables)) {
+    out = out.replaceAll(`{{${key}}}`, value);
+  }
+  return out;
+};
+
+export const applyScaffoldVariablesToFiles = (
+  files: Record<string, ProjectFile>,
+  variables: Record<string, string>,
+): Record<string, ProjectFile> => {
+  const out: Record<string, ProjectFile> = {};
+  for (const [relPath, file] of Object.entries(files)) {
+    out[relPath] = {
+      ...file,
+      content: applyScaffoldVariables(file.content, variables),
+    };
+  }
+  return out;
+};
+
+/**
+ * 按脚手架选项生成完整项目文件树（相对路径 → 内容）。
+ * 不再依赖 templates 复制后再打补丁。
+ * 返回内容仍可能含 `{{...}}` 占位符，写入前请用 `applyScaffoldVariables`。
+ */
+export const generateProjectFiles = (opts: {
+  projectName: string;
+  options: ScaffoldOptions;
+  packageManagerVersion: string;
+  /** @aomex/* 统一版本 */
+  aomexVersion: string;
+  /** prisma / @prisma/* 统一版本（仅 7.x）；非 prisma 可省略 */
+  prismaVersion?: string;
+  /** 文档 UI 路径随机后缀；不传则每次生成新的 */
+  docsPathSecret?: string;
+  /** cron 端口（1024–65535）；不传则每次随机 */
+  cronPort?: number;
+}): Record<string, ProjectFile> => {
+  const { options, packageManagerVersion, aomexVersion, prismaVersion } = opts;
+  const cronPort = opts.cronPort ?? createCronPort();
+  const hasCron = options.consoleMiddlewares.includes('cron');
+  const needsCookie = options.auth === 'bearer' || options.auth === 'jwt';
+  const files: Record<string, ProjectFile> = {};
+
+  const add = (path: string, file: ProjectFile) => {
+    files[path] = file;
+  };
+
+  // —— 固定工具链 ——
+  add(
+    '.gitignore',
+    text(`node_modules/
+.idea/
+dist/
+build/
+.npmrc
+coverage/
+.DS_Store
+*.log
+volumes/
+logs/
+.env*
+!.env.example
+`),
+  );
+  add(
+    '.prettierignore',
+    text(`dist/
+pnpm-lock.yaml
+coverage/
+openapi.json
+build/
+src/generated
+`),
+  );
+  add(
+    '.prettierrc.yml',
+    text(`semi: true
+singleQuote: true
+quoteProps: consistent
+tabWidth: 2
+printWidth: 100
+endOfLine: lf
+trailingComma: all
+bracketSpacing: true
+arrowParens: always
+proseWrap: preserve
+jsxSingleQuote: false
+bracketSameLine: false
+`),
+  );
+  add(
+    '.commitlintrc.yml',
+    text(`extends:
+  - '@commitlint/config-conventional'
+`),
+  );
+  const exec = packageManagerExec(options.packageManager);
+  add(
+    '.husky/pre-commit',
+    sh(`#!/usr/bin/env sh
+
+${exec} prettier --cache --check .
+${exec} tsc
+`),
+  );
+  add(
+    '.husky/commit-msg',
+    sh(`#!/usr/bin/env sh
+
+${exec} commitlint --edit $1
+`),
+  );
+
+  add(AOMEX_SKILL_FILE, text(generateAomexSkill()));
+  add('AGENTS.md', text(generateAgentsMd()));
+
+  const vscodeExts = ['esbenp.prettier-vscode'];
+  if (options.orm === 'prisma') vscodeExts.push('Prisma.prisma');
+  if (options.docker) vscodeExts.push('ms-azuretools.vscode-docker');
+  add(
+    '.vscode/extensions.json',
+    text(JSON.stringify({ recommendations: vscodeExts }, null, 2) + '\n'),
+  );
+  add(
+    '.vscode/settings.json',
+    text(
+      JSON.stringify(
+        {
+          'editor.formatOnSave': true,
+          'editor.defaultFormatter': 'esbenp.prettier-vscode',
+          ...(options.orm === 'prisma'
+            ? { '[prisma]': { 'editor.defaultFormatter': 'Prisma.prisma' } }
+            : {}),
+          'editor.tabSize': 2,
+          'editor.inlayHints.fontSize': 9,
+          'js/ts.inlayHints.parameterNames.enabled': 'all',
+          'js/ts.inlayHints.enumMemberValues.enabled': true,
+          'js/ts.inlayHints.functionLikeReturnTypes.enabled': true,
+          'js/ts.preferences.quoteStyle': 'single',
+          'js/ts.suggest.autoImports': true,
+          'js/ts.experimental.useTsgo': true,
+          'js/ts.tsdk.path': './node_modules/typescript',
+          'cSpell.words': ['openapi', 'aomex'],
+        },
+        null,
+        2,
+      ) + '\n',
+    ),
+  );
+
+  // —— package / tsconfig ——
+  add(
+    'package.json',
+    text(
+      JSON.stringify(
+        generatePackageJson({
+          packageManager: options.packageManager,
+          packageManagerVersion,
+          hasCron,
+          scaffoldOptions: options,
+          aomexVersion,
+          prismaVersion,
+        }),
+        null,
+        2,
+      ) + '\n',
+    ),
+  );
+  add('tsconfig.json', text(generateTsconfig({ orm: options.orm })));
+
+  if (options.packageManager === 'pnpm') {
+    add(
+      'pnpm-workspace.yaml',
+      text(`allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+`),
+    );
+  }
+
+  // —— 配置 ——
+  add(
+    'src/configs/shared.ts',
+    text(`/**
+ * 多环境共用的通用配置。
+ * 各环境文件通过 \`...shared\` 展开后，再覆盖本环境特有项。
+ */
+export const shared = {};
+`),
+  );
+  add(
+    'src/configs/production.ts',
+    text(`import { type RedisOptions } from '@aomex/cache-redis-adapter';
+import { shared } from './shared';
+
+const secrets = process.env as unknown as SecretConfig;
+
+// 正式环境。对应 main 分支
+export const production = {
+  ...shared,
+  redis: <RedisOptions>{
+    host: '',
+    port: 6379,
+    password: secrets.REDIS_PASSWORD || '',
+    db: 0,
+  },
+};
+
+export type Config = typeof production;
+
+export interface SecretConfig {
+  REDIS_PASSWORD?: string;
+}
+`),
+  );
+  add(
+    'src/configs/development.ts',
+    text(`import type { Config, SecretConfig } from './production';
+import type { RedisOptions } from '@aomex/cache-redis-adapter';
+import { shared } from './shared';
+
+const secrets = process.env as unknown as SecretConfig;
+
+// 本地开发环境，对应随意 git 分支
+export const development: Config = {
+  ...shared,
+  redis: <RedisOptions>{
+    host: 'localhost',
+    port: 6379,
+    password: secrets.REDIS_PASSWORD || 'abcde',
+    db: 0,
+  },
+};
+`),
+  );
+  add(
+    'src/configs/integration.ts',
+    text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
+import type { Config, SecretConfig } from './production';
+import { shared } from './shared';
+
+const secrets = process.env as unknown as SecretConfig;
+
+// 线上集成环境，用于功能、交互测试。对应 develop 分支
+export const integration: Config = {
+  ...shared,
+  redis: <RedisOptions>{
+    host: '',
+    port: 6379,
+    password: secrets.REDIS_PASSWORD || '',
+    db: 0,
+  },
+};
+`),
+  );
+  add(
+    'src/configs/index.ts',
+    text(`import 'dotenv/config';
+import type { Config } from './production';
+
+const env = (process.env['NODE_ENV'] || 'development') as
+  | 'development'
+  | 'production'
+  | 'integration';
+
+const configList = await import(\`./\${env}.js\`);
+
+export const configs = configList[env] as Config;
+`),
+  );
+
+  // —— 入口 / 路由 / 指令 ——
+  add(
+    'src/web.ts',
+    text(
+      generateWeb({
+        plugins: options.webPlugins,
+        docsUI: options.docsUI,
+        language: options.language,
+        dynamicLanguage: options.dynamicLanguage,
+        separateListen: options.consoleMiddlewares.includes('openapi'),
+        cluster: options.cluster,
+      }),
+    ),
+  );
+  add(
+    'src/cli.ts',
+    text(
+      generateCli({
+        consoleMiddlewares: options.consoleMiddlewares,
+        language: options.language,
+        cronPort,
+      }),
+    ),
+  );
+  add(
+    'src/routers/index.router.ts',
+    text(`import { Router } from '@aomex/web';
+
+export const router = new Router();
+
+router.get('/', {
+  docs: { showInOpenapi: false },
+  action: (ctx) => {
+    ctx.send('Hello World');
+  },
+});
+`),
+  );
+  add(
+    'src/commanders/hello.cmd.ts',
+    text(`import { Commander, options } from '@aomex/console';
+import { rule } from '@aomex/common';
+
+export const commander = new Commander();
+
+/**
+ * 指令示例
+ *
+ * ${exec} aomex hello
+ * ${exec} aomex hello --user World
+ * ${exec} aomex hello -u aomex.js
+ */
+commander.create('hello', {
+  mount: [
+    options(
+      {
+        user: rule.string().default('World'),
+      },
+      {
+        user: ['u'],
+      },
+    ),
+  ],
+  action: async (ctx) => {
+    const { user } = ctx.options;
+    await ctx.logger.info(\`Hello \${user}\`);
+  },
+});
+`),
+  );
+
+  // —— 服务 ——
+  add('src/services/index.ts', text(generateServicesIndex(options.orm)));
+  if (options.orm !== 'none') {
+    add(
+      'src/services/article.service.ts',
+      text(generateArticleService(options.orm, options.prismaDatabase)),
+    );
+  }
+  add(
+    'src/services/logger.service.ts',
+    text(generateLogger(options.loggerTransports)),
+  );
+  add(
+    'src/services/cache.service.ts',
+    text(generateCacheService(options.auth)),
+  );
+
+  // —— 认证 ——
+  const authContent = generateAuth(options.auth);
+  if (authContent) add('src/middleware/auth.md.ts', text(authContent));
+  if (needsCookie)
+    add('src/constants/cookie-key.ts', text(generateCookieKey()));
+
+  // —— 文档 / 插件附属 ——
+  const docs = generateDocsMiddleware(
+    options.docsUI,
+    opts.projectName,
+    opts.docsPathSecret ?? createDocsPathSecret(),
+  );
+  if (docs) add(`src/middleware/${docs.filename}`, text(docs.content));
+
+  if (options.webPlugins.includes('http-access-log')) {
+    add(
+      'src/middleware/http-access-log.md.ts',
+      text(generateHttpAccessLog(options.loggerTransports)),
+    );
+  }
+  if (options.webPlugins.includes('async-trace')) {
+    add(
+      'src/middleware/slow-trace.md.ts',
+      text(generateSlowTrace(options.language)),
+    );
+  }
+
+  // —— ORM ——
+  if (options.orm === 'prisma' && options.prismaDatabase) {
+    add(
+      'prisma/schema.prisma',
+      text(generatePrismaSchema(options.prismaDatabase)),
+    );
+    add(
+      'prisma.config.ts',
+      text(`import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+});
+`),
+    );
+    add(
+      'src/services/prisma.service.ts',
+      text(generatePrismaClient(options.prismaDatabase)),
+    );
+    add('src/schemas/prisma.schema.ts', text(generatePrismaSchemaModule()));
+    add('src/schemas/article.schema.ts', text(generateArticleSchema()));
+    if (
+      options.prismaDatabase !== 'sqlserver' &&
+      options.prismaDatabase !== 'mongodb'
+    ) {
+      add('src/utils/prisma-json.ts', text(generatePrismaJsonUtil()));
+    }
+    add(
+      'src/routers/article.router.ts',
+      text(
+        generatePrismaArticleRouter(options.language, options.prismaDatabase),
+      ),
+    );
+  } else if (options.orm === 'mongoose') {
+    const mongo = generateMongooseFiles(options.language);
+    add('src/services/mongoose.service.ts', text(mongo.mongoose));
+    add('src/models/article.model.ts', text(mongo.articleModel));
+    add('src/routers/article.router.ts', text(mongo.articleRouter));
+  }
+
+  // —— env / 本地依赖 compose ——
+  const localEnv = generateEnvExample(opts.projectName, options, 'local');
+  const deployEnv = generateEnvExample(opts.projectName, options, 'deploy');
+  add('.env', text(localEnv));
+  add('.env.example', text(localEnv));
+  add('.env.integration', text(deployEnv));
+  add('.env.production', text(deployEnv));
+  add(
+    'docker-compose.yml',
+    text(
+      generateDockerCompose(
+        opts.projectName,
+        options.orm,
+        options.prismaDatabase,
+      ),
+    ),
+  );
+
+  // —— 本地启动 / 构建辅助 ——
+  add(
+    'scripts/start.mjs',
+    text(
+      generateStartScript({
+        orm: options.orm,
+        hasCron,
+        packageManager: options.packageManager,
+      }),
+    ),
+  );
+  add(
+    'scripts/build-fix-source-map.mjs',
+    text(`import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
+const baseDir = path.resolve('./src');
+const files = readdirSync(baseDir, { encoding: 'utf8', recursive: true });
+
+for (const file of files) {
+  if (file.endsWith('.js.map')) {
+    const fullPath = path.join(baseDir, file);
+    const content = JSON.parse(readFileSync(fullPath, 'utf8'));
+    content.sources = content.sources.map((sourceFile) => path.basename(sourceFile));
+    writeFileSync(fullPath, JSON.stringify(content));
+  }
+}
+`),
+  );
+
+  if (options.cluster === 'pm2') {
+    add('ecosystem.config.cjs', text(generatePm2Ecosystem()));
+  }
+
+  // —— Docker 部署（生产 / 集成）——
+  if (options.docker) {
+    add(
+      '.dockerignore',
+      text(`volumes/
+node_modules/
+coverage/
+.git/
+.vscode/
+.cursor/
+.claude/
+.agents/
+.husky/
+.idea/
+.env*
+`),
+    );
+    add(
+      'Dockerfile.production',
+      text(generateDockerfile('production', options.cluster)),
+    );
+    add(
+      'Dockerfile.integration',
+      text(generateDockerfile('integration', options.cluster)),
+    );
+    add(
+      'docker-compose-production.yml',
+      text(
+        generateDeployCompose({
+          env: 'production',
+          hasCron,
+          orm: options.orm,
+          cluster: options.cluster,
+        }),
+      ),
+    );
+    add(
+      'docker-compose-integration.yml',
+      text(
+        generateDeployCompose({
+          env: 'integration',
+          hasCron,
+          orm: options.orm,
+          cluster: options.cluster,
+        }),
+      ),
+    );
+    add(
+      'scripts/build-in-docker.sh',
+      sh(generateBuildInDockerScript(options.packageManager)),
+    );
+    add('scripts/deploy.mjs', text(generateDockerDeployScript()));
+    add('scripts/deploy-api.mjs', text(generateDockerDeployApiScript()));
+    if (hasCron) {
+      add('scripts/deploy-cron.mjs', text(generateDockerDeployCronScript()));
+      add(
+        'scripts/docker-cron-stats.mjs',
+        text(generateDockerCronStatsScript()),
+      );
+      add('scripts/docker-cron-stop.mjs', text(generateDockerCronStopScript()));
+    }
+  }
+
+  add('README.md', text(generateReadmeFromOptions(opts.projectName, options)));
+
+  return files;
+};

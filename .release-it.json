@@ -1,11 +1,15 @@
 {
   "git": {
+    "commit": true,
+    "tag": true,
     "push": true,
-    "commitMessage": "chore: 发布版本 v${version}",
+    "commitMessage": "chore(release): ${version}",
+    "tagName": "${version}",
     "requireBranch": "main"
   },
   "github": {
-    "release": true
+    "release": true,
+    "releaseName": "${version}"
   },
   "npm": {
     "publish": true
