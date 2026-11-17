@@ -11,6 +11,7 @@ import { selectNodeVersion } from './select-node-version';
 import { selectOptions } from './select-options';
 import { applyScaffoldVariables, generateProjectFiles } from './project-files';
 import {
+  packageManagerExec,
   resolveAomexVersion,
   resolvePackageManagerVersion,
   resolvePrismaVersion,
@@ -107,14 +108,15 @@ const { error } = await terminal.runTasks([
     title: '生成prisma客户端',
     skip: async () => options.orm !== 'prisma',
     task: async () => {
-      const pm = options.packageManager;
-      const exec =
-        pm === 'pnpm'
-          ? 'pnpm exec'
-          : pm === 'yarn'
-            ? 'yarn exec'
-            : 'npm exec --';
+      const exec = packageManagerExec(options.packageManager);
       await runShell(`${exec} prisma generate`);
+    },
+  },
+  {
+    title: '格式化代码',
+    task: async () => {
+      const exec = packageManagerExec(options.packageManager);
+      await runShell(`${exec} prettier --cache --write .`);
     },
   },
 ]);
