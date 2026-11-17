@@ -38,21 +38,30 @@ pnpm start
 
 ## 常用脚本
 
-| 命令              | 说明                               |
-| ----------------- | ---------------------------------- |
-| `pnpm start`      | 拉起本地依赖并启动 HTTP（及 cron） |
-| `pnpm pm2:start`  | PM2 启动（编译后的 src/web.js）    |
-| `pnpm pm2:reload` | PM2 零停机重载                     |
-| `pnpm pm2:stop`   | PM2 停止                           |
+| 命令                      | 说明                               |
+| ------------------------- | ---------------------------------- |
+| `pnpm start`              | 拉起本地依赖并启动 HTTP（及 cron） |
+| `pnpm deploy:integration` | 同步环境变量并用 tsx 启动（集成）  |
+| `pnpm deploy:production`  | 同步环境变量并用 tsx 启动（生产）  |
+| `pnpm pm2:start`          | PM2 启动（tsx 直接跑 src/web.ts）  |
+| `pnpm pm2:reload`         | PM2 零停机重载                     |
+| `pnpm pm2:stop`           | PM2 停止                           |
 
 ## 部署
 
-编译后用 PM2 托管：
+集成环境：
 
 ```bash
-pnpm exec tsc && pnpm exec tsc-alias
-pnpm pm2:start
+pnpm deploy:integration
 ```
+
+生产环境：
+
+```bash
+pnpm deploy:production
+```
+
+会同步 `.env.*`，并用 PM2 + tsx 直接跑 `src/web.ts`（与本地一致，不编译）。
 
 ## 目录结构
 

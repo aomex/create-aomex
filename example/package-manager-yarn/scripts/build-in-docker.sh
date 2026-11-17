@@ -9,8 +9,9 @@ corepack enable # package.json => packageManager
 yarn install --frozen-lockfile
 yarn exec tsc
 yarn exec tsc-alias --resolve-full-paths
+node ./scripts/build-minify.mjs
+node ./scripts/build-fix-source-map.mjs
 rm -rf src
 mv build/src .
-node ./scripts/build-fix-source-map.mjs
 yarn install --production --frozen-lockfile
 rm -rf node_modules/@types node_modules/*/*.d.ts

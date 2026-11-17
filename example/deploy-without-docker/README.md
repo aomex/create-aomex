@@ -38,9 +38,27 @@ pnpm start
 
 ## 常用脚本
 
-| 命令         | 说明                               |
-| ------------ | ---------------------------------- |
-| `pnpm start` | 拉起本地依赖并启动 HTTP（及 cron） |
+| 命令                      | 说明                               |
+| ------------------------- | ---------------------------------- |
+| `pnpm start`              | 拉起本地依赖并启动 HTTP（及 cron） |
+| `pnpm deploy:integration` | 同步环境变量并用 tsx 启动（集成）  |
+| `pnpm deploy:production`  | 同步环境变量并用 tsx 启动（生产）  |
+
+## 部署
+
+集成环境：
+
+```bash
+pnpm deploy:integration
+```
+
+生产环境：
+
+```bash
+pnpm deploy:production
+```
+
+会同步 `.env.*`，并用 tsx 直接跑 `src/web.ts`（与本地一致，不编译）。
 
 ## 目录结构
 

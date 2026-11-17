@@ -1,6 +1,7 @@
 import type { ScaffoldOptions } from './types';
 import {
   generateAuth,
+  generateBareDeployScript,
   generateBuildInDockerScript,
   generateCacheService,
   generateCli,
@@ -232,12 +233,20 @@ ${exec} commitlint --edit $1
   if (options.packageManager === 'pnpm') {
     add(
       'pnpm-workspace.yaml',
-      text(`allowBuilds:
+      text(
+        options.docker
+          ? `allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   esbuild: true
   prisma: true
-`),
+`
+          : `allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true
+`,
+      ),
     );
   }
 
@@ -523,12 +532,74 @@ export default defineConfig({
       }),
     ),
   );
-  add(
-    'scripts/build-fix-source-map.mjs',
-    text(`import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+  if (options.cluster === 'pm2') {
+    add(
+      'ecosystem.config.cjs',
+      text(generatePm2Ecosystem({ docker: options.docker })),
+    );
+  }
+
+  // —— 无 Docker：本机 / 裸机部署（直接跑 TS）——
+  if (!options.docker) {
+    add(
+      'scripts/deploy.mjs',
+      text(
+        generateBareDeployScript({
+          packageManager: options.packageManager,
+          cluster: options.cluster,
+          orm: options.orm,
+        }),
+      ),
+    );
+  }
+
+  // —— Docker 部署（生产 / 集成）——
+  if (options.docker) {
+    add(
+      'scripts/build-minify.mjs',
+      text(`import * as esbuild from 'esbuild';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-const baseDir = path.resolve('./src');
+const tsconfig = JSON.parse(readFileSync('./tsconfig.json', 'utf8'));
+const target = tsconfig.compilerOptions?.target ?? 'esnext';
+
+const baseDir = path.resolve('./build');
+const entryPoints = readdirSync(baseDir, { encoding: 'utf8', recursive: true })
+  .filter((file) => file.endsWith('.js'))
+  .map((file) => path.join(baseDir, file));
+
+if (entryPoints.length === 0) {
+  console.error('No .js files found in build/');
+  process.exit(1);
+}
+
+await esbuild.build({
+  entryPoints,
+  outdir: baseDir,
+  outbase: baseDir,
+  allowOverwrite: true,
+  minify: true,
+  keepNames: true,
+  sourcemap: true,
+  sourcesContent: false,
+  legalComments: 'none',
+  drop: ['debugger'],
+  charset: 'utf8',
+  target,
+  platform: 'node',
+  format: 'esm',
+  logLevel: 'info',
+});
+`),
+    );
+    add(
+      'scripts/build-fix-source-map.mjs',
+      text(`import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
+const baseDir = path.resolve('./build');
 const files = readdirSync(baseDir, { encoding: 'utf8', recursive: true });
 
 for (const file of files) {
@@ -540,14 +611,7 @@ for (const file of files) {
   }
 }
 `),
-  );
-
-  if (options.cluster === 'pm2') {
-    add('ecosystem.config.cjs', text(generatePm2Ecosystem()));
-  }
-
-  // —— Docker 部署（生产 / 集成）——
-  if (options.docker) {
+    );
     add(
       '.dockerignore',
       text(`volumes/

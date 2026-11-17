@@ -9,8 +9,9 @@ corepack enable # package.json => packageManager
 npm ci
 npm exec -- tsc
 npm exec -- tsc-alias --resolve-full-paths
+node ./scripts/build-minify.mjs
+node ./scripts/build-fix-source-map.mjs
 rm -rf src
 mv build/src .
-node ./scripts/build-fix-source-map.mjs
 npm prune --omit=dev
 rm -rf node_modules/@types node_modules/*/*.d.ts

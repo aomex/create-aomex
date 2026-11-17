@@ -644,12 +644,16 @@ import { fileURLToPath } from 'node:url';
 `
     : '';
 
+  const needsIsProduction =
+    opts.docsUI !== 'none' || opts.plugins.includes('http-access-log');
+  const isProductionDecl = needsIsProduction
+    ? `\nconst isProduction = process.env['NODE_ENV'] === 'production';\n`
+    : '\n';
+
   return `import 'dotenv/config';
 ${headImports}${imports.join('\n')}
 import { services } from '@/services';
-
-const isProduction = process.env['NODE_ENV'] === 'production';
-
+${isProductionDecl}
 export const app = new WebApp({
   services,
   logger: services.logger,
@@ -1463,19 +1467,26 @@ ${clusterHint}    ports:
 ${cron}`;
 };
 
-export const generatePm2Ecosystem = (): string => `module.exports = {
+export const generatePm2Ecosystem = (opts: { docker: boolean }): string => {
+  // Docker 镜像内已是编译后的 JS；无 Docker 与本地一致直接跑 TS
+  const script = opts.docker ? 'src/web.js' : 'src/web.ts';
+  const nodeArgs = opts.docker
+    ? '--enable-source-maps --stack-trace-limit=30'
+    : '--import tsx/esm --stack-trace-limit=30';
+  return `module.exports = {
   apps: [
     {
       name: 'api',
-      script: 'src/web.js',
+      script: '${script}',
       instances: 'max',
       exec_mode: 'cluster',
       // 勿与 clusterListen / 容器多副本叠用
-      node_args: '--enable-source-maps --stack-trace-limit=50',
+      node_args: '${nodeArgs}',
     },
   ],
 };
 `;
+};
 
 export const generateDockerCompose = (
   projectName: string,
@@ -1672,6 +1683,9 @@ export const generatePackageJson = (opts: {
       scripts['cron:stats'] = 'node scripts/docker-cron-stats.mjs';
       scripts['cron:stop'] = 'node scripts/docker-cron-stop.mjs';
     }
+  } else {
+    scripts['deploy:production'] = 'node scripts/deploy.mjs production';
+    scripts['deploy:integration'] = 'node scripts/deploy.mjs integration';
   }
 
   if (cluster === 'pm2') {
@@ -1789,7 +1803,7 @@ export const generateDockerfile = (
   const cmd =
     cluster === 'pm2'
       ? `CMD ["pm2-runtime", "ecosystem.config.cjs"]`
-      : `CMD ["node", "--enable-source-maps", "--stack-trace-limit=50", "src/web.js"]`;
+      : `CMD ["node", "--enable-source-maps", "--stack-trace-limit=30", "src/web.js"]`;
 
   return `FROM node:{{nodeVersion}}
 COPY . /codes
@@ -1943,11 +1957,80 @@ corepack enable # package.json => packageManager
 ${installDev}
 ${exec} tsc
 ${exec} tsc-alias --resolve-full-paths
+node ./scripts/build-minify.mjs
+node ./scripts/build-fix-source-map.mjs
 rm -rf src
 mv build/src .
-node ./scripts/build-fix-source-map.mjs
 ${installProd}
 rm -rf node_modules/@types node_modules/*/*.d.ts
+`;
+};
+
+/** 无 Docker：与本地一致直接跑 TS（tsx），可选 PM2 拉起 */
+export const generateBareDeployScript = (opts: {
+  packageManager: PackageManager;
+  cluster: ClusterStrategy;
+  orm: Orm;
+}): string => {
+  const exec = packageManagerExec(opts.packageManager);
+  const prismaGenerate =
+    opts.orm === 'prisma'
+      ? `
+run('${exec} prisma generate');
+`
+      : '';
+  const startBlock =
+    opts.cluster === 'pm2'
+      ? `
+run('pm2 startOrReload ecosystem.config.cjs --update-env');
+`
+      : `
+const child = spawn(
+  'node',
+  ['--import', 'tsx/esm', '--stack-trace-limit=30', 'src/web.ts'],
+  { stdio: 'inherit', env: { ...process.env, NODE_ENV: env } },
+);
+child.on('exit', (code, signal) => {
+  if (signal) process.exit(1);
+  process.exit(code ?? 1);
+});
+`;
+
+  const imports =
+    opts.cluster === 'pm2'
+      ? `import { execSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import process from 'node:process';`
+      : `import { execSync, spawn } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import process from 'node:process';`;
+
+  return `${imports}
+
+const env = process.argv[2];
+if (env !== 'production' && env !== 'integration') {
+  console.error('usage: node scripts/deploy.mjs <production|integration>');
+  process.exit(1);
+}
+
+const run = (cmd) => {
+  console.log('+', cmd);
+  execSync(cmd, { stdio: 'inherit', env: { ...process.env, NODE_ENV: env } });
+};
+
+const envFile = \`.env.\${env}\`;
+if (!existsSync(envFile)) {
+  console.error(\`missing \${envFile}\`);
+  process.exit(1);
+}
+const envContent = readFileSync(envFile, 'utf8');
+writeFileSync(
+  '.env',
+  /^(NODE_ENV=)/m.test(envContent)
+    ? envContent.replace(/^NODE_ENV=.*$/m, \`NODE_ENV=\${env}\`)
+    : \`\${envContent.trimEnd()}\\nNODE_ENV=\${env}\\n\`,
+);
+${prismaGenerate}${startBlock}
 `;
 };
 
@@ -2061,7 +2144,6 @@ export const buildDependencyGroups = (
 
   const devDeps = new Set<string>([
     'typescript@^7.0.2',
-    'tsx@^4.23.15',
     'tsc-alias@^1.9.10',
     '@types/node@^26.6.6',
     'husky@^9.1.7',
@@ -2069,6 +2151,14 @@ export const buildDependencyGroups = (
     '@commitlint/cli@^21.2.4',
     '@commitlint/config-conventional@^21.2.4',
   ]);
+
+  // 无 Docker 运行时直接跑 TS，tsx 需在 dependencies；Docker 仅本地 start 用
+  if (opts.docker) {
+    devDeps.add('tsx@^4.23.15');
+    devDeps.add('esbuild@^0.28.2');
+  } else {
+    deps.add('tsx@^4.23.15');
+  }
 
   for (const plugin of opts.webPlugins) {
     switch (plugin) {

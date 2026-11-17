@@ -212,13 +212,34 @@ const buildScriptsTable = (opts: ReadmeOpts, zh: boolean): string => {
         [`${pm} cron:stop`, zh ? '停止定时任务' : 'Stop cron jobs'],
       );
     }
+  } else {
+    rows.push(
+      [
+        `${pm} deploy:integration`,
+        zh
+          ? '同步环境变量并用 tsx 启动（集成）'
+          : 'Sync env and start with tsx (integration)',
+      ],
+      [
+        `${pm} deploy:production`,
+        zh
+          ? '同步环境变量并用 tsx 启动（生产）'
+          : 'Sync env and start with tsx (production)',
+      ],
+    );
   }
 
   if (opts.cluster === 'pm2') {
     rows.push(
       [
         `${pm} pm2:start`,
-        zh ? 'PM2 启动（编译后的 src/web.js）' : 'PM2 start (built src/web.js)',
+        zh
+          ? opts.docker
+            ? 'PM2 启动（编译后的 src/web.js）'
+            : 'PM2 启动（tsx 直接跑 src/web.ts）'
+          : opts.docker
+            ? 'PM2 start (built src/web.js)'
+            : 'PM2 start (tsx src/web.ts)',
       ],
       [`${pm} pm2:reload`, zh ? 'PM2 零停机重载' : 'PM2 zero-downtime reload'],
       [`${pm} pm2:stop`, zh ? 'PM2 停止' : 'PM2 stop'],
@@ -269,6 +290,15 @@ export const generateReadme = (opts: {
   const docsName = docsLabel(opts.docsUI);
   const docsFile = opts.docsUI === 'redoc' ? 'redoc.md.ts' : 'swagger.md.ts';
 
+  const bareDeployHintZh =
+    cluster === 'pm2'
+      ? '会同步 `.env.*`，并用 PM2 + tsx 直接跑 `src/web.ts`（与本地一致，不编译）。'
+      : '会同步 `.env.*`，并用 tsx 直接跑 `src/web.ts`（与本地一致，不编译）。';
+  const bareDeployHintEn =
+    cluster === 'pm2'
+      ? 'Syncs `.env.*`, then PM2 + tsx runs `src/web.ts` (same as local, no compile).'
+      : 'Syncs `.env.*`, then tsx runs `src/web.ts` (same as local, no compile).';
+
   const deploySectionZh = docker
     ? `## 部署
 
@@ -286,17 +316,22 @@ ${pm} deploy:production
 
 镜像构建与容器编排见 \`Dockerfile.*\`、\`docker-compose-*.yml\`。
 `
-    : cluster === 'pm2'
-      ? `## 部署
+    : `## 部署
 
-编译后用 PM2 托管：
+集成环境：
 
 \`\`\`bash
-${pm} exec tsc && ${pm} exec tsc-alias
-${pm} pm2:start
+${pm} deploy:integration
 \`\`\`
-`
-      : '';
+
+生产环境：
+
+\`\`\`bash
+${pm} deploy:production
+\`\`\`
+
+${bareDeployHintZh}
+`;
 
   const deploySectionEn = docker
     ? `## Deploy
@@ -315,17 +350,22 @@ ${pm} deploy:production
 
 See \`Dockerfile.*\` and \`docker-compose-*.yml\` for images and orchestration.
 `
-    : cluster === 'pm2'
-      ? `## Deploy
+    : `## Deploy
 
-Build then run under PM2:
+Integration:
 
 \`\`\`bash
-${pm} exec tsc && ${pm} exec tsc-alias
-${pm} pm2:start
+${pm} deploy:integration
 \`\`\`
-`
-      : '';
+
+Production:
+
+\`\`\`bash
+${pm} deploy:production
+\`\`\`
+
+${bareDeployHintEn}
+`;
 
   if (zh) {
     const docsSection =

@@ -9,9 +9,10 @@ corepack enable # package.json => packageManager
 pnpm install --no-prod --frozen-lockfile --no-runtime
 pnpm exec tsc
 pnpm exec tsc-alias --resolve-full-paths
+node ./scripts/build-minify.mjs
+node ./scripts/build-fix-source-map.mjs
 rm -rf src
 mv build/src .
-node ./scripts/build-fix-source-map.mjs
 pnpm install --prod --no-runtime
 pnpm store prune
 rm -rf node_modules/@types node_modules/*/*.d.ts

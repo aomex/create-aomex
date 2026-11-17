@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-const baseDir = path.resolve('./src');
+const baseDir = path.resolve('./build');
 const files = readdirSync(baseDir, { encoding: 'utf8', recursive: true });
 
 for (const file of files) {

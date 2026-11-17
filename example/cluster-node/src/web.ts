@@ -3,8 +3,6 @@ import { clusterListen, formatError, routers, WebApp } from '@aomex/web';
 import { rule } from '@aomex/common';
 import { services } from '@/services';
 
-const isProduction = process.env['NODE_ENV'] === 'production';
-
 export const app = new WebApp({
   services,
   logger: services.logger,
