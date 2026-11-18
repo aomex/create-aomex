@@ -29,6 +29,7 @@
     "@aomex/common": "4.0.0",
     "@aomex/console": "4.0.0",
     "@aomex/cors": "4.0.0",
+    "@aomex/cron": "4.0.0",
     "@aomex/etag": "4.0.0",
     "@aomex/helmet": "4.0.0",
     "@aomex/logger": "4.0.0",

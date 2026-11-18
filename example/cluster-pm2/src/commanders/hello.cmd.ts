@@ -6,9 +6,9 @@ export const commander = new Commander();
 /**
  * 指令示例
  *
- * pnpm exec aomex hello
- * pnpm exec aomex hello --user World
- * pnpm exec aomex hello -u aomex.js
+ * pnpm aomex hello
+ * pnpm aomex hello --user World
+ * pnpm aomex hello -u aomex.js
  */
 commander.create('hello', {
   mount: [

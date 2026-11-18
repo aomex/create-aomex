@@ -12,7 +12,7 @@
 | 文档 UI  | 无     |
 | 部署方式 | Docker |
 | 时区     | UTC    |
-| 定时任务 | 未启用 |
+| 定时任务 | 已启用 |
 
 ## 环境准备
 
@@ -35,6 +35,7 @@ npm start
 
 - `docker compose up` 拉起本地依赖
 - 启动 HTTP 服务（`src/web.ts`）
+- 启动 cron（`aomex cron:start`）
 
 ## 常用脚本
 
@@ -44,6 +45,9 @@ npm start
 | `npm deploy:integration` | 部署到集成环境                     |
 | `npm deploy:production`  | 部署到生产环境                     |
 | `npm deploy:api`         | 仅重建并重启 api 容器              |
+| `npm deploy:cron`        | 仅重建并重启 cron 容器             |
+| `npm cron:stats`         | 查看定时任务状态                   |
+| `npm cron:stop`          | 停止定时任务                       |
 
 ## 部署
 

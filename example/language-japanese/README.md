@@ -4,15 +4,15 @@ Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs befo
 
 ## Stack
 
-| Item            | Value    |
-| --------------- | -------- |
-| Package manager | pnpm     |
-| ORM             | None     |
-| Auth            | None     |
-| Docs UI         | None     |
-| Deploy          | Docker   |
-| Timezone        | UTC      |
-| Cron            | Disabled |
+| Item            | Value   |
+| --------------- | ------- |
+| Package manager | pnpm    |
+| ORM             | None    |
+| Auth            | None    |
+| Docs UI         | None    |
+| Deploy          | Docker  |
+| Timezone        | UTC     |
+| Cron            | Enabled |
 
 ## Prerequisites
 
@@ -35,6 +35,7 @@ This will:
 
 - `docker compose up` local dependencies
 - start HTTP (`src/web.ts`)
+- start cron (`aomex cron:start`)
 
 ## Scripts
 
@@ -44,6 +45,9 @@ This will:
 | `pnpm deploy:integration` | Deploy to integration              |
 | `pnpm deploy:production`  | Deploy to production               |
 | `pnpm deploy:api`         | Rebuild/restart api only           |
+| `pnpm deploy:cron`        | Rebuild/restart cron only          |
+| `pnpm cron:stats`         | Show cron job stats                |
+| `pnpm cron:stop`          | Stop cron jobs                     |
 
 ## Deploy
 

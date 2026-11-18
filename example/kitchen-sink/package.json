@@ -27,6 +27,7 @@
   "dependencies": {
     "@aomex/async-trace": "4.0.0",
     "@aomex/auth": "4.0.0",
+    "@aomex/auth-jwt-strategy": "4.0.0",
     "@aomex/cache": "4.0.0",
     "@aomex/cache-redis-adapter": "4.0.0",
     "@aomex/common": "4.0.0",

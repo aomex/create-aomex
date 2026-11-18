@@ -1,8 +1,8 @@
 # AGENTS.md
 
-本项目基于 [aomex](https://aomex.js.org)。
+本仓库是 **create-aomex 脚手架**（生成 aomex 项目），不是业务应用。
 
-编写或修改 `src/web.ts`、`src/cli.ts`、routers、middleware、services、schemas，或用户提到 aomex / WebApp / Router / combineServices 时：
-
-1. **先阅读并遵循** 根目录 [`aomex-skill.md`](./aomex-skill.md)
-2. 再动手改代码
+- 改交互 / 生成逻辑：看 `src/`（如 `select-options`、`generators`、`project-files`）
+- 改「写入用户项目的 AI 指引」：只改 [`src/skills/aomex-skill.ts`](./src/skills/aomex-skill.ts)  
+  （脚手架会把它写成用户项目根目录的 `aomex-skill.md`）
+- 本仓库根目录**不要**再放一份 `aomex-skill.md`，避免和生成器双份漂移

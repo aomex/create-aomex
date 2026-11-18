@@ -35,7 +35,7 @@ type ReadmeOpts = {
   hasCron: boolean;
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
-  auth: AuthStrategy;
+  auth: AuthStrategy[];
   hasCookie: boolean;
   docker: boolean;
   timezone: string;
@@ -50,7 +50,7 @@ const ormLabel = (orm: Orm, db?: PrismaDatabase, zh?: boolean): string => {
   return zh ? '无 ORM' : 'None';
 };
 
-const authLabel = (auth: AuthStrategy, zh?: boolean): string => {
+const authStrategyLabel = (auth: AuthStrategy): string => {
   switch (auth) {
     case 'bearer':
       return 'Bearer Token';
@@ -58,9 +58,12 @@ const authLabel = (auth: AuthStrategy, zh?: boolean): string => {
       return 'JWT';
     case 'api-key':
       return 'API Key';
-    case 'none':
-      return zh ? '无' : 'None';
   }
+};
+
+const authLabel = (auth: AuthStrategy[], zh?: boolean): string => {
+  if (auth.length === 0) return zh ? '无' : 'None';
+  return auth.map(authStrategyLabel).join(' + ');
 };
 
 const docsLabel = (docs: DocsUI): string => {
@@ -262,7 +265,7 @@ export const generateReadme = (opts: {
   hasCron: boolean;
   orm?: Orm;
   prismaDatabase?: PrismaDatabase;
-  auth?: AuthStrategy;
+  auth?: AuthStrategy[];
   docker?: boolean;
   timezone: string;
   cluster?: ClusterStrategy;
@@ -272,6 +275,7 @@ export const generateReadme = (opts: {
   const orm: Orm = opts.orm ?? (opts.hasPrisma ? 'prisma' : 'none');
   const docker = opts.docker ?? true;
   const cluster = opts.cluster ?? 'none';
+  const auth = opts.auth ?? [];
   const readme: ReadmeOpts = {
     projectName: opts.projectName,
     language: opts.language,
@@ -280,8 +284,8 @@ export const generateReadme = (opts: {
     hasCron: opts.hasCron,
     orm,
     prismaDatabase: opts.prismaDatabase,
-    auth: opts.auth ?? 'none',
-    hasCookie: opts.auth === 'bearer' || opts.auth === 'jwt',
+    auth,
+    hasCookie: auth.includes('bearer') || auth.includes('jwt'),
     docker,
     timezone: opts.timezone,
     cluster,

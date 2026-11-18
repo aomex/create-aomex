@@ -1,51 +1,39 @@
-import { terminal } from '@aomex/console';
-import { select } from '@inquirer/prompts';
-
-export const selectNodeVersion = async (argv: Record<string, any>) => {
-  let nodeVersion: string = argv['node'];
-  if (!nodeVersion) {
-    const nodes = await promise;
-    nodeVersion = await select({
-      message: '请选择node.js稳定版本',
-      choices: nodes.map((item) => {
-        return {
-          name: `${item.version} ${terminal.style(['gray', 'dim'], item.date)}`,
-          value: item.version,
-          short: item.version,
-        };
-      }),
-      loop: false,
-    });
+/**
+ * 解析 Node.js 版本：默认取最新 LTS（稳定版）；可用 `--node` 覆盖。
+ */
+export const selectNodeVersion = async (
+  argv: Record<string, any>,
+): Promise<string> => {
+  const fromArg = argv['node'];
+  if (typeof fromArg === 'string' && fromArg.trim()) {
+    return fromArg.trim().replace(/^v/, '');
   }
 
-  return nodeVersion.replace(/^v/, '');
+  const nodes = await fetchNodes();
+  const latest = nodes[0];
+  if (!latest) {
+    throw new Error('无法获取 Node.js 最新稳定版');
+  }
+  return latest.version.replace(/^v/, '');
 };
 
 const fetchNodes = async () => {
   const response = await fetch(
     'https://nodejs.org/download/release/index.json',
   );
+  if (!response.ok) {
+    throw new Error(`无法获取 Node.js 版本列表：HTTP ${response.status}`);
+  }
   const nodes = (await response.json()) as {
     version: string;
-    lts: boolean;
+    lts: boolean | string;
     date: string;
   }[];
 
-  return nodes
-    .map((item) => {
-      return {
-        ...item,
-        versions: item.version.slice(1).split('.').map(Number) as [
-          number,
-          number,
-          number,
-        ],
-      };
-    })
-    .filter((item) => {
-      if (!item.lts) return false;
-      return item.versions[0]! >= 24;
-    });
+  // index.json 按版本新→旧排列；取最新 LTS 且 major >= 24
+  return nodes.filter((item) => {
+    if (!item.lts) return false;
+    const major = Number(item.version.slice(1).split('.')[0]);
+    return major >= 24;
+  });
 };
-
-const promise = fetchNodes();

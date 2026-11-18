@@ -7,8 +7,8 @@ set -ex
 # export COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 corepack enable # package.json => packageManager
 pnpm install --no-prod --frozen-lockfile --no-runtime
-pnpm exec tsc
-pnpm exec tsc-alias --resolve-full-paths
+pnpm tsc
+pnpm tsc-alias --resolve-full-paths
 node ./scripts/build-minify.mjs
 node ./scripts/build-fix-source-map.mjs
 rm -rf src

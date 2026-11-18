@@ -1,16 +1,17 @@
 import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { clusterListen, envelope, routers, WebApp } from '@aomex/web';
+import { clusterListen, routers, WebApp } from '@aomex/web';
+// import { envelope } from '@aomex/web';
 import { globalErrorRewrite } from '@/middleware/format-error.md';
 import { httpAccessLog } from '@/middleware/http-access-log.md';
 import { responseTime } from '@aomex/response-time';
-import { slowTrace } from '@/middleware/slow-trace.md';
 import { cors } from '@aomex/cors';
+import { rateLimit } from '@aomex/rate-limit';
 import { compress } from '@aomex/compress';
 import { etag } from '@aomex/etag';
+import { slowTrace } from '@/middleware/slow-trace.md';
 import { prettyJson } from '@aomex/pretty-json';
-import { rateLimit } from '@aomex/rate-limit';
 import { helmet } from '@aomex/helmet';
 import { swagger } from '@/middleware/swagger.md';
 import { services } from '@/services';
@@ -20,28 +21,31 @@ const isProduction = process.env['NODE_ENV'] === 'production';
 export const app = new WebApp({
   services,
   logger: services.logger,
-  language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
+  // 按 Accept-Language 自动切换语言时，改用：
+  // language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
+  language: { mode: 'fixed', language: 'zh-CN' },
   proxyIP: { mode: 'detect' },
-  envelope: {
-    content: {
-      success: envelope.success,
-      statusCode: envelope.statusCode,
-      data: envelope.payload,
-    },
-  },
+  // 如果要把所有请求都封装成固定格式并调整状态码为200，请解开下面的注释
+  // envelope: {
+  //   content: {
+  //     success: envelope.success,
+  //     statusCode: envelope.statusCode,
+  //     data: envelope.payload,
+  //   },
+  // },
   mount: [
     httpAccessLog.skip(isProduction),
     responseTime(),
-    globalErrorRewrite,
-    slowTrace,
     cors({
       // 如果请求需要携带cookies，请解开下面这行注释
       // credentials: true,
     }),
+    rateLimit(),
     compress(),
     etag(),
+    globalErrorRewrite,
+    slowTrace,
     prettyJson(),
-    rateLimit(),
     swagger.skip(isProduction),
     helmet(),
     routers('./src/routers'),

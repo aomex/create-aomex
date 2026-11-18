@@ -12,7 +12,7 @@
 | 文档 UI  | 无     |
 | 部署方式 | PM2    |
 | 时区     | UTC    |
-| 定时任务 | 未启用 |
+| 定时任务 | 已启用 |
 
 ## 环境准备
 
@@ -35,6 +35,7 @@ pnpm start
 
 - `docker compose up` 拉起本地依赖
 - 启动 HTTP 服务（`src/web.ts`）
+- 启动 cron（`aomex cron:start`）
 
 ## 常用脚本
 

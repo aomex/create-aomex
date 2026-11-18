@@ -6,9 +6,9 @@ export const commander = new Commander();
 /**
  * 指令示例
  *
- * yarn exec aomex hello
- * yarn exec aomex hello --user World
- * yarn exec aomex hello -u aomex.js
+ * yarn aomex hello
+ * yarn aomex hello --user World
+ * yarn aomex hello -u aomex.js
  */
 commander.create('hello', {
   mount: [

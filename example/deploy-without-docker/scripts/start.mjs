@@ -10,8 +10,10 @@ const api = spawn('node', ['--import', 'tsx/esm', '--watch', 'src/web.ts'], {
   stdio: 'inherit',
   env: process.env,
 });
+const cron = spawn('pnpm', ['aomex', 'cron:start'], { stdio: 'inherit', env: process.env });
 
 process.on('SIGINT', () => {
+  cron.kill('SIGINT');
   api.kill('SIGINT');
   execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
 });

@@ -11,3 +11,10 @@ services:
     # 已用 PM2 cluster；勿再 --scale api / clusterListen
     ports:
       - 3000:3000
+  cron:
+    image: snapshot-demo:integration
+    env_file:
+      - .env.integration
+    init: true
+    command: aomex cron:start
+    restart: unless-stopped

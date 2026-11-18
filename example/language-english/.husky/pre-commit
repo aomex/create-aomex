@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
-pnpm exec prettier --cache --check .
-pnpm exec tsc
+pnpm prettier --cache --check .
+pnpm tsc

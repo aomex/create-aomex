@@ -10,7 +10,28 @@ export type Orm = 'prisma' | 'mongoose' | 'none';
 export type PrismaDatabase =
   'postgresql' | 'mysql' | 'sqlite' | 'sqlserver' | 'mongodb' | 'cockroachdb';
 
-export type AuthStrategy = 'bearer' | 'jwt' | 'api-key' | 'none';
+/** 可选认证策略（空数组表示无认证） */
+export type AuthStrategy = 'bearer' | 'jwt' | 'api-key';
+
+export const AUTH_STRATEGIES: readonly AuthStrategy[] = [
+  'bearer',
+  'jwt',
+  'api-key',
+] as const;
+
+/** 规范化认证选项：含 `none` 或空 → []；否则去重并去掉 none */
+export const normalizeAuthStrategies = (
+  raw: readonly string[],
+): AuthStrategy[] => {
+  if (raw.length === 0 || raw.includes('none')) return [];
+  return [
+    ...new Set(
+      raw.filter((s): s is AuthStrategy =>
+        (AUTH_STRATEGIES as readonly string[]).includes(s),
+      ),
+    ),
+  ];
+};
 
 export type DocsUI = 'swagger' | 'redoc' | 'none';
 
@@ -60,19 +81,13 @@ export interface ScaffoldOptions {
   packageManager: PackageManager;
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
-  auth: AuthStrategy;
+  /** 认证策略，可多选；空数组表示无认证 */
+  auth: AuthStrategy[];
   webPlugins: WebPlugin[];
   docsUI: DocsUI;
   loggerTransports: LoggerTransport[];
   consoleMiddlewares: ConsoleMiddleware[];
   language: DefaultLanguage;
-  /** WebApp language mode: dynamic（按 Accept-Language） */
-  dynamicLanguage: boolean;
-  /**
-   * 统一响应体套壳：`WebApp.envelope`，写出前包进声明结构并固定 HTTP 200。
-   * @see https://aomex.js.org （envelope / formatError）
-   */
-  responseEnvelope: boolean;
   /** 是否生成 Docker 部署产物（Dockerfile / deploy compose / deploy 脚本） */
   docker: boolean;
   /** IANA 时区：只写入 .env*（Docker compose env_file / dotenv / 本地 start 共用） */

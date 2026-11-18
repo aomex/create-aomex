@@ -29,113 +29,129 @@ const runShell = async (command: string) => {
   });
 };
 
-const argv = yargsParser(process.argv.slice(2));
-const projectName = await inputProject(argv);
-const nodeVersion = await selectNodeVersion(argv);
-const options = await selectOptions(argv);
-const packageManagerVersion = await resolvePackageManagerVersion(
-  options.packageManager,
-);
-const aomexVersion = await resolveAomexVersion();
-const prismaVersion =
-  options.orm === 'prisma' ? await resolvePrismaVersion() : undefined;
-const targetDir = path.resolve(projectName);
+const isExitPromptError = (err: unknown): boolean =>
+  err instanceof Error && err.name === 'ExitPromptError';
 
-const { error } = await terminal.runTasks([
-  {
-    title: '创建目录',
-    task: async () => {
-      await mkdir(targetDir, { recursive: true });
-      process.chdir(targetDir);
-      await setTimeout(500);
+const main = async () => {
+  const argv = yargsParser(process.argv.slice(2));
+  const projectName = await inputProject(argv);
+  const nodeVersion = await selectNodeVersion(argv);
+  const options = await selectOptions(argv);
+  const packageManagerVersion = await resolvePackageManagerVersion(
+    options.packageManager,
+  );
+  const aomexVersion = await resolveAomexVersion();
+  const prismaVersion =
+    options.orm === 'prisma' ? await resolvePrismaVersion() : undefined;
+  const targetDir = path.resolve(projectName);
+
+  const { error } = await terminal.runTasks([
+    {
+      title: '创建目录',
+      task: async () => {
+        await mkdir(targetDir, { recursive: true });
+        process.chdir(targetDir);
+        await setTimeout(500);
+      },
     },
-  },
-  {
-    title: '生成项目文件',
-    task: async () => {
-      const variables: Record<string, string> = {
-        projectName,
-        nodeVersion,
-        pnpmVersion: packageManagerVersion,
-        nodeMajorVersion: nodeVersion.split('.')[0]!,
-      };
+    {
+      title: '生成项目文件',
+      task: async () => {
+        const variables: Record<string, string> = {
+          projectName,
+          nodeVersion,
+          pnpmVersion: packageManagerVersion,
+          nodeMajorVersion: nodeVersion.split('.')[0]!,
+        };
 
-      const files = generateProjectFiles({
-        projectName,
-        options,
-        packageManagerVersion,
-        aomexVersion,
-        prismaVersion,
-      });
+        const files = generateProjectFiles({
+          projectName,
+          options,
+          packageManagerVersion,
+          aomexVersion,
+          prismaVersion,
+        });
 
-      for (const [relPath, file] of Object.entries(files)) {
-        const content = applyScaffoldVariables(file.content, variables);
-        const abs = path.resolve(relPath);
-        await mkdir(path.dirname(abs), { recursive: true });
-        await writeFile(abs, content);
-        if (file.mode !== undefined) {
-          await chmod(abs, file.mode);
+        for (const [relPath, file] of Object.entries(files)) {
+          const content = applyScaffoldVariables(file.content, variables);
+          const abs = path.resolve(relPath);
+          await mkdir(path.dirname(abs), { recursive: true });
+          await writeFile(abs, content);
+          if (file.mode !== undefined) {
+            await chmod(abs, file.mode);
+          }
         }
-      }
 
-      await setTimeout(500);
+        await setTimeout(500);
+      },
     },
-  },
-  {
-    title: 'git初始化',
-    skip: async () => {
-      return !/\d\.\d/.test(execSync('git -v', { encoding: 'utf8' }));
+    {
+      title: 'git初始化',
+      skip: async () => {
+        return !/\d\.\d/.test(execSync('git -v', { encoding: 'utf8' }));
+      },
+      task: async () => {
+        await runShell('git init');
+        await setTimeout(500);
+      },
     },
-    task: async () => {
-      await runShell('git init');
-      await setTimeout(500);
-    },
-  },
-  {
-    title: '安装依赖',
-    task: async () => {
-      const pm = options.packageManager;
-      const cmd =
-        pm === 'pnpm' ? 'pnpm install' : pm === 'yarn' ? 'yarn' : 'npm install';
-      await runShell(cmd);
+    {
+      title: '安装依赖',
+      task: async () => {
+        const pm = options.packageManager;
+        const cmd =
+          pm === 'pnpm'
+            ? 'pnpm install'
+            : pm === 'yarn'
+              ? 'yarn'
+              : 'npm install';
+        await runShell(cmd);
 
-      if (pm === 'pnpm') {
-        await runShell('pnpm approve-builds --all -y');
-      }
+        if (pm === 'pnpm') {
+          await runShell('pnpm approve-builds --all -y');
+        }
+      },
     },
-  },
-  {
-    title: '生成prisma客户端',
-    skip: async () => options.orm !== 'prisma',
-    task: async () => {
-      const exec = packageManagerExec(options.packageManager);
-      await runShell(`${exec} prisma generate`);
+    {
+      title: '生成prisma客户端',
+      skip: async () => options.orm !== 'prisma',
+      task: async () => {
+        const exec = packageManagerExec(options.packageManager);
+        await runShell(`${exec} prisma generate`);
+      },
     },
-  },
-  {
-    title: '格式化代码',
-    task: async () => {
-      const exec = packageManagerExec(options.packageManager);
-      await runShell(`${exec} prettier --cache --write .`);
+    {
+      title: '格式化代码',
+      task: async () => {
+        const exec = packageManagerExec(options.packageManager);
+        await runShell(`${exec} prettier --cache --write .`);
+      },
     },
-  },
-]);
+  ]);
 
-if (error) process.exit(1);
+  if (error) process.exit(1);
 
-const startCmd =
-  options.packageManager === 'npm'
-    ? `npm start`
-    : options.packageManager === 'yarn'
-      ? `yarn start`
-      : `pnpm start`;
+  const startCmd =
+    options.packageManager === 'npm'
+      ? `npm start`
+      : options.packageManager === 'yarn'
+        ? `yarn start`
+        : `pnpm start`;
 
-console.log(
-  '\n项目创建成功：' +
-    terminal.style(['blue', 'underline'], process.cwd()) +
-    '\n' +
-    '启动项目可执行如下指令：' +
-    '\n\n' +
-    terminal.style('green', `cd ${projectName} && ${startCmd}`) +
-    '\n',
-);
+  console.log(
+    '\n项目创建成功：' +
+      terminal.style(['blue', 'underline'], process.cwd()) +
+      '\n' +
+      '启动项目可执行如下指令：' +
+      '\n\n' +
+      terminal.style('green', `cd ${projectName} && ${startCmd}`) +
+      '\n',
+  );
+};
+
+main().catch((err) => {
+  if (isExitPromptError(err)) {
+    process.exit(0);
+  }
+  throw err;
+});

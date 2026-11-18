@@ -7,8 +7,8 @@ set -ex
 # export COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 corepack enable # package.json => packageManager
 yarn install --frozen-lockfile
-yarn exec tsc
-yarn exec tsc-alias --resolve-full-paths
+yarn tsc
+yarn tsc-alias --resolve-full-paths
 node ./scripts/build-minify.mjs
 node ./scripts/build-fix-source-map.mjs
 rm -rf src

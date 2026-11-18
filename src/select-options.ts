@@ -1,8 +1,9 @@
 import { checkbox, confirm, select } from '@inquirer/prompts';
 import { I18N_LANGUAGES, type DefaultLanguage } from './i18n-languages';
-import { DEFAULT_TIMEZONE, isValidTimezone, listTimezones } from './timezones';
+import { buildTimezoneChoices, isValidTimezone } from './timezones';
 import {
   CLUSTER_STRATEGIES,
+  normalizeAuthStrategies,
   withBaseWebPlugins,
   type AuthStrategy,
   type ClusterStrategy,
@@ -93,18 +94,35 @@ export const selectOptions = async (
       }));
   }
 
+  // 可多选；若勾选「无」则清空其他策略
+  const authArg = parseList(argv['auth']);
   const auth =
-    (argv['auth'] as AuthStrategy | undefined) ??
-    (await select<AuthStrategy>({
-      message: '身份认证策略',
-      choices: [
-        { name: 'Bearer Token', value: 'bearer' },
-        { name: 'JWT', value: 'jwt' },
-        { name: 'API Key', value: 'api-key' },
-        { name: '无', value: 'none' },
-      ],
-      default: 'bearer',
-    }));
+    authArg.length > 0
+      ? normalizeAuthStrategies(authArg)
+      : normalizeAuthStrategies(
+          await checkbox<AuthStrategy | 'none'>({
+            message: '身份认证策略（可多选；选「无」将清空其他项）',
+            choices: [
+              {
+                name: 'Bearer Token（不透明令牌，可吊销）',
+                value: 'bearer',
+                checked: true,
+              },
+              {
+                name: 'JWT（无状态令牌）',
+                value: 'jwt',
+                checked: false,
+              },
+              {
+                name: 'API Key（x-api-key）',
+                value: 'api-key',
+                checked: false,
+              },
+              { name: '无', value: 'none', checked: false },
+            ],
+            loop: false,
+          }),
+        );
 
   // response-time / cors / etag / helmet 为基础插件，不询问，始终安装
   const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
@@ -112,11 +130,10 @@ export const selectOptions = async (
     webPluginsArg.length > 0
       ? (webPluginsArg as WebPlugin[])
       : await checkbox<WebPlugin>({
-          message:
-            '需要用到的 Web 插件（已默认 cors / etag / helmet / response-time）',
+          message: '需要用到的Web中间件',
           choices: [
             {
-              name: 'http-access-log',
+              name: 'http-access-log（HTTP 访问日志）',
               value: 'http-access-log',
               checked: true,
             },
@@ -125,9 +142,21 @@ export const selectOptions = async (
               value: 'async-trace',
               checked: true,
             },
-            { name: 'compress', value: 'compress', checked: false },
-            { name: 'pretty-json', value: 'pretty-json', checked: false },
-            { name: 'rate-limit', value: 'rate-limit', checked: false },
+            {
+              name: 'compress（Gzip/Brotli 响应压缩）',
+              value: 'compress',
+              checked: false,
+            },
+            {
+              name: 'pretty-json（开发时美化 JSON 响应）',
+              value: 'pretty-json',
+              checked: false,
+            },
+            {
+              name: 'rate-limit（接口限流防刷）',
+              value: 'rate-limit',
+              checked: false,
+            },
           ],
           loop: false,
         });
@@ -152,17 +181,25 @@ export const selectOptions = async (
       : await checkbox<LoggerTransport>({
           message: '日志出口',
           choices: [
-            { name: 'Console', value: 'console', checked: true },
-            { name: 'File', value: 'file', checked: true },
-            { name: 'Stream', value: 'stream', checked: false },
-            { name: 'Webhook', value: 'webhook', checked: false },
+            { name: 'Console（终端输出）', value: 'console', checked: true },
+            { name: 'File（写入本地日志文件）', value: 'file', checked: true },
             {
-              name: 'Sentry（@aomex/logger-sentry）',
+              name: 'Stream（自定义可写流）',
+              value: 'stream',
+              checked: false,
+            },
+            {
+              name: 'Webhook（HTTP 回调上报）',
+              value: 'webhook',
+              checked: false,
+            },
+            {
+              name: 'Sentry（错误监控上报）',
               value: 'sentry',
               checked: false,
             },
             {
-              name: 'Telegram（@aomex/logger-telegram）',
+              name: 'Telegram（机器人消息通知）',
               value: 'telegram',
               checked: false,
             },
@@ -173,24 +210,16 @@ export const selectOptions = async (
             items.length > 0 ? true : '至少选择一个日志出口',
         });
 
+  // Console 中间件不再询问：统一安装 cron；可用 argv 追加 openapi 等
   const consoleArg = parseList(
     argv['console-middlewares'] ?? argv['consoleMiddlewares'],
-  );
-  const consoleMiddlewares =
-    consoleArg.length > 0
-      ? (consoleArg as ConsoleMiddleware[])
-      : await checkbox<ConsoleMiddleware>({
-          message: 'Console 中间件',
-          choices: [
-            { name: 'cron（定时任务）', value: 'cron', checked: true },
-            {
-              name: 'openapi（生成文档文件）',
-              value: 'openapi',
-              checked: false,
-            },
-          ],
-          loop: false,
-        });
+  ) as ConsoleMiddleware[];
+  const consoleMiddlewares = [
+    ...new Set<ConsoleMiddleware>([
+      'cron',
+      ...consoleArg.filter((m) => m === 'cron' || m === 'openapi'),
+    ]),
+  ];
 
   const argvLang = argv['lang'] as string | undefined;
   const language =
@@ -218,48 +247,33 @@ export const selectOptions = async (
     return undefined;
   };
 
-  const argvDynamicLang = argv['dynamic-language'] ?? argv['dynamicLanguage'];
-  const dynamicLanguage =
-    parseBoolArg(argvDynamicLang) ??
-    (await confirm({
-      message: '是否根据请求自动切换语言（Accept-Language）',
-      default: false,
-    }));
-
-  const responseEnvelope =
-    parseBoolArg(
-      argv['envelope'] ?? argv['response-envelope'] ?? argv['responseEnvelope'],
-    ) ??
-    (await confirm({
-      message: '是否统一响应体套壳为 HTTP 200（WebApp.envelope）',
-      default: false,
-    }));
-
   const docker =
     parseBoolArg(argv['docker']) ??
     (await confirm({
-      message: '是否使用 Docker 部署',
+      message: '是否使用 Docker 部署生产环境',
       default: true,
     }));
 
   const argvTz = (argv['tz'] ?? argv['timezone']) as string | undefined;
-  const timezone =
-    argvTz && isValidTimezone(argvTz)
-      ? argvTz
-      : await select<string>({
-          message: '时区（进程 ENV TZ）',
-          choices: listTimezones().map((tz) => ({ name: tz, value: tz })),
-          default: DEFAULT_TIMEZONE,
-          loop: false,
-          pageSize: 15,
-        });
+  let timezone: string;
+  if (argvTz && isValidTimezone(argvTz)) {
+    timezone = argvTz;
+  } else {
+    const { choices, defaultValue } = await buildTimezoneChoices();
+    timezone = await select<string>({
+      message: '时区（进程 ENV TZ）',
+      choices,
+      default: defaultValue,
+      loop: false,
+    });
+  }
 
   const cluster =
     parseClusterArg(argv['cluster']) ??
     (await select<ClusterStrategy>({
       message: '集群方案（勿叠用）',
       choices: [
-        { name: '无（单进程）', value: 'none' },
+        { name: '单进程', value: 'none' },
         { name: '内置 clusterListen', value: 'cluster-listen' },
         { name: 'PM2', value: 'pm2' },
       ],
@@ -277,8 +291,6 @@ export const selectOptions = async (
     loggerTransports,
     consoleMiddlewares,
     language,
-    dynamicLanguage,
-    responseEnvelope,
     docker,
     timezone,
     cluster,

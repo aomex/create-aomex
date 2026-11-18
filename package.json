@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --node v24.22.3 --pm=pnpm --orm=prisma --db=mysql --auth=bearer --docs=swagger --lang=zh-CN --dynamic-language=false --docker=true --tz=Asia/Shanghai --web-plugins=cors,etag,helmet,response-time,http-access-log,async-trace --logger=console,file --console-middlewares=cron --cluster=none",
+    "cli": "rm -rf hello-aomex && tsx src/index.ts --project=HelloAomex --pm=pnpm --orm=prisma --db=mysql --auth=bearer --docs=swagger --lang=zh-CN --dynamic-language=false --docker=true --tz=Asia/Shanghai --web-plugins=http-access-log,async-trace --logger=console,file --cluster=none",
     "prepare": "husky || true",
     "test": "vitest run",
     "test:update": "DIR_SNAPSHOT_UPDATE=1 vitest run",
@@ -17,7 +17,7 @@
     "runtime": {
       "name": "node",
       "version": ">=24",
-      "onFail": "error"
+      "onFail": "warn"
     }
   },
   "engines": {

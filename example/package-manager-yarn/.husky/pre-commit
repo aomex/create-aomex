@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
-yarn exec prettier --cache --check .
-yarn exec tsc
+yarn prettier --cache --check .
+yarn tsc

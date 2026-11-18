@@ -4,12 +4,12 @@ import { CookieKey } from '@/constants/cookie-key';
 import { services } from '@/services';
 
 /**
- * 不透明 Bearer token（可随时吊销）。
- * 参考：https://aomex.js.org/plugins/auth-bearer-strategy
+ * Bearer：不透明令牌，可随时吊销。
+ * 路由用法：`auth.authenticate('bearer')`
  */
 export const auth = new Auth({
   strategies: {
-    user: new AuthBearerStrategy({
+    bearer: new AuthBearerStrategy({
       async onLoaded(token) {
         const userId = await services.cache.getUserIdByToken(token, true);
         if (!userId) return false;

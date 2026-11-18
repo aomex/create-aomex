@@ -14,10 +14,13 @@ import type {
 } from './types';
 import { scaffoldText } from './scaffold-locale';
 
-/** 本地执行依赖二进制：pnpm/yarn → `* exec`，npm → `npm exec --`（避免 npx） */
+/**
+ * 本地执行依赖二进制前缀。
+ * pnpm/yarn 可直接 `pnpm aomex` / `yarn aomex`；npm 需 `npm exec --`。
+ */
 export const packageManagerExec = (pm: PackageManager): string => {
-  if (pm === 'pnpm') return 'pnpm exec';
-  if (pm === 'yarn') return 'yarn exec';
+  if (pm === 'pnpm') return 'pnpm';
+  if (pm === 'yarn') return 'yarn';
   return 'npm exec --';
 };
 
@@ -242,22 +245,21 @@ await registerLifecycle({
 `;
 };
 
-export const generateAuth = (auth: AuthStrategy): string | null => {
-  if (auth === 'none') return null;
+export const generateAuth = (strategies: AuthStrategy[]): string | null => {
+  if (strategies.length === 0) return null;
 
-  if (auth === 'bearer') {
-    return `import { Auth, AuthError } from '@aomex/auth';
-import { AuthBearerStrategy } from '@aomex/auth/bearer';
-import { CookieKey } from '@/constants/cookie-key';
-import { services } from '@/services';
+  const imports = new Set<string>([
+    `import { Auth, AuthError } from '@aomex/auth';`,
+  ]);
+  const strategyEntries: string[] = [];
+  const notes: string[] = [];
 
-/**
- * 不透明 Bearer token（可随时吊销）。
- * 参考：https://aomex.js.org/plugins/auth-bearer-strategy
- */
-export const auth = new Auth({
-  strategies: {
-    user: new AuthBearerStrategy({
+  if (strategies.includes('bearer')) {
+    imports.add(`import { AuthBearerStrategy } from '@aomex/auth/bearer';`);
+    imports.add(`import { CookieKey } from '@/constants/cookie-key';`);
+    imports.add(`import { services } from '@/services';`);
+    notes.push('Bearer：不透明令牌，可随时吊销');
+    strategyEntries.push(`    bearer: new AuthBearerStrategy({
       async onLoaded(token) {
         const userId = await services.cache.getUserIdByToken(token, true);
         if (!userId) return false;
@@ -271,26 +273,14 @@ export const auth = new Auth({
         { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
         { type: 'query', key: 'access_token' },
       ],
-    }),
-  },
-});
-
-export { AuthError };
-`;
+    }),`);
   }
 
-  if (auth === 'jwt') {
-    return `import { Auth, AuthError } from '@aomex/auth';
-import { AuthJwtStrategy } from '@aomex/auth-jwt-strategy';
-import { CookieKey } from '@/constants/cookie-key';
-
-/**
- * JWT 无状态令牌。
- * 参考：https://aomex.js.org/plugins/auth-jwt-strategy
- */
-export const auth = new Auth({
-  strategies: {
-    user: new AuthJwtStrategy({
+  if (strategies.includes('jwt')) {
+    imports.add(`import { AuthJwtStrategy } from '@aomex/auth-jwt-strategy';`);
+    imports.add(`import { CookieKey } from '@/constants/cookie-key';`);
+    notes.push('JWT：无状态令牌');
+    strategyEntries.push(`    jwt: new AuthJwtStrategy({
       secret: process.env['JWT_SECRET'] || 'change-me-in-production',
       async onVerified(payload: { userId: number }) {
         return { id: payload.userId };
@@ -303,23 +293,13 @@ export const auth = new Auth({
         { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
         { type: 'query', key: 'access_token' },
       ],
-    }),
-  },
-});
-
-export { AuthError };
-`;
+    }),`);
   }
 
-  return `import { Auth, AuthError } from '@aomex/auth';
-import { AuthApiKeyStrategy } from '@aomex/auth/api-key';
-
-/**
- * API Key（默认从 x-api-key 读取裸值）。
- */
-export const auth = new Auth({
-  strategies: {
-    app: new AuthApiKeyStrategy({
+  if (strategies.includes('api-key')) {
+    imports.add(`import { AuthApiKeyStrategy } from '@aomex/auth/api-key';`);
+    notes.push('API Key：默认从 x-api-key 读取');
+    strategyEntries.push(`    apiKey: new AuthApiKeyStrategy({
       async onLoaded(apiKey) {
         // TODO: 按 apiKey 查询应用身份
         if (!apiKey) return false;
@@ -329,7 +309,24 @@ export const auth = new Auth({
         return true;
       },
       keyLoaders: [{ type: 'header', key: 'x-api-key' }],
-    }),
+    }),`);
+  }
+
+  const authNames = [
+    ...(strategies.includes('bearer') ? ["'bearer'"] : []),
+    ...(strategies.includes('jwt') ? ["'jwt'"] : []),
+    ...(strategies.includes('api-key') ? ["'apiKey'"] : []),
+  ].join(' | ');
+
+  return `${[...imports].join('\n')}
+
+/**
+ * ${notes.join('；')}。
+ * 路由用法：\`auth.authenticate(${authNames})\`
+ */
+export const auth = new Auth({
+  strategies: {
+${strategyEntries.join('\n')}
   },
 });
 
@@ -546,12 +543,13 @@ const pluginMount = (plugin: WebPlugin): string => {
 const PLUGIN_ORDER: WebPlugin[] = [
   'http-access-log',
   'response-time',
-  'async-trace',
   'cors',
+  'rate-limit',
+  // compress 只需在 etag 之前（出站先签明文再压）；可靠前，不依赖 slowTrace/prettyJson
   'compress',
   'etag',
+  'async-trace',
   'pretty-json',
-  'rate-limit',
   'helmet',
 ];
 
@@ -559,24 +557,20 @@ export const generateWeb = (opts: {
   plugins: WebPlugin[];
   docsUI: DocsUI;
   language: DefaultLanguage;
-  /** 按 Accept-Language 动态切换；否则 fixed */
-  dynamicLanguage: boolean;
   /** Console 选了 openapi 时：WebApp 与 listen 分开，便于 CLI import { app } 而不起服 */
   separateListen: boolean;
   /** 集群方案 */
   cluster: ClusterStrategy;
-  /** WebApp.envelope：统一套壳并固定 HTTP 200 */
-  responseEnvelope: boolean;
 }): string => {
   const useClusterListen = opts.cluster === 'cluster-listen';
   const ordered = PLUGIN_ORDER.filter((p) => opts.plugins.includes(p));
   const webImportNames = [
     ...(useClusterListen ? (['clusterListen'] as const) : []),
-    ...(opts.responseEnvelope ? (['envelope'] as const) : []),
     'routers',
     'WebApp',
   ];
-  const webImports = `import { ${webImportNames.join(', ')} } from '@aomex/web';`;
+  const webImports = `import { ${webImportNames.join(', ')} } from '@aomex/web';
+// import { envelope } from '@aomex/web';`;
   const imports = [
     webImports,
     `import { globalErrorRewrite } from '@/middleware/format-error.md';`,
@@ -585,12 +579,21 @@ export const generateWeb = (opts: {
 
   const mounts = ordered.map(pluginMount);
 
-  // globalErrorRewrite 放在 responseTime() 之后（无则尽量靠外层）
+  // globalErrorRewrite：紧跟 etag（有则），否则 cors / responseTime 之后
   {
+    const etagIdx = mounts.findIndex((m) => m.includes('etag('));
+    const corsIdx = mounts.findIndex((m) => m.includes('cors('));
     const responseTimeIdx = mounts.findIndex((m) =>
       m.includes('responseTime('),
     );
-    const insertAt = responseTimeIdx >= 0 ? responseTimeIdx + 1 : 0;
+    const insertAt =
+      etagIdx >= 0
+        ? etagIdx + 1
+        : corsIdx >= 0
+          ? corsIdx + 1
+          : responseTimeIdx >= 0
+            ? responseTimeIdx + 1
+            : 0;
     mounts.splice(insertAt, 0, `    globalErrorRewrite,`);
   }
 
@@ -663,16 +666,16 @@ import { fileURLToPath } from 'node:url';
     ? `\nconst isProduction = process.env['NODE_ENV'] === 'production';\n`
     : '\n';
 
-  const envelopeBlock = opts.responseEnvelope
-    ? `  envelope: {
-    content: {
-      success: envelope.success,
-      statusCode: envelope.statusCode,
-      data: envelope.payload,
-    },
-  },
-`
-    : '';
+  // 默认注释掉：需要时解开本块，并取消上方 envelope 的 import 注释
+  const envelopeBlock = `  // 如果要把所有请求都封装成固定格式并调整状态码为200，请解开下面的注释
+  // envelope: {
+  //   content: {
+  //     success: envelope.success,
+  //     statusCode: envelope.statusCode,
+  //     data: envelope.payload,
+  //   },
+  // },
+`;
 
   return `import 'dotenv/config';
 ${headImports}${imports.join('\n')}
@@ -681,11 +684,9 @@ ${isProductionDecl}
 export const app = new WebApp({
   services,
   logger: services.logger,
-  language: ${
-    opts.dynamicLanguage
-      ? `{ mode: 'dynamic', header: 'accept-language', fallback: '${opts.language}' }`
-      : `{ mode: 'fixed', language: '${opts.language}' }`
-  },
+  // 按 Accept-Language 自动切换语言时，改用：
+  // language: { mode: 'dynamic', header: 'accept-language', fallback: '${opts.language}' },
+  language: { mode: 'fixed', language: '${opts.language}' },
   proxyIP: { mode: 'detect' },
 ${envelopeBlock}  mount: [
 ${mounts.join('\n')}
@@ -1243,7 +1244,7 @@ export const slowTrace = traceMiddleware('${text.slowTrace}', async (record, ctx
 `;
 };
 
-export const generateCacheService = (auth: AuthStrategy): string => {
+export const generateCacheService = (auth: AuthStrategy[]): string => {
   const rememberExport = `/**
  * 方法装饰器：缓存异步方法返回值（绑定本 CacheService；未命中时并发只跑一次）。
  *
@@ -1273,7 +1274,7 @@ export const generateCacheService = (auth: AuthStrategy): string => {
 export const remember = createRemember(CacheService);
 `;
 
-  if (auth === 'bearer') {
+  if (auth.includes('bearer')) {
     return `import { BaseCacheService, createRemember } from '@aomex/cache';
 import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import { configs } from '@/configs';
@@ -1341,11 +1342,9 @@ export const generateStartScript = (opts: {
 }): string => {
   const exec = packageManagerExec(opts.packageManager);
   const cronSpawnArgs =
-    opts.packageManager === 'pnpm'
-      ? `['exec', 'aomex', 'cron:start']`
-      : opts.packageManager === 'yarn'
-        ? `['exec', 'aomex', 'cron:start']`
-        : `['exec', '--', 'aomex', 'cron:start']`;
+    opts.packageManager === 'pnpm' || opts.packageManager === 'yarn'
+      ? `['aomex', 'cron:start']`
+      : `['exec', '--', 'aomex', 'cron:start']`;
   const cronBin =
     opts.packageManager === 'pnpm'
       ? 'pnpm'
@@ -1579,8 +1578,9 @@ export const generateDockerCompose = (
     services.push(`  postgres:
     image: postgres:16
     environment:
+      # 与 DATABASE_URL 保持一致；首次初始化 data 目录时自动建库（改库名需清 volumes/postgres）
       POSTGRES_PASSWORD: abcde
-      POSTGRES_DB: \${POSTGRES_DB}
+      POSTGRES_DB: ${projectName}
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data
     ports:
@@ -1638,9 +1638,6 @@ export const generateEnvExample = (
     lines.push(
       `DATABASE_URL=${databaseUrl(opts.prismaDatabase, projectName, password)}`,
     );
-    if (opts.prismaDatabase === 'postgresql') {
-      lines.push(`POSTGRES_DB=${projectName}`);
-    }
   } else if (opts.orm === 'mongoose') {
     lines.push(
       `DATABASE_URL=mongodb://root:${password}@localhost:27017/${projectName}?authSource=admin`,
@@ -1649,7 +1646,7 @@ export const generateEnvExample = (
 
   lines.push(`REDIS_PASSWORD=${password}`);
 
-  if (opts.auth === 'jwt') {
+  if (opts.auth.includes('jwt')) {
     lines.push(
       `JWT_SECRET=${mode === 'local' ? 'change-me-in-production' : 'CHANGE_ME'}`,
     );
@@ -2064,28 +2061,26 @@ ${prismaGenerate}${startBlock}
 `;
 };
 
+const PACKAGE_MANAGER_FALLBACK: Record<PackageManager, string> = {
+  pnpm: '12.21.0',
+  yarn: '1.22.22',
+  npm: '10.0.0',
+};
+
+/** 从 registry 取 latest，避免调用本机 npm（预发布 Node 上会触发 devEngines / 兼容性警告） */
 export const resolvePackageManagerVersion = async (
   pm: PackageManager,
 ): Promise<string> => {
-  const { execSync } = await import('node:child_process');
+  const fallback = PACKAGE_MANAGER_FALLBACK[pm];
   try {
-    if (pm === 'pnpm') {
-      return (
-        execSync('npm view pnpm version', { encoding: 'utf8' }).trim() ||
-        '12.21.0'
-      );
-    }
-    if (pm === 'yarn') {
-      return (
-        execSync('npm view yarn version', { encoding: 'utf8' }).trim() ||
-        '1.22.22'
-      );
-    }
-    return execSync('npm --version', { encoding: 'utf8' }).trim() || '10.0.0';
+    const res = await fetch(`https://registry.npmjs.org/${pm}`);
+    if (!res.ok) return fallback;
+    const data = (await res.json()) as {
+      'dist-tags'?: Record<string, string>;
+    };
+    return data['dist-tags']?.['latest'] ?? fallback;
   } catch {
-    if (pm === 'pnpm') return '12.21.0';
-    if (pm === 'yarn') return '1.22.22';
-    return '10.0.0';
+    return fallback;
   }
 };
 
@@ -2232,10 +2227,10 @@ export const buildDependencyGroups = (
     deps.add(aomex('@aomex/cron'));
   }
 
-  if (opts.auth !== 'none') {
+  if (opts.auth.length > 0) {
     deps.add(aomex('@aomex/auth'));
   }
-  if (opts.auth === 'jwt') {
+  if (opts.auth.includes('jwt')) {
     deps.add(aomex('@aomex/auth-jwt-strategy'));
   }
 

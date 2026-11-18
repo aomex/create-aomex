@@ -105,7 +105,8 @@ export const generateProjectFiles = (opts: {
   const { packageManagerVersion, aomexVersion, prismaVersion } = opts;
   const cronPort = opts.cronPort ?? createCronPort();
   const hasCron = options.consoleMiddlewares.includes('cron');
-  const needsCookie = options.auth === 'bearer' || options.auth === 'jwt';
+  const needsCookie =
+    options.auth.includes('bearer') || options.auth.includes('jwt');
   const files: Record<string, ProjectFile> = {};
 
   const add = (path: string, file: ProjectFile) => {
@@ -361,10 +362,8 @@ export const configs = configList[env] as FullConfig;
         plugins: options.webPlugins,
         docsUI: options.docsUI,
         language: options.language,
-        dynamicLanguage: options.dynamicLanguage,
         separateListen: options.consoleMiddlewares.includes('openapi'),
         cluster: options.cluster,
-        responseEnvelope: options.responseEnvelope,
       }),
     ),
   );

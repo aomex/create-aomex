@@ -10,3 +10,10 @@ services:
         hard: 65535
     ports:
       - 3000:3000
+  cron:
+    image: snapshot-demo:production
+    env_file:
+      - .env.production
+    init: true
+    command: aomex cron:start
+    restart: unless-stopped
