@@ -69,7 +69,14 @@ const authLabel = (auth: AuthStrategy[], zh?: boolean): string => {
 const docsLabel = (docs: DocsUI): string => {
   if (docs === 'swagger') return 'Swagger UI';
   if (docs === 'redoc') return 'Redoc';
+  if (docs === 'scalar') return 'Scalar UI';
   return '';
+};
+
+const docsMiddlewareFile = (docs: DocsUI): string => {
+  if (docs === 'redoc') return 'redoc.md.ts';
+  if (docs === 'scalar') return 'scalar.md.ts';
+  return 'swagger.md.ts';
 };
 
 const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
@@ -292,7 +299,7 @@ export const generateReadme = (opts: {
   };
 
   const docsName = docsLabel(opts.docsUI);
-  const docsFile = opts.docsUI === 'redoc' ? 'redoc.md.ts' : 'swagger.md.ts';
+  const docsFile = docsMiddlewareFile(opts.docsUI);
 
   const bareDeployHintZh =
     cluster === 'pm2'

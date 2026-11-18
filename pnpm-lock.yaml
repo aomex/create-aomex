@@ -220,11 +220,11 @@ importers:
   .:
     dependencies:
       '@aomex/common':
-        specifier: 4.0.0
-        version: 4.0.0(typescript@7.0.2)
+        specifier: 4.1.0
+        version: 4.1.0(typescript@7.0.2)
       '@aomex/console':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@inquirer/prompts':
         specifier: ^8.8.0
         version: 8.8.0(@types/node@26.6.6)
@@ -236,74 +236,77 @@ importers:
         version: 22.0.0
     devDependencies:
       '@aomex/async-trace':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@aomex/auth':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/auth-jwt-strategy':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/auth@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/auth@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/cache':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@aomex/cache-redis-adapter':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/cache@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/cache@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@aomex/compress':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/cors':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/cron':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/console@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/console@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/etag':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/helmet':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/http-access-log':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/logger':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@aomex/logger-sentry':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@aomex/logger-telegram':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@aomex/mongoose':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(mongoose@9.12.1)
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(mongoose@9.12.1)
       '@aomex/openapi':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/console@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/console@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/pretty-json':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/prisma':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))
       '@aomex/rate-limit':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/redoc-ui':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/response-time':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
+      '@aomex/scalar-ui':
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/swagger-ui':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
       '@aomex/web':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+        specifier: 4.1.0
+        version: 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@commitlint/cli':
         specifier: ^21.2.4
         version: 21.2.4(conventional-commits-parser@7.1.4)(typescript@7.0.2)
@@ -357,189 +360,189 @@ importers:
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
 packages:
-  '@aomex/async-trace@4.0.0':
+  '@aomex/async-trace@4.1.0':
     resolution:
       {
-        integrity: sha512-gwVx0XiRWwYKgHP+IQ6ZhlUoo22F1OD2/JZxCRKhKjlNR6MSdIyL3XkH9z36f1vmgzf7U5/pfu70wn4hM/5TyQ==,
+        integrity: sha512-vSI/bWOP6fs3cGBZz7L/JjzL/UnamLKNmiZ4CWhSzvP0TV+XqC1yLrAv1aSYM/b9FvRYlJizMCAHH1VMpnWH/Q==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
 
-  '@aomex/auth-jwt-strategy@4.0.0':
+  '@aomex/auth-jwt-strategy@4.1.0':
     resolution:
       {
-        integrity: sha512-94Xsc3txtvgUtFAJH7B+rpO5k7M1ToH7UW7d7Cd9qNRqUdSyYqYpfVSGmJbpdPil7DG7g/4AEyljKrPa3TW3IA==,
+        integrity: sha512-occTosVE8xd6vtwzq3y4eDMvH3Fd0BFT21JcAM+m7HEp4sphTrzWHl7ppOJsD0lyKl7dW5nZm5TKLToGkuCmFg==,
       }
     peerDependencies:
       '@aomex/auth': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/auth@4.0.0':
+  '@aomex/auth@4.1.0':
     resolution:
       {
-        integrity: sha512-liDe/TsjIb6FKBtHNKiqIEq6YyxvkmvXtyqR+RyU/FdDIdX8/Gdh1Md6h2dOtCWh7m1nt89/QfvnS1JGzq+Z1g==,
+        integrity: sha512-CZrzB1pqQUfIJ7r/TU8wQAYcVBVZSDkhpGCOG+Pu/ksADOb+XyG+/XPPAjE0/EEALpjhPCkmyOw3mJGTnfCaQw==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/cache-redis-adapter@4.0.0':
+  '@aomex/cache-redis-adapter@4.1.0':
     resolution:
       {
-        integrity: sha512-boB1Lli/pCilp5ze3+bupLlqTWrbUW/P00bHyTgrKSyBFl07aOHNPM5uZGpkokFsdwSzkG3teQF0OGcOn49D8g==,
+        integrity: sha512-YkT19SS7Lsfk1GGlLiJ7fv0CviQvxRchPgoNYLapT28gX7WJJ/r+ODtikTcnE9311Ebcy0Ky9HK9MPNfFW4+5w==,
       }
     peerDependencies:
       '@aomex/cache': ^4.0.0
 
-  '@aomex/cache@4.0.0':
+  '@aomex/cache@4.1.0':
     resolution:
       {
-        integrity: sha512-ac6ALQkOksPMiQ6Gp/z4QcxA0NODBiTfFZh4vOsSIJyveG5iYaI+tL4NlLqkqQW50YmoXX7Dc2GsEaqhi+zqYQ==,
+        integrity: sha512-eODelGW7a68HUIDAWeRBCy6zu8dP5+0vT0ds8PsVRnhOmFIysce3pTv+DGJuO2DMbVWLN0iKaPA5zGkNN7V0/g==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
 
-  '@aomex/common-middleware@4.0.0':
+  '@aomex/common-middleware@4.1.0':
     resolution:
       {
-        integrity: sha512-CdBgJx8r5VkA1nhWAFZ8ThT8uLIiZEkG7ox4qf7F+ZdLwMzeMYcUHSWgswO7LkhLvsHlmBWzrI+0/JOpwW49jA==,
+        integrity: sha512-b7xAdcLbqNuslmTv2Tp373VeHGmriYlrIKqwau2y3G6SYXC5z71iIxyd892YuftwjpYmAqCJT9VlmQLZXzbGag==,
       }
 
-  '@aomex/common-service@4.0.0':
+  '@aomex/common-service@4.1.0':
     resolution:
       {
-        integrity: sha512-MF8j/NQWOsWtRwPgkE9/fBcI5TIOLf5tL96jkLvKMgF4wiG4aBfgl2wJfL8gXsNnMeBqUyL5fBFhr9iIrIcuiA==,
+        integrity: sha512-4Y6E5J+wdD40u0igxOPJLlqHuKIZELg9F8RiB5KUIDB99HyuzNiKrPwJ6tzKnByMIviUbIGBUN+ihtZb4CEd6Q==,
       }
 
-  '@aomex/common-validator@4.0.0':
+  '@aomex/common-validator@4.1.0':
     resolution:
       {
-        integrity: sha512-FFiv/YBtDo0nRGztft6hxGE+t040uP/hiMgSemKT3LtrFkFEUEa/IVyrsS+ikWoplE1eyH+2k1EzIOtAGJDRGw==,
+        integrity: sha512-A1y+2mnaCgUc282YMFcALAllvmCDcjBbQy2HK+UTt3TFB4pdfKGm8XeOQiJH+ROpMvl0AXMy1zOGJvrUQw/jaQ==,
       }
 
-  '@aomex/common@4.0.0':
+  '@aomex/common@4.1.0':
     resolution:
       {
-        integrity: sha512-QP9uFaPnQgi7s+SJH1y68heI96nr3b8K4o44fh9hHB6SvVLRWL/O4eGO37XQ/42q4JHtLQlhJFLxtzf3WpGX4Q==,
+        integrity: sha512-5v7LzygCoNjMJ9GF3zYmziiLheiB3dCTXxXxuMm0lhWRNI/jc0isWiPOlkj6esfr6hYs7Q7zK9uZeEPugIAAjw==,
       }
     engines: { node: '>=24.0.0' }
     peerDependencies:
       typescript: '>=7'
 
-  '@aomex/compress@4.0.0':
+  '@aomex/compress@4.1.0':
     resolution:
       {
-        integrity: sha512-RXH+XAxmVzyQnD1oH+sCoinCe/dbjHli0BHmQSfcl7au7pZ6UKlsYblXZZDa9sVZqUp8rhEpoUdhSkTipwBCEw==,
+        integrity: sha512-r7N7EY2huNAJx4ApXLFI6R00lCY+grWOtXEn25r8SBEnwGu7QqbM3blA4R2CrRGJ5y6SmYafz+L7URXTyhRkDw==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/console@4.0.0':
+  '@aomex/console@4.1.0':
     resolution:
       {
-        integrity: sha512-B751PxTnechB0dc++9CT+4WUh+9t8/ZfDT585IzsX05qAE8dyBj8idtWBKnnO73sZS0narOzGakMnd5ifaAV+g==,
+        integrity: sha512-dQ2KVlVItKuIcPbAa3GBW09XaRDiISZNdmfXeCD3PaRPu6EWtr8VBBWUNA6/pujtgS+Gjy1+qJV7dvPwa4Zq6g==,
       }
     hasBin: true
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/logger': ^4.0.0
 
-  '@aomex/cors@4.0.0':
+  '@aomex/cors@4.1.0':
     resolution:
       {
-        integrity: sha512-0T/AehVllOxDWq6glne1iH5rEr4aWCBg3Gk1HoFQwTORai29ZaY2VQAhEmRunzJxyeBO6xzK8Jdpe95ld3TP4Q==,
+        integrity: sha512-tKJHhzdib+4iy5NeoTJjoPZnRl009SlNmK+tu7HZmd2VVG8KPmtHKcSDq1ciRFpsfpBxEsDuI1m7ojUFBbM+OA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/cron@4.0.0':
+  '@aomex/cron@4.1.0':
     resolution:
       {
-        integrity: sha512-Ky2lhcxHntdfhj2mbcxgV18aaXz0F3/9TEbwvkgFE3h6+CncSYFX2y5nB9x+zm21IXuC4Uo7fo4hU9eJeySB9g==,
+        integrity: sha512-BFeMv99ZZilzC1ZLh85johINep6N+sgARitJiTp+FcUoU+2b3qBvopvPWLRRDpWjndSOGBztNY4ElY6EXbw6fg==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/console': ^4.0.0
 
-  '@aomex/etag@4.0.0':
+  '@aomex/etag@4.1.0':
     resolution:
       {
-        integrity: sha512-HA9LLSD3b75nvUsqhLpFrp2qdZXzTcWYbUKZ+RuxB4VSVq27t7n3E3VD4SBjdamf1iJ8SXMbtH9Ws4lwQ/fs2w==,
+        integrity: sha512-RiJHoTdO6xQCrkilIFTFCbmKcOybWOn1D9PrpMmmLfy+qdDQNRHiIW6eFeJFUFy3wd2DDGX9p3v196xNYvJ2qA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/helmet@4.0.0':
+  '@aomex/helmet@4.1.0':
     resolution:
       {
-        integrity: sha512-JZmghZMZsr3Dk9TqYcGOLU51gI+kflDEmsBmvQYUujwjsVssqoNPvkW+pCiVZfGnm6QAHY9axT0XFWz2YyAMIw==,
+        integrity: sha512-LCkuxvE2EF30yXocFgFlpAGK5sTGzvdfblMQ5lvA2/XvRCEXWAf5nik+i654N9Dyd8xnS+IbwZUTBj7RSby5YQ==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/http-access-log@4.0.0':
+  '@aomex/http-access-log@4.1.0':
     resolution:
       {
-        integrity: sha512-204Q0xlOqHLVHN82XNWi4DmfOk6GSw/YYBUp7VcGKrDVTxT8CXMjZyhJi1NF2ok4nbL3ET5iDsdyIcV4brT9ig==,
+        integrity: sha512-4XmdIFrnhoLJoNxCQNGjl57M+rlzEDPzYBNb7W4LJZcT6jsNoyU/srh2l7Ev5i8CzQxBcZ2eY/vKI6K8jydHIQ==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/internal-file-import@4.0.0':
+  '@aomex/internal-file-import@4.1.0':
     resolution:
       {
-        integrity: sha512-nnHgFwmzDfbVxuAD/MF/AH883vaaQst3s3iTrbOhVBBBOBbWQSO6Okdlcqos5APl/bVKeeY+Q8cR99fVwT64Bg==,
+        integrity: sha512-xVuEU/u42XPbNktU20gvTeSirNOF0SMt3wNa5m4HotcUqoyC8PJ3nkK4W7v0wZXwDiDEUeLoTmIG+MosCIZ/lg==,
       }
 
-  '@aomex/internal-tools@4.0.0':
+  '@aomex/internal-tools@4.1.0':
     resolution:
       {
-        integrity: sha512-XuXGZzaXumMz+MQpYfEkYE6R+FANpm+R8nTSuHq9ugpvw39rea4W+tN8rmAEQvzKKPp0i1MuXfA7fDemMAfd0A==,
+        integrity: sha512-9gpdbK1KSBMlQmfbZVzKt5/lq529QZQkZq+JyIziUwuRoKJwTq1/Z0nax2R7z7IaDKn2hNsT08BnBA4L5+HOkQ==,
       }
 
-  '@aomex/logger-sentry@4.0.0':
+  '@aomex/logger-sentry@4.1.0':
     resolution:
       {
-        integrity: sha512-rRhr9eXFujK/V2E9KAPOV2te+gf53ZDAoMwqx7u3HZbTAQOGS/xDehQEwpAm0+ln9JglIXNfsw2SP++s+9relA==,
+        integrity: sha512-L3o5dUrUugP/kfLhXZq70ktkezqFMYykUz4RE9Emmxt82+f3MwkoPy70COYiBRhLjZoXMF27lc0nGUAAk6dn6g==,
       }
     peerDependencies:
       '@aomex/logger': ^4.0.0
 
-  '@aomex/logger-telegram@4.0.0':
+  '@aomex/logger-telegram@4.1.0':
     resolution:
       {
-        integrity: sha512-75stYJD3zIk7KI7cKCMMGr16YVNuScTNmucCWvf5qM3I7vGUEe9ttJLKZRF8IJa+KyFw6sEJIktnR4XE4wyh6Q==,
+        integrity: sha512-GhKCrSwhygIxAq7ZPtnf/4T527mf47oCwjWeYK8UpotdOJH2GnUR0fnc0xhDZZC0FE98OsXG+yTZCkf6XDDhSw==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/logger': ^4.0.0
 
-  '@aomex/logger@4.0.0':
+  '@aomex/logger@4.1.0':
     resolution:
       {
-        integrity: sha512-Tme9zkHsz8w/G3F80DnVVIjHwzKqCZclpiVCf3sQavNsPRuu47ZaQBWJrCNfxySeUAdZOwI18AOOX+FoaRRD2w==,
+        integrity: sha512-tHK+WYrkhV1kiVDJTq+iDP+jn0W7huYpFPWEZ2Jolq2Ag/xpkBV8BJ0YUGfp8cpKQIb7rqltHG9p2rQpujQf8w==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
 
-  '@aomex/mongoose@4.0.0':
+  '@aomex/mongoose@4.1.0':
     resolution:
       {
-        integrity: sha512-5eavUn3XZmbiIhTht2qeRnup2+vFY4UTJRZmQ/ApGyJlC9iVLfJyAppWAEsLTI35CM96squFxJK/MBexwjlpqQ==,
+        integrity: sha512-3MUS+63O7VHX3t8B/ruoWEDaEnsuZJMSI67vizCgRI7dbNd96E1cixz4w9mkIppTiBcU+DWUHpIsmT9yJ4SExA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       mongoose: ^9
 
-  '@aomex/openapi@4.0.0':
+  '@aomex/openapi@4.1.0':
     resolution:
       {
-        integrity: sha512-jaPWfLQtZddqwSAheq4499kFHZqeqyzp+trpeHSEP2qq2oL/Hhc0kFD6qT2QpxEV+zYND2eU1zB0+Q47LI+YTQ==,
+        integrity: sha512-dlrOyprL/riWyXinb7G+ZvLJEgLUXa5sGh16uMgbgUqixgcAw5dK6xJN6lbCzRtCUZhDw9ZmCkVTGeKSfaAJ/g==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
@@ -549,74 +552,83 @@ packages:
       '@aomex/console':
         optional: true
 
-  '@aomex/pretty-json@4.0.0':
+  '@aomex/pretty-json@4.1.0':
     resolution:
       {
-        integrity: sha512-OhAu+asH3yVySsI2pCe0YlZeLafkrxRWHKHsLJ9r4blEn55narM1b5KTb4ya1qBnUPSnv2nP5PJLpYRPHjRGWQ==,
+        integrity: sha512-4bxe1u2HQ0VsW9ROhY2APloSZWBW0Td7iPCitL8fLw6sjXTPkQi3EnCogycyp++2m6GZm+8MMROjoDMWJvAElQ==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/prisma@4.0.0':
+  '@aomex/prisma@4.1.0':
     resolution:
       {
-        integrity: sha512-RikNl5touZGVyKAJ+mBJE8uxnyMWEsgYy7f2+m9S8OSJTGrE8QgVlRKfT/valw/Kbv4Z52f1hquYcChuMOyNoA==,
+        integrity: sha512-zJ928mh4PXBXKYIssy8xNnyV2ZO+TmDMZuYslJ68KufzKsLxiR8m7/sXDEnK531Wq4BrioxdrMDwlsoI4XxSwg==,
       }
     hasBin: true
     peerDependencies:
       '@aomex/common': ^4.0.0
       prisma: '>=6'
 
-  '@aomex/rate-limit@4.0.0':
+  '@aomex/rate-limit@4.1.0':
     resolution:
       {
-        integrity: sha512-d6S5ArZ6BYSOE8jFp3N5LQ617CqvnCQyHgYh5SXPBWnYT1CcAq//UEN5GnLARDUSHhU9DLQ+G7mjbP8RqxWa7Q==,
+        integrity: sha512-mXytTjYnxcbfF3OfPlr4Kx70FCH+bGNpOImqLOm0cqHnACv2+iDAagoKPKAKuee8nmufQ56YTe+oyyeEjLR2WA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/redoc-ui@4.0.0':
+  '@aomex/redoc-ui@4.1.0':
     resolution:
       {
-        integrity: sha512-4wIKWvx0Ta3pf+u/VZULVGZb2gsfLNK6kgIfJcjEg1Urk/KshN99xpOYvDeVsGITV7LYAJwEp5ameXdxC/ay4w==,
+        integrity: sha512-09F1aUyu0R/WkuU6o7m6kUUgzZq9NrCpSi0V+4pKQ2s1GkMffM+DkMGQjXOjhKl7pQm00/Y+9Jn+o77skaewTw==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/response-time@4.0.0':
+  '@aomex/response-time@4.1.0':
     resolution:
       {
-        integrity: sha512-K9tp2rVacWzV/qm6duh/yDmZD6AzVs6h3AJEyjg/4NxMXBZW++h3FbuzDsCHlRVNeqhDoQl9hCzvA702PayevA==,
+        integrity: sha512-5qe3TmHQlybpVNbB970JjnSWKU137bnyAjXWmh17pQ5LH+CHg+u/ehtucm1h+IRpIlBcrjHFwqM/Nf/R6APMCA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/serve-static@4.0.0':
+  '@aomex/scalar-ui@4.1.0':
     resolution:
       {
-        integrity: sha512-0bpkgAQYuS7dFHU9EIolbB4aw4PHZ5RgQn+XHRDmQZRsaJ2nJ+gR+t9E9xkuFDkPe/ULKHlTq3MTedMLQi3VOA==,
+        integrity: sha512-0qQb75ge1E0nxgRnjVj7EAByhPQcumi9iSECUWHEww0XnHgxJXVHZEw9WBGR+3Cvzu4V2zBUA8jZhC3OP3F5OA==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/swagger-ui@4.0.0':
+  '@aomex/serve-static@4.1.0':
     resolution:
       {
-        integrity: sha512-q8KvF+i2b6J/zByMxWF3LDApISN5vGv4kw4VFbAQmYZA6qxyJbvEHXLB3CPzLFK+rWDSm0pLN1njNO57Plfpmw==,
+        integrity: sha512-yccGuppa8TV0KwXh1mpMK7qypkJVmf2vPNtQi5za5RILItYk/N0U4toZNSEyzJtpwXhTy3BjFoY3nGXPv8q/pQ==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
       '@aomex/web': ^4.0.0
 
-  '@aomex/web@4.0.0':
+  '@aomex/swagger-ui@4.1.0':
     resolution:
       {
-        integrity: sha512-VQkzYEaf6JmpqTJqElIJJ/JJrUY6p8eMC7hyU6+2OiwpD5nE9JKfavNshDH/N8UWVMutTR3o22B+8iQVPpSBZg==,
+        integrity: sha512-LjmIRB9/yTKIYDJShj970t/jU1lkSRrmH0Tf6PcWCasOtR8HEm5xPv2uxmuiXpP6V3PZUbAoFpPTql4+o8EW8A==,
+      }
+    peerDependencies:
+      '@aomex/common': ^4.0.0
+      '@aomex/web': ^4.0.0
+
+  '@aomex/web@4.1.0':
+    resolution:
+      {
+        integrity: sha512-uEf3oc0I3aq9MZhAJCNjfqq0UDcNcjdZ+fN9HX9tk0WuRk8Xnoxztha0j3KUXuToC+GtpC4qvihoy02xYs2olw==,
       }
     peerDependencies:
       '@aomex/common': ^4.0.0
@@ -6936,70 +6948,70 @@ packages:
       }
 
 snapshots:
-  '@aomex/async-trace@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))':
+  '@aomex/async-trace@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
+      '@aomex/common': 4.1.0(typescript@7.0.2)
 
-  '@aomex/auth-jwt-strategy@4.0.0(@aomex/auth@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/auth-jwt-strategy@4.1.0(@aomex/auth@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/auth': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/auth': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@types/jsonwebtoken': 9.0.10
       jsonwebtoken: 9.0.3
 
-  '@aomex/auth@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/auth@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
 
-  '@aomex/cache-redis-adapter@4.0.0(@aomex/cache@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))':
+  '@aomex/cache-redis-adapter@4.1.0(@aomex/cache@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))':
     dependencies:
-      '@aomex/cache': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+      '@aomex/cache': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       ioredis: 6.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@aomex/cache@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))':
+  '@aomex/cache@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))':
     dependencies:
-      '@aomex/async-trace': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
-      '@aomex/common': 4.0.0(typescript@7.0.2)
+      '@aomex/async-trace': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
 
-  '@aomex/common-middleware@4.0.0':
+  '@aomex/common-middleware@4.1.0':
     dependencies:
-      '@aomex/internal-tools': 4.0.0
+      '@aomex/internal-tools': 4.1.0
 
-  '@aomex/common-service@4.0.0':
+  '@aomex/common-service@4.1.0':
     dependencies:
-      '@aomex/internal-tools': 4.0.0
+      '@aomex/internal-tools': 4.1.0
 
-  '@aomex/common-validator@4.0.0':
+  '@aomex/common-validator@4.1.0':
     dependencies:
-      '@aomex/internal-tools': 4.0.0
+      '@aomex/internal-tools': 4.1.0
       decimal.js: 10.6.0
       email-validator: 2.0.4
       luxon: 3.7.2
 
-  '@aomex/common@4.0.0(typescript@7.0.2)':
+  '@aomex/common@4.1.0(typescript@7.0.2)':
     dependencies:
-      '@aomex/common-middleware': 4.0.0
-      '@aomex/common-service': 4.0.0
-      '@aomex/common-validator': 4.0.0
-      '@aomex/internal-tools': 4.0.0
+      '@aomex/common-middleware': 4.1.0
+      '@aomex/common-service': 4.1.0
+      '@aomex/common-validator': 4.1.0
+      '@aomex/internal-tools': 4.1.0
       typescript: 7.0.2
 
-  '@aomex/compress@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/compress@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-tools': 4.0.0
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-tools': 4.1.0
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       compressible: 2.0.18
 
-  '@aomex/console@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))':
+  '@aomex/console@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-file-import': 4.0.0
-      '@aomex/internal-tools': 4.0.0
-      '@aomex/logger': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-file-import': 4.1.0
+      '@aomex/internal-tools': 4.1.0
+      '@aomex/logger': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       ansi-escapes: 7.3.0
       glob: 14.0.6
       is-unicode-supported: 2.1.0
@@ -7010,146 +7022,153 @@ snapshots:
       yargs: 18.2.0
       yargs-parser: 22.0.0
 
-  '@aomex/cors@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/cors@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       vary: 1.1.2
 
-  '@aomex/cron@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/console@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/cron@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/console@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/cache': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/console': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
-      '@aomex/internal-file-import': 4.0.0
-      '@aomex/internal-tools': 4.0.0
+      '@aomex/cache': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/console': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
+      '@aomex/internal-file-import': 4.1.0
+      '@aomex/internal-tools': 4.1.0
       cron-parser: 5.10.6
       format-duration: 4.0.0
       pidusage: 4.1.0
 
-  '@aomex/etag@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/etag@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       etag: 1.8.1
 
-  '@aomex/helmet@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/helmet@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       helmet: 8.3.0
 
-  '@aomex/http-access-log@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/http-access-log@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-tools': 4.0.0
-      '@aomex/logger': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-tools': 4.1.0
+      '@aomex/logger': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       pretty-time: 1.1.0
 
-  '@aomex/internal-file-import@4.0.0':
+  '@aomex/internal-file-import@4.1.0':
     dependencies:
       glob: 14.0.6
 
-  '@aomex/internal-tools@4.0.0':
+  '@aomex/internal-tools@4.1.0':
     dependencies:
       '@i18nx/node': 0.3.1
       '@types/bytes': 3.1.6
       bytes: 3.1.2
       openapi-types: 12.1.3
 
-  '@aomex/logger-sentry@4.0.0(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))':
+  '@aomex/logger-sentry@4.1.0(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))':
     dependencies:
-      '@aomex/logger': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+      '@aomex/logger': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@sentry/node': 11.12.0
     transitivePeerDependencies:
       - rollup
       - webpack
 
-  '@aomex/logger-telegram@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))':
+  '@aomex/logger-telegram@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/logger': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/logger': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@grammyjs/auto-retry': 2.0.2(grammy@1.46.0)
       grammy: 1.46.0
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  '@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))':
+  '@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
+      '@aomex/common': 4.1.0(typescript@7.0.2)
 
-  '@aomex/mongoose@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(mongoose@9.12.1)':
+  '@aomex/mongoose@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(mongoose@9.12.1)':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-file-import': 4.0.0
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-file-import': 4.1.0
       lodash.snakecase: 4.1.1
       mongoose: 9.12.1
 
-  '@aomex/openapi@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/console@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/openapi@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/console@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-file-import': 4.0.0
-      '@aomex/internal-tools': 4.0.0
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-file-import': 4.1.0
+      '@aomex/internal-tools': 4.1.0
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       '@stoplight/spectral-core': 1.24.1
       '@stoplight/spectral-rulesets': 1.23.1
       lodash.snakecase: 4.1.1
       yaml: 2.9.1
     optionalDependencies:
-      '@aomex/console': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/console': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
     transitivePeerDependencies:
       - encoding
 
-  '@aomex/pretty-json@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/pretty-json@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       streaming-json-stringify: 3.1.0
 
-  '@aomex/prisma@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))':
+  '@aomex/prisma@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
+      '@aomex/common': 4.1.0(typescript@7.0.2)
       '@prisma/generator-helper': 7.10.1
       prettier: 3.10.1
       prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2)
 
-  '@aomex/rate-limit@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/rate-limit@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
 
-  '@aomex/redoc-ui@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/redoc-ui@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/serve-static': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/serve-static': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       yaml: 2.9.1
 
-  '@aomex/response-time@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/response-time@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
 
-  '@aomex/serve-static@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
+  '@aomex/scalar-ui@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
-
-  '@aomex/swagger-ui@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))':
-    dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/serve-static': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
-      '@aomex/web': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/serve-static': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
       yaml: 2.9.1
 
-  '@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2)))':
+  '@aomex/serve-static@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
     dependencies:
-      '@aomex/common': 4.0.0(typescript@7.0.2)
-      '@aomex/internal-file-import': 4.0.0
-      '@aomex/internal-tools': 4.0.0
-      '@aomex/logger': 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
+
+  '@aomex/swagger-ui@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))':
+    dependencies:
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/serve-static': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))))
+      '@aomex/web': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))
+      yaml: 2.9.1
+
+  '@aomex/web@4.1.0(@aomex/common@4.1.0(typescript@7.0.2))(@aomex/logger@4.1.0(@aomex/common@4.1.0(typescript@7.0.2)))':
+    dependencies:
+      '@aomex/common': 4.1.0(typescript@7.0.2)
+      '@aomex/internal-file-import': 4.1.0
+      '@aomex/internal-tools': 4.1.0
+      '@aomex/logger': 4.1.0(@aomex/common@4.1.0(typescript@7.0.2))
       '@types/accepts': 1.3.7
       '@types/formidable': 3.5.1
       '@types/statuses': 2.0.6

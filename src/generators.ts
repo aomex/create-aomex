@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import type {
   AuthStrategy,
   ClusterStrategy,
@@ -422,13 +421,31 @@ ${entries.join('\n')}
 `;
 };
 
-/** 文档 UI 的随机路径后缀（脚手架写入时固化，非运行时变化） */
-export const createDocsPathSecret = (): string =>
-  randomBytes(8).toString('hex');
+const openapiInfoDescription = (projectName: string) =>
+  `
+# ${projectName}
 
-/** cron 监听端口：1024–65535，脚手架写入时固化 */
-export const createCronPort = (): number =>
-  1024 + (randomBytes(2).readUInt16BE(0) % (65535 - 1024 + 1));
+> Type-safe API powered by aomex：路由、中间件、校验、文档一站式可观测。
+
+## Capabilities
+
+| 模块 | 说明 |
+| --- | --- |
+| **Routers** | 声明式路由与参数校验 |
+| **Middleware** | 链式组合，可观测可复用 |
+| **OpenAPI** | 由源码自动生成，与实现同步 |
+
+## Quick Start
+
+\`\`\`bash
+pnpm dev
+# 打开本页即可调试接口
+\`\`\`
+
+---
+
+*Built with [aomex](https://aomex.js.org) · Type-safe · Production-ready*
+`.trim();
 
 export const generateDocsMiddleware = (
   docsUI: DocsUI,
@@ -436,6 +453,18 @@ export const generateDocsMiddleware = (
   docsPathSecret: string,
 ): { filename: string; content: string } | null => {
   if (docsUI === 'none') return null;
+
+  // description 内含 markdown 代码围栏（反引号），写入模板字符串时需转义
+  const infoDescription = openapiInfoDescription(projectName).replace(
+    /`/g,
+    '\\`',
+  );
+  const infoBlock = `info: {
+          title: '${projectName}',
+          description: \`
+${infoDescription}
+\`.trim(),
+        }`;
 
   if (docsUI === 'swagger') {
     return {
@@ -452,9 +481,7 @@ export const swagger = swaggerUI({
       routers: './src/routers',
       app,
       docs: {
-        info: {
-          title: '${projectName}',
-        },
+        ${infoBlock},
         servers: [{ url: 'http://localhost:3000', description: 'Local' }],
       },
     });
@@ -464,9 +491,10 @@ export const swagger = swaggerUI({
     };
   }
 
-  return {
-    filename: 'redoc.md.ts',
-    content: `import { redocUI } from '@aomex/redoc-ui';
+  if (docsUI === 'redoc') {
+    return {
+      filename: 'redoc.md.ts',
+      content: `import { redocUI } from '@aomex/redoc-ui';
 import { generateOpenapi } from '@aomex/openapi';
 import { app } from '@/web';
 
@@ -478,9 +506,31 @@ export const redoc = redocUI({
       routers: './src/routers',
       app,
       docs: {
-        info: {
-          title: '${projectName}',
-        },
+        ${infoBlock},
+        servers: [{ url: 'http://localhost:3000', description: 'Local' }],
+      },
+    });
+  },
+});
+`,
+    };
+  }
+
+  return {
+    filename: 'scalar.md.ts',
+    content: `import { scalarUI } from '@aomex/scalar-ui';
+import { generateOpenapi } from '@aomex/openapi';
+import { app } from '@/web';
+
+// 随机路径：降低被扫到后滥用文档接口的风险；生产环境会 skip
+export const scalar = scalarUI({
+  uriPrefix: '/scalar-${docsPathSecret}',
+  openapi: () => {
+    return generateOpenapi({
+      routers: './src/routers',
+      app,
+      docs: {
+        ${infoBlock},
         servers: [{ url: 'http://localhost:3000', description: 'Local' }],
       },
     });
@@ -604,6 +654,9 @@ export const generateWeb = (opts: {
   } else if (opts.docsUI === 'redoc') {
     imports.push(`import { redoc } from '@/middleware/redoc.md';`);
     docsMount = `    redoc.skip(isProduction),`;
+  } else if (opts.docsUI === 'scalar') {
+    imports.push(`import { scalar } from '@/middleware/scalar.md';`);
+    docsMount = `    scalar.skip(isProduction),`;
   }
 
   // 文档 UI 挂在 helmet 之前（与官方模板一致）
@@ -2222,6 +2275,7 @@ export const buildDependencyGroups = (
   }
   if (opts.docsUI === 'swagger') deps.add(aomex('@aomex/swagger-ui'));
   if (opts.docsUI === 'redoc') deps.add(aomex('@aomex/redoc-ui'));
+  if (opts.docsUI === 'scalar') deps.add(aomex('@aomex/scalar-ui'));
 
   if (opts.consoleMiddlewares.includes('cron')) {
     deps.add(aomex('@aomex/cron'));

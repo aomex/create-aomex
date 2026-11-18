@@ -169,6 +169,7 @@ export const selectOptions = async (
       choices: [
         { name: 'Swagger UI', value: 'swagger' },
         { name: 'Redoc UI', value: 'redoc' },
+        { name: 'Scalar UI', value: 'scalar' },
         { name: '无', value: 'none' },
       ],
       default: 'swagger',

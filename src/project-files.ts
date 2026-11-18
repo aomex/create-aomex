@@ -1,3 +1,4 @@
+import { randomBytes, randomInt } from 'node:crypto';
 import { withBaseWebPlugins, type ScaffoldOptions } from './types';
 import {
   generateAuth,
@@ -7,8 +8,6 @@ import {
   generateCli,
   generateCookieKey,
   generateDeployCompose,
-  createCronPort,
-  createDocsPathSecret,
   generateDocsMiddleware,
   generateDockerCompose,
   generateDockerCronStatsScript,
@@ -103,7 +102,7 @@ export const generateProjectFiles = (opts: {
     webPlugins: withBaseWebPlugins(opts.options.webPlugins),
   };
   const { packageManagerVersion, aomexVersion, prismaVersion } = opts;
-  const cronPort = opts.cronPort ?? createCronPort();
+  const cronPort = opts.cronPort ?? randomInt(1024, 65536);
   const hasCron = options.consoleMiddlewares.includes('cron');
   const needsCookie =
     options.auth.includes('bearer') || options.auth.includes('jwt');
@@ -454,7 +453,7 @@ commander.create('hello', {
   const docs = generateDocsMiddleware(
     options.docsUI,
     opts.projectName,
-    opts.docsPathSecret ?? createDocsPathSecret(),
+    opts.docsPathSecret ?? randomBytes(8).toString('hex'),
   );
   if (docs) add(`src/middleware/${docs.filename}`, text(docs.content));
 

@@ -33,7 +33,7 @@ export const normalizeAuthStrategies = (
   ];
 };
 
-export type DocsUI = 'swagger' | 'redoc' | 'none';
+export type DocsUI = 'swagger' | 'redoc' | 'scalar' | 'none';
 
 export type WebPlugin =
   | 'cors'

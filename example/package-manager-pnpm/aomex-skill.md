@@ -156,7 +156,7 @@ declare global {
 | 调 `services.xxx`           | 一律 `await`（懒加载）；类型已是 `Promise`；Service 内部 `this.` 调用除外                                                          |
 | Service 互调                | `import { services } from '@/services'` → `await services.other....`                                                               |
 | 控制台命令 / 定时任务       | 见下节「指令与定时任务」                                                                                                           |
-| 生产关掉文档 UI             | 已有 `swagger`/`redoc` 用 `.skip(isProduction)`；新加敏感中间件同样模式                                                            |
+| 生产关掉文档 UI             | 已有 `swagger`/`redoc`/`scalar` 用 `.skip(isProduction)`；新加敏感中间件同样模式                                                   |
 | 慢请求追踪                  | 已有 async-trace 时挂慢请求中间件；不要自己 setTimeout 统计                                                                        |
 
 ## 指令与定时任务
@@ -278,16 +278,16 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 
 推荐骨架（有则按此相对位置；没有的插件跳过）：
 
-`accessLog → responseTime → cors → rateLimit → compress → etag → globalErrorRewrite → slowTrace → prettyJson → swagger/redoc → helmet → routers`
+`accessLog → responseTime → cors → rateLimit → compress → etag → globalErrorRewrite → slowTrace → prettyJson → swagger/redoc/scalar → helmet → routers`
 
-| 关系                         | 要求                                  | 原因                                                                         |
-| ---------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
-| `responseTime`               | 尽量最外（`accessLog` 后）            | 覆盖内侧全部耗时                                                             |
-| `cors`                       | 靠外；在限流 / 业务 / 错误重写之前    | 预检早返回；429/错误响应也带 CORS 头                                         |
-| `rateLimit`                  | `cors` 后、重活前                     | 尽早拒绝；被拒时可不再进 compress 等                                         |
-| `compress` → `etag`          | **compress 必须在 etag 前面**（更外） | 出站先对明文算 ETag 再压缩；若 etag 更外，压缩后 body 变 Stream，etag 会跳过 |
-| `swagger`/`redoc` → `helmet` | 文档 UI 在 helmet 前面                | 命中文档则短路，避免 CSP 弄坏文档页                                          |
-| `helmet` → `routers`         | helmet 在路由前                       | 安全头留给业务接口                                                           |
+| 关系                                  | 要求                                  | 原因                                                                         |
+| ------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| `responseTime`                        | 尽量最外（`accessLog` 后）            | 覆盖内侧全部耗时                                                             |
+| `cors`                                | 靠外；在限流 / 业务 / 错误重写之前    | 预检早返回；429/错误响应也带 CORS 头                                         |
+| `rateLimit`                           | `cors` 后、重活前                     | 尽早拒绝；被拒时可不再进 compress 等                                         |
+| `compress` → `etag`                   | **compress 必须在 etag 前面**（更外） | 出站先对明文算 ETag 再压缩；若 etag 更外，压缩后 body 变 Stream，etag 会跳过 |
+| `swagger`/`redoc`/`scalar` → `helmet` | 文档 UI 在 helmet 前面                | 命中文档则短路，避免 CSP 弄坏文档页                                          |
+| `helmet` → `routers`                  | helmet 在路由前                       | 安全头留给业务接口                                                           |
 
 注意：
 
