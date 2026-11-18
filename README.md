@@ -6,22 +6,19 @@
 
 ## 快速开始
 
+务必带上 `@latest`，否则本地缓存常会跑到旧版脚手架。用哪条命令启动，就会自动选用对应包管理器（也可用 `--pm` 覆盖）。
+
 ```bash
-# npm
+pnpm create aomex@latest
+yarn create aomex@latest
 npm create aomex@latest
-
-# pnpm
-pnpm create aomex
-
-# yarn
-yarn create aomex
 ```
 
-按提示选择包管理器、ORM、认证、中间件等；生成后进入目录启动：
+按提示选择 ORM、认证、中间件等；生成后进入目录启动：
 
 ```bash
 cd <project>
-pnpm start   # 或 npm start / yarn start
+pnpm start   # 或 yarn start / npm start
 ```
 
 生成项目根目录含 `AGENTS.md` → `aomex-skill.md`，供 AI 按约定扩展代码。
@@ -34,7 +31,7 @@ pnpm start   # 或 npm start / yarn start
 | ----------------------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
 | `--project`             | 项目目录名                                                               | `--project=my-api`                                |
 | `--node`                | Node 版本（默认自动取最新 LTS）                                          | `--node=24.22.0`                                  |
-| `--pm`                  | 包管理器                                                                 | `--pm=pnpm` \| `npm` \| `yarn`                    |
+| `--pm`                  | 包管理器（默认跟 create 命令走）                                         | `--pm=pnpm` \| `yarn` \| `npm`                    |
 | `--orm`                 | ORM                                                                      | `--orm=prisma` \| `mongoose` \| `none`            |
 | `--db`                  | Prisma 数据库（仅 `--orm=prisma`）                                       | `--db=mysql` \| `postgresql` \| …                 |
 | `--auth`                | 认证策略，逗号多选；`none` 表示无                                        | `--auth=bearer,jwt` \| `--auth=none`              |
@@ -50,7 +47,7 @@ pnpm start   # 或 npm start / yarn start
 示例：
 
 ```bash
-pnpm create aomex -- \
+pnpm create aomex@latest -- \
   --project=HelloAomex \
   --pm=pnpm \
   --orm=prisma \

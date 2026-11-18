@@ -48,17 +48,29 @@ const parseList = (value: unknown): string[] => {
   return [];
 };
 
+/** 从 `pnpm/yarn/npm create` 注入的 user-agent 推断包管理器 */
+export const packageManagerFromUserAgent = (
+  userAgent = process.env['npm_config_user_agent'],
+): PackageManager | undefined => {
+  if (!userAgent) return undefined;
+  if (userAgent.includes('pnpm')) return 'pnpm';
+  if (userAgent.includes('yarn')) return 'yarn';
+  if (userAgent.includes('npm')) return 'npm';
+  return undefined;
+};
+
 export const selectOptions = async (
   argv: Record<string, any>,
 ): Promise<ScaffoldOptions> => {
   const packageManager =
     (argv['pm'] as PackageManager | undefined) ??
+    packageManagerFromUserAgent() ??
     (await select<PackageManager>({
       message: '使用哪种包管理器',
       choices: [
         { name: 'pnpm', value: 'pnpm' },
-        { name: 'npm', value: 'npm' },
         { name: 'yarn', value: 'yarn' },
+        { name: 'npm', value: 'npm' },
       ],
       default: 'pnpm',
     }));
