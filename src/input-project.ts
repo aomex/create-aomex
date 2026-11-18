@@ -1,4 +1,4 @@
-import { terminal } from '@aomex/console';
+import { terminal } from './terminal';
 import { input } from '@inquirer/prompts';
 import { existsSync, readdirSync } from 'node:fs';
 import sanitize from 'sanitize-filename';

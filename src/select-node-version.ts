@@ -1,20 +1,26 @@
-/**
- * 解析 Node.js 版本：默认取最新 LTS（稳定版）；可用 `--node` 覆盖。
- */
+import { select } from '@inquirer/prompts';
+import { terminal } from './terminal';
+
 export const selectNodeVersion = async (
   argv: Record<string, any>,
 ): Promise<string> => {
-  const fromArg = argv['node'];
-  if (typeof fromArg === 'string' && fromArg.trim()) {
-    return fromArg.trim().replace(/^v/, '');
+  let nodeVersion: string | undefined =
+    typeof argv['node'] === 'string' ? argv['node'] : undefined;
+
+  if (!nodeVersion) {
+    const nodes = await promise;
+    nodeVersion = await select({
+      message: '请选择node.js稳定版本',
+      choices: nodes.map((item) => ({
+        name: `${item.version} ${terminal.style(['gray', 'dim'], item.date)}`,
+        value: item.version,
+        short: item.version,
+      })),
+      loop: false,
+    });
   }
 
-  const nodes = await fetchNodes();
-  const latest = nodes[0];
-  if (!latest) {
-    throw new Error('无法获取 Node.js 最新稳定版');
-  }
-  return latest.version.replace(/^v/, '');
+  return nodeVersion.replace(/^v/, '');
 };
 
 const fetchNodes = async () => {
@@ -30,10 +36,20 @@ const fetchNodes = async () => {
     date: string;
   }[];
 
-  // index.json 按版本新→旧排列；取最新 LTS 且 major >= 24
-  return nodes.filter((item) => {
-    if (!item.lts) return false;
-    const major = Number(item.version.slice(1).split('.')[0]);
-    return major >= 24;
-  });
+  return nodes
+    .map((item) => ({
+      ...item,
+      versions: item.version.slice(1).split('.').map(Number) as [
+        number,
+        number,
+        number,
+      ],
+    }))
+    .filter((item) => {
+      if (!item.lts) return false;
+      // 生成项目依赖 @aomex/*，要求 Node >= 24
+      return item.versions[0]! >= 24;
+    });
 };
+
+const promise = fetchNodes();

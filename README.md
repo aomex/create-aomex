@@ -2,7 +2,7 @@
 
 交互式脚手架，用于生成基于 [aomex](https://aomex.js.org) 的 TypeScript 项目（Web + Console / Cron、可选 Prisma / Mongoose、Docker / 裸机部署等）。
 
-要求 **Node.js ≥ 24**。
+脚手架要求 **Node.js `^22.22.2 || ^24.15.0 || >=26`**。
 
 ## 快速开始
 
@@ -30,7 +30,7 @@ pnpm start   # 或 yarn start / npm start
 | 参数                    | 说明                                                                     | 示例                                              |
 | ----------------------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
 | `--project`             | 项目目录名                                                               | `--project=my-api`                                |
-| `--node`                | Node 版本（默认自动取最新 LTS）                                          | `--node=24.22.0`                                  |
+| `--node`                | Node 版本（不传则交互选择 LTS，≥24）                                     | `--node=24.22.0`                                  |
 | `--pm`                  | 包管理器（默认跟 create 命令走）                                         | `--pm=pnpm` \| `yarn` \| `npm`                    |
 | `--orm`                 | ORM                                                                      | `--orm=prisma` \| `mongoose` \| `none`            |
 | `--db`                  | Prisma 数据库（仅 `--orm=prisma`）                                       | `--db=mysql` \| `postgresql` \| …                 |

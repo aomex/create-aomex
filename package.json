@@ -16,12 +16,12 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": ">=24",
+      "version": "^22.22.2 || ^24.15.0 || >=26.0.0",
       "onFail": "warn"
     }
   },
   "engines": {
-    "node": ">=24"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "packageManager": "pnpm@12.21.0",
   "publishConfig": {
@@ -35,8 +35,6 @@
   ],
   "bin": "dist/index.js",
   "dependencies": {
-    "@aomex/common": "4.1.0",
-    "@aomex/console": "4.1.0",
     "@inquirer/prompts": "^8.8.0",
     "sanitize-filename": "^1.6.5",
     "yargs-parser": "^22.0.0"
@@ -47,6 +45,7 @@
     "@aomex/auth-jwt-strategy": "4.1.0",
     "@aomex/cache": "4.1.0",
     "@aomex/cache-redis-adapter": "4.1.0",
+    "@aomex/common": "4.1.0",
     "@aomex/compress": "4.1.0",
     "@aomex/cors": "4.1.0",
     "@aomex/cron": "4.1.0",

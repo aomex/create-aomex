@@ -3,7 +3,7 @@
 import path from 'node:path/posix';
 import yargsParser from 'yargs-parser';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { terminal } from '@aomex/console';
+import { terminal } from './terminal';
 import { execSync, spawn } from 'node:child_process';
 import { setTimeout } from 'node:timers/promises';
 import { inputProject } from './input-project';
