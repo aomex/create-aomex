@@ -1,9 +1,12 @@
 import { type RedisOptions } from '@aomex/cache-redis-adapter';
 import { shared, type SecretConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env.production，需在生产服务器手动创建文件。
+ * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 正式环境。对应 main 分支
 export const production = {
   ...shared,
   redis: <RedisOptions>{
@@ -13,5 +16,3 @@ export const production = {
     db: 0,
   },
 };
-
-export type Config = typeof production;

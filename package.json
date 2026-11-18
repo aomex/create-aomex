@@ -63,7 +63,6 @@
     "@aomex/rate-limit": "4.0.0",
     "@aomex/redoc-ui": "4.0.0",
     "@aomex/response-time": "4.0.0",
-    "@aomex/serve-static": "4.0.0",
     "@aomex/swagger-ui": "4.0.0",
     "@aomex/web": "4.0.0",
     "@commitlint/cli": "^21.2.4",

@@ -1,6 +1,10 @@
 import 'dotenv/config';
-import { clusterListen, formatError, routers, WebApp } from '@aomex/web';
-import { rule } from '@aomex/common';
+import { clusterListen, routers, WebApp } from '@aomex/web';
+import { globalErrorRewrite } from '@/middleware/format-error.md';
+import { responseTime } from '@aomex/response-time';
+import { cors } from '@aomex/cors';
+import { etag } from '@aomex/etag';
+import { helmet } from '@aomex/helmet';
 import { services } from '@/services';
 
 export const app = new WebApp({
@@ -9,12 +13,14 @@ export const app = new WebApp({
   language: { mode: 'fixed', language: 'zh-CN' },
   proxyIP: { mode: 'detect' },
   mount: [
-    formatError({
-      content: { code: rule.string(), message: rule.string() },
-      handler(err) {
-        return { code: err.code || '', message: err.message };
-      },
+    responseTime(),
+    globalErrorRewrite,
+    cors({
+      // 如果请求需要携带cookies，请解开下面这行注释
+      // credentials: true,
     }),
+    etag(),
+    helmet(),
     routers('./src/routers'),
   ],
 });

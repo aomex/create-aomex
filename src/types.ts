@@ -22,9 +22,20 @@ export type WebPlugin =
   | 'response-time'
   | 'pretty-json'
   | 'rate-limit'
-  | 'serve-static'
   | 'http-access-log'
   | 'async-trace';
+
+/** 所有项目默认安装、不询问的 Web 插件 */
+export const BASE_WEB_PLUGINS: readonly WebPlugin[] = [
+  'response-time',
+  'cors',
+  'etag',
+  'helmet',
+];
+
+export const withBaseWebPlugins = (plugins: WebPlugin[]): WebPlugin[] => [
+  ...new Set<WebPlugin>([...BASE_WEB_PLUGINS, ...plugins]),
+];
 
 export type LoggerTransport =
   'console' | 'file' | 'stream' | 'webhook' | 'sentry' | 'telegram';
@@ -57,6 +68,11 @@ export interface ScaffoldOptions {
   language: DefaultLanguage;
   /** WebApp language mode: dynamic（按 Accept-Language） */
   dynamicLanguage: boolean;
+  /**
+   * 统一响应体套壳：`WebApp.envelope`，写出前包进声明结构并固定 HTTP 200。
+   * @see https://aomex.js.org （envelope / formatError）
+   */
+  responseEnvelope: boolean;
   /** 是否生成 Docker 部署产物（Dockerfile / deploy compose / deploy 脚本） */
   docker: boolean;
   /** IANA 时区：只写入 .env*（Docker compose env_file / dotenv / 本地 start 共用） */

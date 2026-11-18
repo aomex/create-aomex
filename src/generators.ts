@@ -509,8 +509,6 @@ const pluginImport = (plugin: WebPlugin): string => {
       return `import { prettyJson } from '@aomex/pretty-json';`;
     case 'rate-limit':
       return `import { rateLimit } from '@aomex/rate-limit';`;
-    case 'serve-static':
-      return `import { serveStatic } from '@aomex/serve-static';`;
     case 'http-access-log':
       return `import { httpAccessLog } from '@/middleware/http-access-log.md';`;
     case 'async-trace':
@@ -521,7 +519,10 @@ const pluginImport = (plugin: WebPlugin): string => {
 const pluginMount = (plugin: WebPlugin): string => {
   switch (plugin) {
     case 'cors':
-      return `    cors({ credentials: true }),`;
+      return `    cors({
+      // 如果请求需要携带cookies，请解开下面这行注释
+      // credentials: true,
+    }),`;
     case 'etag':
       return `    etag(),`;
     case 'helmet':
@@ -534,8 +535,6 @@ const pluginMount = (plugin: WebPlugin): string => {
       return `    prettyJson(),`;
     case 'rate-limit':
       return `    rateLimit(),`;
-    case 'serve-static':
-      return `    serveStatic('./public'),`;
     case 'http-access-log':
       return `    httpAccessLog.skip(isProduction),`;
     case 'async-trace':
@@ -553,7 +552,6 @@ const PLUGIN_ORDER: WebPlugin[] = [
   'etag',
   'pretty-json',
   'rate-limit',
-  'serve-static',
   'helmet',
 ];
 
@@ -567,19 +565,34 @@ export const generateWeb = (opts: {
   separateListen: boolean;
   /** 集群方案 */
   cluster: ClusterStrategy;
+  /** WebApp.envelope：统一套壳并固定 HTTP 200 */
+  responseEnvelope: boolean;
 }): string => {
   const useClusterListen = opts.cluster === 'cluster-listen';
   const ordered = PLUGIN_ORDER.filter((p) => opts.plugins.includes(p));
-  const webImports = useClusterListen
-    ? `import { clusterListen, formatError, routers, WebApp } from '@aomex/web';`
-    : `import { formatError, routers, WebApp } from '@aomex/web';`;
+  const webImportNames = [
+    ...(useClusterListen ? (['clusterListen'] as const) : []),
+    ...(opts.responseEnvelope ? (['envelope'] as const) : []),
+    'routers',
+    'WebApp',
+  ];
+  const webImports = `import { ${webImportNames.join(', ')} } from '@aomex/web';`;
   const imports = [
     webImports,
-    `import { rule } from '@aomex/common';`,
+    `import { globalErrorRewrite } from '@/middleware/format-error.md';`,
     ...ordered.map(pluginImport),
   ];
 
   const mounts = ordered.map(pluginMount);
+
+  // globalErrorRewrite 放在 responseTime() 之后（无则尽量靠外层）
+  {
+    const responseTimeIdx = mounts.findIndex((m) =>
+      m.includes('responseTime('),
+    );
+    const insertAt = responseTimeIdx >= 0 ? responseTimeIdx + 1 : 0;
+    mounts.splice(insertAt, 0, `    globalErrorRewrite,`);
+  }
 
   let docsMount: string | null = null;
   if (opts.docsUI === 'swagger') {
@@ -650,6 +663,17 @@ import { fileURLToPath } from 'node:url';
     ? `\nconst isProduction = process.env['NODE_ENV'] === 'production';\n`
     : '\n';
 
+  const envelopeBlock = opts.responseEnvelope
+    ? `  envelope: {
+    content: {
+      success: envelope.success,
+      statusCode: envelope.statusCode,
+      data: envelope.payload,
+    },
+  },
+`
+    : '';
+
   return `import 'dotenv/config';
 ${headImports}${imports.join('\n')}
 import { services } from '@/services';
@@ -663,14 +687,8 @@ export const app = new WebApp({
       : `{ mode: 'fixed', language: '${opts.language}' }`
   },
   proxyIP: { mode: 'detect' },
-  mount: [
+${envelopeBlock}  mount: [
 ${mounts.join('\n')}
-    formatError({
-      content: { code: rule.string(), message: rule.string() },
-      handler(err) {
-        return { code: err.code || '', message: err.message };
-      },
-    }),
     routers('./src/routers'),
   ],
 });
@@ -1383,6 +1401,24 @@ export const generateCookieKey = (): string => {
 `;
 };
 
+export const generateGlobalErrorRewrite =
+  (): string => `import { formatError } from '@aomex/web';
+import { rule } from '@aomex/common';
+
+export const globalErrorRewrite = formatError({
+  content: {
+    code: rule.string(),
+    message: rule.string(),
+  },
+  handler(err) {
+    return {
+      code: err.code || '',
+      message: err.message,
+    };
+  },
+});
+`;
+
 export const generateHttpAccessLog = (
   transports: LoggerTransport[],
 ): string => {
@@ -1704,45 +1740,26 @@ export const generatePackageJson = (opts: {
     groups.find((g) => g.dev)?.pkgs ?? [],
   );
 
-  const pkg: Record<string, any> = {
-    name: '{{projectName}}',
-    private: true,
-    license: 'UNLICENSED',
-    type: 'module',
-    engines: {
-      node: '{{nodeVersion}}',
-    },
-    scripts,
-    dependencies,
-    devDependencies,
-  };
-
+  // packageManager / devEngines 紧跟 scripts
+  let packageManager: string | undefined;
+  let devEngines: Record<string, unknown> | undefined;
   if (opts.packageManager === 'pnpm') {
-    // pnpm 通过 devEngines.runtime 自动下载并锁定 Node
-    pkg['packageManager'] = `pnpm@${opts.packageManagerVersion}`;
-    pkg['devEngines'] = {
+    // 顶层 packageManager 交给 Corepack；devEngines.runtime 用于自动下载 Node
+    packageManager = `pnpm@${opts.packageManagerVersion}`;
+    devEngines = {
       runtime: {
         name: 'node',
-        version: '^{{nodeVersion}}',
-        onFail: 'download',
-      },
-      packageManager: {
-        name: 'pnpm',
-        version: opts.packageManagerVersion,
+        version: '{{nodeVersion}}',
         onFail: 'download',
       },
     };
   } else if (opts.packageManager === 'yarn') {
-    pkg['packageManager'] = `yarn@${opts.packageManagerVersion}`;
-    pkg['devEngines'] = {
-      packageManager: {
-        name: 'yarn',
-        version: opts.packageManagerVersion,
-        onFail: 'download',
-      },
-    };
+    // 顶层 packageManager 已够；不再重复写 devEngines.packageManager
+    packageManager = `yarn@${opts.packageManagerVersion}`;
+    devEngines = undefined;
   } else {
-    pkg['devEngines'] = {
+    // npm 无顶层 packageManager 字段时，用 devEngines 声明期望版本
+    devEngines = {
       packageManager: {
         name: 'npm',
         version: opts.packageManagerVersion,
@@ -1751,7 +1768,20 @@ export const generatePackageJson = (opts: {
     };
   }
 
-  return pkg;
+  return {
+    name: '{{projectName}}',
+    private: true,
+    license: 'UNLICENSED',
+    type: 'module',
+    engines: {
+      node: '{{nodeVersion}}',
+    },
+    scripts,
+    ...(packageManager ? { packageManager } : {}),
+    ...(devEngines ? { devEngines } : {}),
+    dependencies,
+    devDependencies,
+  };
 };
 
 /** TypeScript 7 only：不再兼容 moduleResolution:node / downlevelIteration 等已移除选项 */
@@ -2182,9 +2212,6 @@ export const buildDependencyGroups = (
         break;
       case 'rate-limit':
         deps.add(aomex('@aomex/rate-limit'));
-        break;
-      case 'serve-static':
-        deps.add(aomex('@aomex/serve-static'));
         break;
       case 'http-access-log':
         deps.add(aomex('@aomex/http-access-log'));

@@ -1,11 +1,13 @@
 import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import type { Config } from './production';
-import { shared, type SecretConfig } from './shared';
+import { shared, type SecretConfig, type FullConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env.integration，需在集成服务器手动创建文件。
+ * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 线上集成环境，用于功能、交互测试。对应 develop 分支
-export const integration: Config = {
+export const integration: FullConfig = {
   ...shared,
   redis: <RedisOptions>{
     host: '',

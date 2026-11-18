@@ -3,6 +3,7 @@ import { I18N_LANGUAGES, type DefaultLanguage } from './i18n-languages';
 import { DEFAULT_TIMEZONE, isValidTimezone, listTimezones } from './timezones';
 import {
   CLUSTER_STRATEGIES,
+  withBaseWebPlugins,
   type AuthStrategy,
   type ClusterStrategy,
   type ConsoleMiddleware,
@@ -105,17 +106,15 @@ export const selectOptions = async (
       default: 'bearer',
     }));
 
+  // response-time / cors / etag / helmet 为基础插件，不询问，始终安装
   const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
-  const webPlugins =
+  const selectedWebPlugins =
     webPluginsArg.length > 0
       ? (webPluginsArg as WebPlugin[])
       : await checkbox<WebPlugin>({
-          message: '需要用到的 Web 插件',
+          message:
+            '需要用到的 Web 插件（已默认 cors / etag / helmet / response-time）',
           choices: [
-            { name: 'cors', value: 'cors', checked: true },
-            { name: 'etag', value: 'etag', checked: true },
-            { name: 'helmet', value: 'helmet', checked: true },
-            { name: 'response-time', value: 'response-time', checked: true },
             {
               name: 'http-access-log',
               value: 'http-access-log',
@@ -129,10 +128,10 @@ export const selectOptions = async (
             { name: 'compress', value: 'compress', checked: false },
             { name: 'pretty-json', value: 'pretty-json', checked: false },
             { name: 'rate-limit', value: 'rate-limit', checked: false },
-            { name: 'serve-static', value: 'serve-static', checked: false },
           ],
           loop: false,
         });
+  const webPlugins = withBaseWebPlugins(selectedWebPlugins);
 
   const docsUI =
     (argv['docs'] as DocsUI | undefined) ??
@@ -227,6 +226,15 @@ export const selectOptions = async (
       default: false,
     }));
 
+  const responseEnvelope =
+    parseBoolArg(
+      argv['envelope'] ?? argv['response-envelope'] ?? argv['responseEnvelope'],
+    ) ??
+    (await confirm({
+      message: '是否统一响应体套壳为 HTTP 200（WebApp.envelope）',
+      default: false,
+    }));
+
   const docker =
     parseBoolArg(argv['docker']) ??
     (await confirm({
@@ -270,6 +278,7 @@ export const selectOptions = async (
     consoleMiddlewares,
     language,
     dynamicLanguage,
+    responseEnvelope,
     docker,
     timezone,
     cluster,

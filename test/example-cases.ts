@@ -1,4 +1,8 @@
-import type { ScaffoldOptions, WebPlugin } from '../src/types';
+import {
+  BASE_WEB_PLUGINS,
+  type ScaffoldOptions,
+  type WebPlugin,
+} from '../src/types';
 
 export type ExampleCase = {
   /** example/<name>/ 目录名 */
@@ -7,40 +11,34 @@ export type ExampleCase = {
 };
 
 const allWebPlugins: WebPlugin[] = [
-  'cors',
-  'etag',
-  'helmet',
+  ...BASE_WEB_PLUGINS,
   'compress',
-  'response-time',
   'pretty-json',
   'rate-limit',
-  'serve-static',
   'http-access-log',
   'async-trace',
 ];
 
-/** 推荐组合常用插件 */
-const recommendedPlugins = [
-  'cors',
-  'etag',
-  'helmet',
-  'response-time',
+/** 推荐组合：基础插件 + 常用可选 */
+const recommendedPlugins: WebPlugin[] = [
+  ...BASE_WEB_PLUGINS,
   'http-access-log',
   'async-trace',
-] as const;
+];
 
-/** 精简底版：变体以此为基底 */
+/** 精简底版：变体以此为基底（含基础 Web 插件） */
 const bareMinimum: ScaffoldOptions = {
   packageManager: 'pnpm',
   orm: 'none',
   prismaDatabase: undefined,
   auth: 'none',
-  webPlugins: [],
+  webPlugins: [...BASE_WEB_PLUGINS],
   docsUI: 'none',
   loggerTransports: ['console'],
   consoleMiddlewares: [],
   language: 'zh-CN',
   dynamicLanguage: false,
+  responseEnvelope: false,
   docker: true,
   timezone: 'UTC',
   cluster: 'none',
@@ -65,6 +63,7 @@ const kitchenSink: ScaffoldOptions = {
   consoleMiddlewares: ['cron', 'openapi'],
   language: 'zh-CN',
   dynamicLanguage: true,
+  responseEnvelope: true,
   docker: true,
   timezone: 'UTC',
   cluster: 'cluster-listen',
@@ -82,6 +81,7 @@ const recommended: ScaffoldOptions = {
   consoleMiddlewares: ['cron'],
   language: 'zh-CN',
   dynamicLanguage: false,
+  responseEnvelope: false,
   docker: true,
   timezone: 'UTC',
   cluster: 'none',

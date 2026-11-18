@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { clusterListen, formatError, routers, WebApp } from '@aomex/web';
-import { rule } from '@aomex/common';
+import { clusterListen, envelope, routers, WebApp } from '@aomex/web';
+import { globalErrorRewrite } from '@/middleware/format-error.md';
 import { httpAccessLog } from '@/middleware/http-access-log.md';
 import { responseTime } from '@aomex/response-time';
 import { slowTrace } from '@/middleware/slow-trace.md';
@@ -11,7 +11,6 @@ import { compress } from '@aomex/compress';
 import { etag } from '@aomex/etag';
 import { prettyJson } from '@aomex/pretty-json';
 import { rateLimit } from '@aomex/rate-limit';
-import { serveStatic } from '@aomex/serve-static';
 import { helmet } from '@aomex/helmet';
 import { swagger } from '@/middleware/swagger.md';
 import { services } from '@/services';
@@ -23,24 +22,28 @@ export const app = new WebApp({
   logger: services.logger,
   language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
   proxyIP: { mode: 'detect' },
+  envelope: {
+    content: {
+      success: envelope.success,
+      statusCode: envelope.statusCode,
+      data: envelope.payload,
+    },
+  },
   mount: [
     httpAccessLog.skip(isProduction),
     responseTime(),
+    globalErrorRewrite,
     slowTrace,
-    cors({ credentials: true }),
+    cors({
+      // 如果请求需要携带cookies，请解开下面这行注释
+      // credentials: true,
+    }),
     compress(),
     etag(),
     prettyJson(),
     rateLimit(),
-    serveStatic('./public'),
     swagger.skip(isProduction),
     helmet(),
-    formatError({
-      content: { code: rule.string(), message: rule.string() },
-      handler(err) {
-        return { code: err.code || '', message: err.message };
-      },
-    }),
     routers('./src/routers'),
   ],
 });

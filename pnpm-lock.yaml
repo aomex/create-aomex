@@ -298,9 +298,6 @@ importers:
       '@aomex/response-time':
         specifier: 4.0.0
         version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
-      '@aomex/serve-static':
-        specifier: 4.0.0
-        version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))
       '@aomex/swagger-ui':
         specifier: 4.0.0
         version: 4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/web@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))(@aomex/logger@4.0.0(@aomex/common@4.0.0(typescript@7.0.2))))

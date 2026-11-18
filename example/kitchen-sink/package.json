@@ -16,6 +16,14 @@
     "cron:stats": "node scripts/docker-cron-stats.mjs",
     "cron:stop": "node scripts/docker-cron-stop.mjs"
   },
+  "packageManager": "pnpm@12.21.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.0",
+      "onFail": "download"
+    }
+  },
   "dependencies": {
     "@aomex/async-trace": "4.0.0",
     "@aomex/auth": "4.0.0",
@@ -37,7 +45,6 @@
     "@aomex/prisma": "4.0.0",
     "@aomex/rate-limit": "4.0.0",
     "@aomex/response-time": "4.0.0",
-    "@aomex/serve-static": "4.0.0",
     "@aomex/swagger-ui": "4.0.0",
     "@aomex/web": "4.0.0",
     "@prisma/adapter-mariadb": "7.10.1",
@@ -56,18 +63,5 @@
     "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  },
-  "packageManager": "pnpm@12.21.0",
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "^24.22.0",
-      "onFail": "download"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.21.0",
-      "onFail": "download"
-    }
   }
 }

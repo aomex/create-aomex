@@ -1,4 +1,4 @@
-import type { ScaffoldOptions } from './types';
+import { withBaseWebPlugins, type ScaffoldOptions } from './types';
 import {
   generateAuth,
   generateBareDeployScript,
@@ -19,6 +19,7 @@ import {
   generateDockerfile,
   generateEnvExample,
   packageManagerExec,
+  generateGlobalErrorRewrite,
   generateHttpAccessLog,
   generateLogger,
   generateArticleSchema,
@@ -97,7 +98,11 @@ export const generateProjectFiles = (opts: {
   /** cron 端口（1024–65535）；不传则每次随机 */
   cronPort?: number;
 }): Record<string, ProjectFile> => {
-  const { options, packageManagerVersion, aomexVersion, prismaVersion } = opts;
+  const options: ScaffoldOptions = {
+    ...opts.options,
+    webPlugins: withBaseWebPlugins(opts.options.webPlugins),
+  };
+  const { packageManagerVersion, aomexVersion, prismaVersion } = opts;
   const cronPort = opts.cronPort ?? createCronPort();
   const hasCron = options.consoleMiddlewares.includes('cron');
   const needsCookie = options.auth === 'bearer' || options.auth === 'jwt';
@@ -253,7 +258,8 @@ ${exec} commitlint --edit $1
   // —— 配置 ——
   add(
     'src/configs/shared.ts',
-    text(`/**
+    text(`import type { production } from './production';
+/**
  * 多环境共用的通用配置。
  * 各环境文件通过 \`...shared\` 展开后，再覆盖本环境特有项。
  */
@@ -262,6 +268,8 @@ export const shared = {};
 export interface SecretConfig {
   REDIS_PASSWORD?: string;
 }
+
+export type FullConfig = typeof production;
 `),
   );
   add(
@@ -269,9 +277,12 @@ export interface SecretConfig {
     text(`import { type RedisOptions } from '@aomex/cache-redis-adapter';
 import { shared, type SecretConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env.production，需在生产服务器手动创建文件。
+ * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 正式环境。对应 main 分支
 export const production = {
   ...shared,
   redis: <RedisOptions>{
@@ -281,20 +292,19 @@ export const production = {
     db: 0,
   },
 };
-
-export type Config = typeof production;
 `),
   );
   add(
     'src/configs/development.ts',
-    text(`import type { Config } from './production';
-import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig } from './shared';
+    text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
+import { shared, type SecretConfig, type FullConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 本地开发环境，对应随意 git 分支
-export const development: Config = {
+export const development: FullConfig = {
   ...shared,
   redis: <RedisOptions>{
     host: 'localhost',
@@ -308,13 +318,15 @@ export const development: Config = {
   add(
     'src/configs/integration.ts',
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import type { Config } from './production';
-import { shared, type SecretConfig } from './shared';
+import { shared, type SecretConfig, type FullConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env.integration，需在集成服务器手动创建文件。
+ * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 线上集成环境，用于功能、交互测试。对应 develop 分支
-export const integration: Config = {
+export const integration: FullConfig = {
   ...shared,
   redis: <RedisOptions>{
     host: '',
@@ -328,7 +340,7 @@ export const integration: Config = {
   add(
     'src/configs/index.ts',
     text(`import 'dotenv/config';
-import type { Config } from './production';
+import type { FullConfig } from './shared';
 
 const env = (process.env['NODE_ENV'] || 'development') as
   | 'development'
@@ -337,7 +349,7 @@ const env = (process.env['NODE_ENV'] || 'development') as
 
 const configList = await import(\`./\${env}.js\`);
 
-export const configs = configList[env] as Config;
+export const configs = configList[env] as FullConfig;
 `),
   );
 
@@ -352,6 +364,7 @@ export const configs = configList[env] as Config;
         dynamicLanguage: options.dynamicLanguage,
         separateListen: options.consoleMiddlewares.includes('openapi'),
         cluster: options.cluster,
+        responseEnvelope: options.responseEnvelope,
       }),
     ),
   );
@@ -428,6 +441,9 @@ commander.create('hello', {
     'src/services/cache.service.ts',
     text(generateCacheService(options.auth)),
   );
+
+  // —— 中间件 ——
+  add('src/middleware/format-error.md.ts', text(generateGlobalErrorRewrite()));
 
   // —— 认证 ——
   const authContent = generateAuth(options.auth);
@@ -506,8 +522,17 @@ export default defineConfig({
   // —— env / 本地依赖 compose ——
   const localEnv = generateEnvExample(opts.projectName, options, 'local');
   const deployEnv = generateEnvExample(opts.projectName, options, 'deploy');
-  add('.env', text(localEnv));
-  add('.env.example', text(localEnv));
+  add(
+    '.env',
+    text(`# 配置项有变化时建议及时同步 .env.example
+${localEnv}`),
+  );
+  add(
+    '.env.example',
+    text(`# 初始化时从这里复制一份，并重命名为 .env{.xxx}
+# 配置项有变化时建议及时同步该文件
+${localEnv}`),
+  );
   add('.env.integration', text(deployEnv));
   add('.env.production', text(deployEnv));
   add(

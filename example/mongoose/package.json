@@ -13,13 +13,25 @@
     "deploy:integration": "node scripts/deploy.mjs integration",
     "deploy:api": "node scripts/deploy-api.mjs production"
   },
+  "packageManager": "pnpm@12.21.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.0",
+      "onFail": "download"
+    }
+  },
   "dependencies": {
     "@aomex/cache": "4.0.0",
     "@aomex/cache-redis-adapter": "4.0.0",
     "@aomex/common": "4.0.0",
     "@aomex/console": "4.0.0",
+    "@aomex/cors": "4.0.0",
+    "@aomex/etag": "4.0.0",
+    "@aomex/helmet": "4.0.0",
     "@aomex/logger": "4.0.0",
     "@aomex/mongoose": "4.0.0",
+    "@aomex/response-time": "4.0.0",
     "@aomex/web": "4.0.0",
     "dotenv": "^18.0.10",
     "mongoose": "^8.24.10"
@@ -34,18 +46,5 @@
     "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  },
-  "packageManager": "pnpm@12.21.0",
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "^24.22.0",
-      "onFail": "download"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.21.0",
-      "onFail": "download"
-    }
   }
 }

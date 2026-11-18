@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { formatError, routers, WebApp } from '@aomex/web';
-import { rule } from '@aomex/common';
+import { routers, WebApp } from '@aomex/web';
+import { globalErrorRewrite } from '@/middleware/format-error.md';
 import { httpAccessLog } from '@/middleware/http-access-log.md';
 import { responseTime } from '@aomex/response-time';
 import { slowTrace } from '@/middleware/slow-trace.md';
@@ -20,17 +20,15 @@ export const app = new WebApp({
   mount: [
     httpAccessLog.skip(isProduction),
     responseTime(),
+    globalErrorRewrite,
     slowTrace,
-    cors({ credentials: true }),
+    cors({
+      // 如果请求需要携带cookies，请解开下面这行注释
+      // credentials: true,
+    }),
     etag(),
     swagger.skip(isProduction),
     helmet(),
-    formatError({
-      content: { code: rule.string(), message: rule.string() },
-      handler(err) {
-        return { code: err.code || '', message: err.message };
-      },
-    }),
     routers('./src/routers'),
   ],
 });

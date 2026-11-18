@@ -53,7 +53,7 @@ export const app = new WebApp({
   proxyIP: { mode: 'detect' },
   mount: [
     // 全局中间件（洋葱模型，越靠前越外层）
-    formatError({ /* ... */ }),
+    globalErrorRewrite,
     routers('./src/routers'),
   ],
 });
@@ -66,7 +66,8 @@ declare module '@aomex/web' {
 }
 \`\`\`
 
-- **错误响应**：用 \`formatError\`，不要再挂 \`app.on('error')\`。
+- **错误响应**：用 \`src/middleware/format-error.md.ts\` 的 \`globalErrorRewrite\`，不要再挂 \`app.on('error')\`。
+- **统一 200 套壳**：若启用 \`WebApp.envelope\`，成功/错误均在 \`flush\` 前套壳并固定 HTTP 200；槽位用 \`envelope.success\` / \`envelope.payload\` / \`envelope.statusCode\`。
 - **未捕获异常**：\`process.on('uncaughtException', ...)\` + \`services.logger.fatal\`。
 - **集群方案**（勿叠用）：\`clusterListen({ workers: 'max', listen })\`；或 PM2 \`instances: 'max'\` + \`pm2-runtime\`；勿与容器多副本叠用。
 - **语言**：使用 BCP 47 规范码（如 \`zh-CN\`、\`en-US\`），见 \`I18N_LANGUAGES\`。

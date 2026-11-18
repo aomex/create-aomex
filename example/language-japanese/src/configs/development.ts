@@ -1,11 +1,12 @@
-import type { Config } from './production';
 import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig } from './shared';
+import { shared, type SecretConfig, type FullConfig } from './shared';
 
+/**
+ * 密钥配置请放 .env
+ */
 const secrets = process.env as unknown as SecretConfig;
 
-// 本地开发环境，对应随意 git 分支
-export const development: Config = {
+export const development: FullConfig = {
   ...shared,
   redis: <RedisOptions>{
     host: 'localhost',
