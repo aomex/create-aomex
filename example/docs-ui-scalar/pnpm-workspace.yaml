@@ -1,0 +1,11 @@
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  esbuild: true
+  prisma: true
+minimumReleaseAgeExclude:
+  - '@aomex/*'
+permissions:
+  prisma-json-types-generator:
+    skills: false

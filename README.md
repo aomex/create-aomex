@@ -73,6 +73,14 @@ pnpm test:update                       # 更新 example/* 快照
 pnpm build                             # 产出 dist（发布用）
 ```
 
+也可直接进入 `example/` 下某个快照目录安装并启动（与真实生成项目相同）：
+
+```bash
+cd example/docs-ui-scalar   # 或 recommended / kitchen-sink / …
+pnpm install
+pnpm start
+```
+
 - 生成逻辑：`src/select-options.ts`、`src/generators.ts`、`src/project-files.ts`
 - 写入用户项目的 AI 指引：只改 [`src/skills/aomex-skill.ts`](./src/skills/aomex-skill.ts)
 - 示例快照：`example/`（由测试生成，勿手改当源）

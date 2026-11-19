@@ -18,12 +18,58 @@ export const scaffoldText = (language: DefaultLanguage) => {
     return {
       slowTrace: '链路追踪',
       articleNotFound: '文章不存在',
+      articleTag: 'Article',
+      articleTagDesc: '文章 CRUD 与查询接口',
+      systemTag: 'System',
+      systemTagDesc: '系统探活与基础设施接口',
+      articleIdDesc: '文章 ID',
+      articleListSummary: '文章列表',
+      articleListDesc: '获取全部文章，按创建时间倒序。',
+      articleListResponse: '文章列表',
+      articleGetSummary: '文章详情',
+      articleGetDesc: '按 ID 查询单篇文章；不存在时返回 404。',
+      articleGetResponse: '文章详情',
+      articleCreateSummary: '创建文章',
+      articleCreateDesc: '创建一篇新文章并返回完整记录。',
+      articleCreateResponse: '创建成功',
+      articleUpdateSummary: '更新文章',
+      articleUpdateDesc: '按 ID 部分更新文章字段。',
+      articleUpdateResponse: '更新后的文章',
+      articleDeleteSummary: '删除文章',
+      articleDeleteDesc: '按 ID 删除文章；成功无响应体。',
+      articleDeleteResponse: '删除成功',
+      articleExternalDocsDesc: 'aomex 文档',
+      indexSummary: '健康检查 / 欢迎页',
+      indexDesc: '简易探活接口，默认不出现在 OpenAPI 文档中。',
     } as const;
   }
 
   return {
     slowTrace: 'Slow request',
     articleNotFound: 'Article not found',
+    articleTag: 'Article',
+    articleTagDesc: 'Article CRUD and query APIs',
+    systemTag: 'System',
+    systemTagDesc: 'Health checks and infrastructure',
+    articleIdDesc: 'Article ID',
+    articleListSummary: 'List articles',
+    articleListDesc: 'Return all articles, newest first.',
+    articleListResponse: 'Article list',
+    articleGetSummary: 'Get article',
+    articleGetDesc: 'Fetch one article by ID; 404 if missing.',
+    articleGetResponse: 'Article detail',
+    articleCreateSummary: 'Create article',
+    articleCreateDesc: 'Create a new article and return the full record.',
+    articleCreateResponse: 'Created article',
+    articleUpdateSummary: 'Update article',
+    articleUpdateDesc: 'Partially update an article by ID.',
+    articleUpdateResponse: 'Updated article',
+    articleDeleteSummary: 'Delete article',
+    articleDeleteDesc: 'Delete an article by ID; empty body on success.',
+    articleDeleteResponse: 'Deleted',
+    articleExternalDocsDesc: 'aomex docs',
+    indexSummary: 'Health / welcome',
+    indexDesc: 'Simple probe endpoint; hidden from OpenAPI by default.',
   } as const;
 };
 
@@ -73,11 +119,7 @@ const docsLabel = (docs: DocsUI): string => {
   return '';
 };
 
-const docsMiddlewareFile = (docs: DocsUI): string => {
-  if (docs === 'redoc') return 'redoc.md.ts';
-  if (docs === 'scalar') return 'scalar.md.ts';
-  return 'swagger.md.ts';
-};
+const docsMiddlewareFile = (_docs: DocsUI): string => 'docs.md.ts';
 
 const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
   const lines: string[] = ['.'];

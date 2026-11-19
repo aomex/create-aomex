@@ -1,0 +1,31 @@
+datasource db {
+  provider     = "mysql"
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+generator json {
+  provider  = "prisma-json-types-generator"
+  namespace = "PrismaJson"
+}
+
+generator aomex {
+  provider = "aomex-prisma"
+  output   = "../src/generated/aomex/prisma"
+}
+
+model article {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String   @db.Text
+  summary    String?
+  published  Boolean  @default(false)
+  /// [ArticleTags]
+  tags       Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt()
+}

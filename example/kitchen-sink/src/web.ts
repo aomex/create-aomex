@@ -13,7 +13,7 @@ import { etag } from '@aomex/etag';
 import { slowTrace } from '@/middleware/slow-trace.md';
 import { prettyJson } from '@aomex/pretty-json';
 import { helmet } from '@aomex/helmet';
-import { swagger } from '@/middleware/swagger.md';
+import { docs } from '@/middleware/docs.md';
 import { services } from '@/services';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
@@ -46,7 +46,7 @@ export const app = new WebApp({
     globalErrorRewrite,
     slowTrace,
     prettyJson(),
-    swagger.skip(isProduction),
+    docs.skip(isProduction),
     helmet(),
     routers('./src/routers'),
   ],

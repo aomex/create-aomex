@@ -40,7 +40,7 @@ pnpm start
 
 ## API 文档
 
-启动后访问 `src/middleware/swagger.md.ts` 中配置的 `uriPrefix`（**生产环境默认关闭**）。
+启动后访问 `src/middleware/docs.md.ts` 中配置的 `uriPrefix`（**生产环境默认关闭**）。
 
 ## 常用脚本
 

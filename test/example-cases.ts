@@ -93,11 +93,12 @@ const fromBare = (
  * 示例策略（不做全笛卡尔积）：
  * 1. bare-minimum / kitchen-sink / recommended
  * 2. ORM：prisma-mysql / mongoose
- * 3. 时区：timezone-shanghai
- * 4. 包管理器：package-manager-*
- * 5. 语言：language-*
- * 6. 集群：cluster-node / cluster-pm2
- * 7. 部署：deploy-without-docker / cluster-pm2-without-docker
+ * 3. 文档 UI：docs-ui-scalar（router OpenAPI 字段加满）
+ * 4. 时区：timezone-shanghai
+ * 5. 包管理器：package-manager-*
+ * 6. 语言：language-*
+ * 7. 集群：cluster-node / cluster-pm2
+ * 8. 部署：deploy-without-docker / cluster-pm2-without-docker
  */
 export const exampleCases: ExampleCase[] = [
   // 精简示例：无 Docker 部署、无 PM2（变体基底 bareMinimum 仍默认 docker，便于对照）
@@ -115,6 +116,12 @@ export const exampleCases: ExampleCase[] = [
   fromBare('mongoose', {
     orm: 'mongoose',
   }),
+
+  // Scalar UI：在 recommended 能力上换文档引擎，并给 router 补全 OpenAPI 元数据
+  {
+    name: 'docs-ui-scalar',
+    options: { ...recommended, docsUI: 'scalar' },
+  },
 
   fromBare('timezone-shanghai', { timezone: 'Asia/Shanghai' }),
 

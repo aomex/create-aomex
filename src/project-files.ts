@@ -37,7 +37,7 @@ import {
   generateTsconfig,
   generateWeb,
 } from './generators';
-import { generateReadmeFromOptions } from './scaffold-locale';
+import { generateReadmeFromOptions, scaffoldText } from './scaffold-locale';
 import {
   AOMEX_SKILL_FILE,
   generateAgentsMd,
@@ -236,6 +236,13 @@ ${exec} commitlint --edit $1
   add('tsconfig.json', text(generateTsconfig({ orm: options.orm })));
 
   if (options.packageManager === 'pnpm') {
+    const prismaSkillsDeny =
+      options.orm === 'prisma'
+        ? `permissions:
+  prisma-json-types-generator:
+    skills: false
+`
+        : '';
     add(
       'pnpm-workspace.yaml',
       text(
@@ -243,14 +250,20 @@ ${exec} commitlint --edit $1
           ? `allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
+  '@scarf/scarf': false
   esbuild: true
   prisma: true
-`
+minimumReleaseAgeExclude:
+  - '@aomex/*'
+${prismaSkillsDeny}`
           : `allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
+  '@scarf/scarf': false
   prisma: true
-`,
+minimumReleaseAgeExclude:
+  - '@aomex/*'
+${prismaSkillsDeny}`,
       ),
     );
   }
@@ -376,9 +389,40 @@ export const configs = configList[env] as FullConfig;
       }),
     ),
   );
+  const enrichOpenapi = options.docsUI === 'scalar';
+  const indexText = scaffoldText(options.language);
   add(
     'src/routers/index.router.ts',
-    text(`import { Router } from '@aomex/web';
+    text(
+      enrichOpenapi
+        ? `import { Router } from '@aomex/web';
+
+export const router = new Router({
+  docs: {
+    tags: ['${indexText.systemTag}'],
+    deprecated: false,
+  },
+});
+
+router.get('/', {
+  docs: {
+    tags: ['${indexText.systemTag}'],
+    summary: '${indexText.indexSummary}',
+    description: '${indexText.indexDesc}',
+    operationId: 'getWelcome',
+    deprecated: false,
+    externalDocs: {
+      description: '${indexText.articleExternalDocsDesc}',
+      url: 'https://aomex.js.org',
+    },
+    showInOpenapi: false,
+  },
+  action: (ctx) => {
+    ctx.send('Hello World');
+  },
+});
+`
+        : `import { Router } from '@aomex/web';
 
 export const router = new Router();
 
@@ -388,7 +432,8 @@ router.get('/', {
     ctx.send('Hello World');
   },
 });
-`),
+`,
+    ),
   );
   add(
     'src/commanders/hello.cmd.ts',
@@ -454,8 +499,12 @@ commander.create('hello', {
     options.docsUI,
     opts.projectName,
     opts.docsPathSecret ?? randomBytes(8).toString('hex'),
+    options.language,
   );
-  if (docs) add(`src/middleware/${docs.filename}`, text(docs.content));
+  if (docs) {
+    add(`src/middleware/${docs.filename}`, text(docs.content));
+    add(docs.markdown.filename, text(docs.markdown.content));
+  }
 
   if (options.webPlugins.includes('http-access-log')) {
     add(
@@ -507,11 +556,15 @@ export default defineConfig({
     add(
       'src/routers/article.router.ts',
       text(
-        generatePrismaArticleRouter(options.language, options.prismaDatabase),
+        generatePrismaArticleRouter(
+          options.language,
+          options.prismaDatabase,
+          enrichOpenapi,
+        ),
       ),
     );
   } else if (options.orm === 'mongoose') {
-    const mongo = generateMongooseFiles(options.language);
+    const mongo = generateMongooseFiles(options.language, enrichOpenapi);
     add('src/services/mongoose.service.ts', text(mongo.mongoose));
     add('src/models/article.model.ts', text(mongo.articleModel));
     add('src/routers/article.router.ts', text(mongo.articleRouter));

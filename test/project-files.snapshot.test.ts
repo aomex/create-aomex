@@ -37,8 +37,8 @@ const DOCS_PATH_SECRET = '7c3e9a1f02b48d6e';
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(TEST_DIR, '..');
 const EXAMPLES_ROOT = path.join(REPO_ROOT, 'example');
-const PRISMA_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', 'prisma');
-const PRETTIER_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', 'prettier');
+const ROOT_BIN = path.join(REPO_ROOT, 'node_modules', '.bin');
+const PRETTIER_BIN = path.join(ROOT_BIN, 'prettier');
 
 const normalizeNewlines = (s: string) => s.replace(/\r\n/g, '\n');
 
@@ -72,16 +72,59 @@ const shouldUpdateSnapshots = (): boolean => {
   return flag === 'all' || flag === 'new';
 };
 
+/**
+ * 在仓库根目录执行 `pnpm exec prisma generate --schema <case>/prisma/schema.prisma`，
+ * 复用根依赖（避免在 example 里装 node_modules），并校验生成产物。
+ */
 const runPrismaGenerateInCase = (caseDir: string, db: PrismaDatabase): void => {
-  execFileSync(PRISMA_BIN, ['generate'], {
-    cwd: caseDir,
-    env: {
-      ...process.env,
-      PATH: `${path.join(REPO_ROOT, 'node_modules', '.bin')}${path.delimiter}${process.env['PATH'] ?? ''}`,
-      DATABASE_URL: databaseUrl(db, PROJECT_NAME),
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  const schema = path.join(caseDir, 'prisma', 'schema.prisma');
+  if (!existsSync(schema)) {
+    throw new Error(`missing prisma schema: ${schema}`);
+  }
+
+  let output = '';
+  try {
+    output = execFileSync(
+      'pnpm',
+      ['exec', 'prisma', 'generate', '--schema', schema],
+      {
+        cwd: REPO_ROOT,
+        env: {
+          ...process.env,
+          PATH: `${ROOT_BIN}${path.delimiter}${process.env['PATH'] ?? ''}`,
+          DATABASE_URL: databaseUrl(db, PROJECT_NAME),
+        },
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+  } catch (err) {
+    const detail =
+      err && typeof err === 'object' && 'stderr' in err
+        ? String((err as { stderr?: Buffer | string }).stderr ?? '')
+        : '';
+    const stdout =
+      err && typeof err === 'object' && 'stdout' in err
+        ? String((err as { stdout?: Buffer | string }).stdout ?? '')
+        : '';
+    throw new Error(
+      `pnpm exec prisma generate failed for ${caseDir}\n${stdout}${detail}`,
+    );
+  }
+
+  if (/command not found|Generator ".*" failed/i.test(output)) {
+    throw new Error(
+      `pnpm exec prisma generate reported generator failure for ${caseDir}\n${output}`,
+    );
+  }
+
+  const clientOut = path.join(caseDir, 'src/generated/prisma');
+  const aomexOut = path.join(caseDir, 'src/generated/aomex/prisma');
+  if (!existsSync(clientOut) || !existsSync(aomexOut)) {
+    throw new Error(
+      `prisma generate did not write expected outputs under ${caseDir}/src/generated`,
+    );
+  }
 };
 
 /** 用 case 目录内的 .prettierrc.yml / .prettierignore 格式化 */
@@ -143,7 +186,7 @@ const expectExampleDirectory = async (
       const mode = files[rel]!.mode;
       if (mode !== undefined) chmodSync(abs, mode);
     }
-    if (prismaDatabase && existsSync(PRISMA_BIN)) {
+    if (prismaDatabase) {
       runPrismaGenerateInCase(caseDir, prismaDatabase);
     }
     runPrettierInCase(caseDir);

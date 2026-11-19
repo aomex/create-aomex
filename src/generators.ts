@@ -421,9 +421,9 @@ ${entries.join('\n')}
 `;
 };
 
-const openapiInfoDescription = (projectName: string) =>
+const openapiInfoDescription = () =>
   `
-# ${projectName}
+# API
 
 > Type-safe API powered by aomex：路由、中间件、校验、文档一站式可观测。
 
@@ -447,34 +447,60 @@ pnpm dev
 *Built with [aomex](https://aomex.js.org) · Type-safe · Production-ready*
 `.trim();
 
+const OPENAPI_MD_FILENAME = 'openapi.md';
+
+const docsMiddlewareImports = `import { generateOpenapi } from '@aomex/openapi';
+import { readFileSync } from 'node:fs';
+import { app } from '@/web';`;
+
+const docsInfoBlock = (projectName: string) => `info: {
+          title: '${projectName}',
+          // 支持 Markdown（内容见项目根目录 ${OPENAPI_MD_FILENAME}）
+          description: readFileSync('./${OPENAPI_MD_FILENAME}', 'utf8'),
+        }`;
+
+const docsTagsBlock = (language: DefaultLanguage) => {
+  const t = scaffoldText(language);
+  return `tags: [
+          {
+            name: '${t.articleTag}',
+            description: '${t.articleTagDesc}',
+          },
+          {
+            name: '${t.systemTag}',
+            description: '${t.systemTagDesc}',
+          },
+        ]`;
+};
+
 export const generateDocsMiddleware = (
   docsUI: DocsUI,
   projectName: string,
   docsPathSecret: string,
-): { filename: string; content: string } | null => {
+  language: DefaultLanguage = 'zh-CN',
+): {
+  filename: string;
+  content: string;
+  markdown: { filename: string; content: string };
+} | null => {
   if (docsUI === 'none') return null;
 
-  // description 内含 markdown 代码围栏（反引号），写入模板字符串时需转义
-  const infoDescription = openapiInfoDescription(projectName).replace(
-    /`/g,
-    '\\`',
-  );
-  const infoBlock = `info: {
-          title: '${projectName}',
-          description: \`
-${infoDescription}
-\`.trim(),
-        }`;
+  const markdown = {
+    filename: OPENAPI_MD_FILENAME,
+    content: openapiInfoDescription() + '\n',
+  };
+  const infoBlock = docsInfoBlock(projectName);
+  const serversBlock = `servers: [{ url: 'http://localhost:3000', description: 'Local' }]`;
 
   if (docsUI === 'swagger') {
     return {
-      filename: 'swagger.md.ts',
+      filename: 'docs.md.ts',
+      markdown,
       content: `import { swaggerUI } from '@aomex/swagger-ui';
-import { generateOpenapi } from '@aomex/openapi';
-import { app } from '@/web';
+${docsMiddlewareImports}
 
 // 随机路径：降低被扫到后滥用文档接口的风险；生产环境会 skip
-export const swagger = swaggerUI({
+export const docs = swaggerUI({
   uriPrefix: '/swagger-${docsPathSecret}',
   openapi: () => {
     return generateOpenapi({
@@ -482,7 +508,7 @@ export const swagger = swaggerUI({
       app,
       docs: {
         ${infoBlock},
-        servers: [{ url: 'http://localhost:3000', description: 'Local' }],
+        ${serversBlock},
       },
     });
   },
@@ -493,13 +519,13 @@ export const swagger = swaggerUI({
 
   if (docsUI === 'redoc') {
     return {
-      filename: 'redoc.md.ts',
+      filename: 'docs.md.ts',
+      markdown,
       content: `import { redocUI } from '@aomex/redoc-ui';
-import { generateOpenapi } from '@aomex/openapi';
-import { app } from '@/web';
+${docsMiddlewareImports}
 
 // 随机路径：降低被扫到后滥用文档接口的风险；生产环境会 skip
-export const redoc = redocUI({
+export const docs = redocUI({
   uriPrefix: '/redoc-${docsPathSecret}',
   openapi: () => {
     return generateOpenapi({
@@ -507,7 +533,7 @@ export const redoc = redocUI({
       app,
       docs: {
         ${infoBlock},
-        servers: [{ url: 'http://localhost:3000', description: 'Local' }],
+        ${serversBlock},
       },
     });
   },
@@ -517,13 +543,13 @@ export const redoc = redocUI({
   }
 
   return {
-    filename: 'scalar.md.ts',
+    filename: 'docs.md.ts',
+    markdown,
     content: `import { scalarUI } from '@aomex/scalar-ui';
-import { generateOpenapi } from '@aomex/openapi';
-import { app } from '@/web';
+${docsMiddlewareImports}
 
 // 随机路径：降低被扫到后滥用文档接口的风险；生产环境会 skip
-export const scalar = scalarUI({
+export const docs = scalarUI({
   uriPrefix: '/scalar-${docsPathSecret}',
   openapi: () => {
     return generateOpenapi({
@@ -531,7 +557,8 @@ export const scalar = scalarUI({
       app,
       docs: {
         ${infoBlock},
-        servers: [{ url: 'http://localhost:3000', description: 'Local' }],
+        ${serversBlock},
+        ${docsTagsBlock(language)},
       },
     });
   },
@@ -648,15 +675,9 @@ export const generateWeb = (opts: {
   }
 
   let docsMount: string | null = null;
-  if (opts.docsUI === 'swagger') {
-    imports.push(`import { swagger } from '@/middleware/swagger.md';`);
-    docsMount = `    swagger.skip(isProduction),`;
-  } else if (opts.docsUI === 'redoc') {
-    imports.push(`import { redoc } from '@/middleware/redoc.md';`);
-    docsMount = `    redoc.skip(isProduction),`;
-  } else if (opts.docsUI === 'scalar') {
-    imports.push(`import { scalar } from '@/middleware/scalar.md';`);
-    docsMount = `    scalar.skip(isProduction),`;
+  if (opts.docsUI !== 'none') {
+    imports.push(`import { docs } from '@/middleware/docs.md';`);
+    docsMount = `    docs.skip(isProduction),`;
   }
 
   // 文档 UI 挂在 helmet 之前（与官方模板一致）
@@ -953,14 +974,105 @@ export default class ArticleService extends Service {
   );
 };
 
+const articleOpenapiBlocks = (language: DefaultLanguage, idExample: string) => {
+  const t = scaffoldText(language);
+  const idDocs = `.docs({ description: '${t.articleIdDesc}', example: ${idExample} })`;
+  return {
+    routerDocs: `  docs: {
+    tags: ['${t.articleTag}'],
+    deprecated: false,
+  },`,
+    idParam: (idRule: string) => `params({ id: ${idRule}${idDocs} })`,
+    list: `  docs: {
+    tags: ['${t.articleTag}'],
+    summary: '${t.articleListSummary}',
+    description: '${t.articleListDesc}',
+    operationId: 'listArticles',
+    deprecated: false,
+    externalDocs: {
+      description: '${t.articleExternalDocsDesc}',
+      url: 'https://aomex.js.org',
+    },
+    showInOpenapi: true,
+  },`,
+    listResponse: `    response({
+      statusCode: 200,
+      description: '${t.articleListResponse}',
+      content: rule.array(articleSchema),
+    }),`,
+    get: `  docs: {
+    tags: ['${t.articleTag}'],
+    summary: '${t.articleGetSummary}',
+    description: '${t.articleGetDesc}',
+    operationId: 'getArticle',
+    deprecated: false,
+    showInOpenapi: true,
+  },`,
+    getResponses: `    response({
+      statusCode: 200,
+      description: '${t.articleGetResponse}',
+      content: articleSchema,
+    }),
+    response({
+      statusCode: 404,
+      description: '${t.articleNotFound}',
+    }),`,
+    create: `  docs: {
+    tags: ['${t.articleTag}'],
+    summary: '${t.articleCreateSummary}',
+    description: '${t.articleCreateDesc}',
+    operationId: 'createArticle',
+    deprecated: false,
+    showInOpenapi: true,
+  },`,
+    createResponse: `    response({
+      statusCode: 201,
+      description: '${t.articleCreateResponse}',
+      content: articleSchema,
+    }),`,
+    update: `  docs: {
+    tags: ['${t.articleTag}'],
+    summary: '${t.articleUpdateSummary}',
+    description: '${t.articleUpdateDesc}',
+    operationId: 'updateArticle',
+    deprecated: false,
+    showInOpenapi: true,
+  },`,
+    updateResponse: `    response({
+      statusCode: 200,
+      description: '${t.articleUpdateResponse}',
+      content: articleSchema,
+    }),`,
+    remove: `  docs: {
+    tags: ['${t.articleTag}'],
+    summary: '${t.articleDeleteSummary}',
+    description: '${t.articleDeleteDesc}',
+    operationId: 'deleteArticle',
+    deprecated: false,
+    showInOpenapi: true,
+  },`,
+    removeResponse: `    response({
+      statusCode: 204,
+      description: '${t.articleDeleteResponse}',
+    }),`,
+  };
+};
+
 export const generateMongooseFiles = (
   language: DefaultLanguage = 'zh-CN',
+  enrichOpenapi = false,
 ): {
   mongoose: string;
   articleModel: string;
   articleRouter: string;
 } => {
   const { articleNotFound } = scaffoldText(language);
+  const oa = enrichOpenapi
+    ? articleOpenapiBlocks(language, `'507f1f77bcf86cd799439011'`)
+    : null;
+  const idParam = oa
+    ? oa.idParam('rule.string()')
+    : 'params({ id: rule.string() })';
   return {
     mongoose: `import { registerLifecycle } from '@aomex/common';
 import mongoose from 'mongoose';
@@ -997,7 +1109,102 @@ export const ArticleModel = defineMongooseModel('article', {
   indexes: [{ fields: { title: 1 } }],
 });
 `,
-    articleRouter: `import { rule } from '@aomex/common';
+    articleRouter: oa
+      ? `import { rule } from '@aomex/common';
+import { body, params, response, Router } from '@aomex/web';
+import { services } from '@/services';
+
+const articleSchema = rule.object({
+  _id: rule.string(),
+  title: rule.string(),
+  content: rule.string(),
+  summary: rule.string().nullable(),
+  published: rule.boolean(),
+  tags: rule.array(rule.string()).nullable(),
+});
+
+export const router = new Router({
+  prefix: '/articles',
+${oa.routerDocs}
+});
+
+router.get('/', {
+${oa.list}
+  mount: [
+${oa.listResponse}
+  ],
+  action: async (ctx) => {
+    const articles = await services.article.findArticles();
+    ctx.send(articles);
+  },
+});
+
+router.get('/:id', {
+${oa.get}
+  mount: [
+    ${idParam},
+${oa.getResponses}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.findArticleById(ctx.params.id);
+    if (!article) return ctx.throw(404);
+    ctx.send(article);
+  },
+});
+
+router.post('/', {
+${oa.create}
+  mount: [
+    body({
+      title: rule.string(),
+      content: rule.string(),
+      summary: rule.string().optional().nullable(),
+      published: rule.boolean().optional(),
+      tags: rule.array(rule.string()).optional().nullable(),
+    }),
+${oa.createResponse}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.createArticle(ctx.body);
+    ctx.send(201, article);
+  },
+});
+
+router.patch('/:id', {
+${oa.update}
+  mount: [
+    ${idParam},
+    body({
+      title: rule.string().optional(),
+      content: rule.string().optional(),
+      summary: rule.string().optional().nullable(),
+      published: rule.boolean().optional(),
+      tags: rule.array(rule.string()).optional().nullable(),
+    }),
+${oa.updateResponse}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.updateArticle(
+      ctx.params.id,
+      ctx.body,
+    );
+    ctx.send(article);
+  },
+});
+
+router.delete('/:id', {
+${oa.remove}
+  mount: [
+    ${idParam},
+${oa.removeResponse}
+  ],
+  action: async (ctx) => {
+    await services.article.deleteArticle(ctx.params.id);
+    ctx.send(204);
+  },
+});
+`
+      : `import { rule } from '@aomex/common';
 import { body, params, response, Router } from '@aomex/web';
 import { services } from '@/services';
 
@@ -1109,6 +1316,7 @@ router.delete('/:id', {
 export const generatePrismaArticleRouter = (
   language: DefaultLanguage,
   prismaDatabase?: PrismaDatabase,
+  enrichOpenapi = false,
 ): string => {
   const { articleNotFound } = scaffoldText(language);
   const idRule = prismaDatabase === 'mongodb' ? 'rule.string()' : 'rule.int()';
@@ -1125,7 +1333,8 @@ export const generatePrismaArticleRouter = (
     ? "nullableJsonFields(ctx.body, ['tags'])"
     : 'ctx.body';
 
-  return `import { rule } from '@aomex/common';
+  if (!enrichOpenapi) {
+    return `import { rule } from '@aomex/common';
 import { body, params, response, Router } from '@aomex/web';
 import { services } from '@/services';
 import { prismaInput } from '@/schemas/prisma.schema';
@@ -1202,6 +1411,85 @@ router.delete('/:id', {
     response({
       statusCode: 204,
     }),
+  ],
+  action: async (ctx) => {
+    await services.article.deleteArticle(ctx.params.id);
+    ctx.send(204);
+  },
+});
+`;
+  }
+
+  const idExample =
+    prismaDatabase === 'mongodb' ? `'507f1f77bcf86cd799439011'` : '1';
+  const oa = articleOpenapiBlocks(language, idExample);
+  const idParam = oa.idParam(idRule);
+
+  return `import { rule } from '@aomex/common';
+import { body, params, response, Router } from '@aomex/web';
+import { services } from '@/services';
+import { prismaInput } from '@/schemas/prisma.schema';
+import { articleSchema } from '@/schemas/article.schema';
+${jsonUtilImport}
+export const router = new Router({
+  prefix: '/articles',
+${oa.routerDocs}
+});
+
+router.get('/', {
+${oa.list}
+  mount: [
+${oa.listResponse}
+  ],
+  action: async (ctx) => {
+    const articles = await services.article.findArticles();
+    ctx.send(articles);
+  },
+});
+
+router.get('/:id', {
+${oa.get}
+  mount: [
+    ${idParam},
+${oa.getResponses}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.findArticleById(ctx.params.id);
+    if (!article) return ctx.throw(404);
+    ctx.send(article);
+  },
+});
+
+router.post('/', {
+${oa.create}
+  mount: [
+    body(prismaInput.article.pick('title', 'content', 'summary', 'published', 'tags')),
+${oa.createResponse}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.createArticle(${createArg});
+    ctx.send(201, article);
+  },
+});
+
+router.patch('/:id', {
+${oa.update}
+  mount: [
+    ${idParam},
+    body(prismaInput.article.pick('title', 'content', 'summary', 'published', 'tags').partial()),
+${oa.updateResponse}
+  ],
+  action: async (ctx) => {
+    const article = await services.article.updateArticle(ctx.params.id, ${updateArg});
+    ctx.send(article);
+  },
+});
+
+router.delete('/:id', {
+${oa.remove}
+  mount: [
+    ${idParam},
+${oa.removeResponse}
   ],
   action: async (ctx) => {
     await services.article.deleteArticle(ctx.params.id);

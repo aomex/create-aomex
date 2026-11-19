@@ -136,7 +136,10 @@ const articleOutputColumns = {
    *
    * [ArticleTags]
    */
-  tags: rule.anyOf([rule.object(), rule.array()]).nullable().docs({ description: '[ArticleTags]' }),
+  tags: rule
+    .anyOf([rule.object(), rule.array()])
+    .nullable()
+    .docs({ description: '[ArticleTags]' }),
 
   /**
    * Prisma类型：`DateTime`
@@ -167,4 +170,8 @@ export const generated = {
   prismaInput,
   prismaOutput,
   prismaEnum,
-} as unknown as PrismaGeneratedSchemas<typeof prismaInput, typeof prismaOutput, typeof prismaEnum>;
+} as unknown as PrismaGeneratedSchemas<
+  typeof prismaInput,
+  typeof prismaOutput,
+  typeof prismaEnum
+>;
