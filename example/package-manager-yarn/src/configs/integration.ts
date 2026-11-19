@@ -1,13 +1,13 @@
-import { shared, type SecretConfig, type FullConfig } from './shared';
+import { baseConfig, type EnvSecrets, type AppConfig } from './shared';
 
 /**
  * 密钥配置请放 .env.integration，需在集成服务器手动创建文件。
  * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
  */
-const secrets = process.env as unknown as SecretConfig;
+const secrets = process.env as unknown as EnvSecrets;
 
-export const integration: FullConfig = {
-  ...shared,
+export const integration: AppConfig = {
+  ...baseConfig,
   redis: {
     host: '',
     port: 6379,

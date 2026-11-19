@@ -264,42 +264,42 @@ ${prismaSkillsDeny}`,
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
 
 /**
- * 多环境共用的通用配置。
- * 各环境文件通过 \`...shared\` 展开后，再覆盖本环境特有项。
+ * 多环境共用的基底配置。
+ * 各环境文件通过 \`...baseConfig\` 展开后，再覆盖本环境特有项。
  */
-export const shared = {
+export const baseConfig = {
   // timeout: 30_000,
 };
+
+type BaseConfig = typeof baseConfig;
 
 /**
  * 各环境密钥配置，来自.env*、Aws Secret Manager、Vault 等。
  */
-export interface SecretConfig {
+export interface EnvSecrets {
   REDIS_PASSWORD: string;
 }
 
-type SharedConfig = typeof shared;
-
 /**
- * 各环境完整配置
+ * 应用运行时配置
  */
-export interface FullConfig extends SharedConfig {
+export interface AppConfig extends BaseConfig {
   redis: RedisOptions;
 }
 `),
   );
   add(
     'src/configs/production.ts',
-    text(`import { shared, type FullConfig, type SecretConfig } from './shared';
+    text(`import { baseConfig, type AppConfig, type EnvSecrets } from './shared';
 
 /**
  * 密钥配置请放 .env.production，需在生产服务器手动创建文件。
  * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
  */
-const secrets = process.env as unknown as SecretConfig;
+const secrets = process.env as unknown as EnvSecrets;
 
-export const production: FullConfig = {
-  ...shared,
+export const production: AppConfig = {
+  ...baseConfig,
   redis: {
     host: '',
     port: 6379,
@@ -311,15 +311,15 @@ export const production: FullConfig = {
   );
   add(
     'src/configs/development.ts',
-    text(`import { shared, type SecretConfig, type FullConfig } from './shared';
+    text(`import { baseConfig, type EnvSecrets, type AppConfig } from './shared';
 
 /**
  * 密钥配置请放 .env
  */
-const secrets = process.env as unknown as SecretConfig;
+const secrets = process.env as unknown as EnvSecrets;
 
-export const development: FullConfig = {
-  ...shared,
+export const development: AppConfig = {
+  ...baseConfig,
   redis: {
     host: 'localhost',
     port: 6379,
@@ -331,16 +331,16 @@ export const development: FullConfig = {
   );
   add(
     'src/configs/integration.ts',
-    text(`import { shared, type SecretConfig, type FullConfig } from './shared';
+    text(`import { baseConfig, type EnvSecrets, type AppConfig } from './shared';
 
 /**
  * 密钥配置请放 .env.integration，需在集成服务器手动创建文件。
  * 有条件请用 AWS Secret Manager 或者 Vault 存储密钥。
  */
-const secrets = process.env as unknown as SecretConfig;
+const secrets = process.env as unknown as EnvSecrets;
 
-export const integration: FullConfig = {
-  ...shared,
+export const integration: AppConfig = {
+  ...baseConfig,
   redis: {
     host: '',
     port: 6379,
@@ -353,14 +353,14 @@ export const integration: FullConfig = {
   add(
     'src/configs/index.ts',
     text(`import 'dotenv/config';
-import type { FullConfig } from './shared';
+import type { AppConfig } from './shared';
 
 const env = (process.env['NODE_ENV'] || 'development') as
   'development' | 'production' | 'integration';
 
 const configList = await import(\`./\${env}.js\`);
 
-export const configs = configList[env] as FullConfig;
+export const configs = configList[env] as AppConfig;
 `),
   );
 

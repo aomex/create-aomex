@@ -1,25 +1,25 @@
 import type { RedisOptions } from '@aomex/cache-redis-adapter';
 
 /**
- * 多环境共用的通用配置。
- * 各环境文件通过 `...shared` 展开后，再覆盖本环境特有项。
+ * 多环境共用的基底配置。
+ * 各环境文件通过 `...baseConfig` 展开后，再覆盖本环境特有项。
  */
-export const shared = {
+export const baseConfig = {
   // timeout: 30_000,
 };
+
+type BaseConfig = typeof baseConfig;
 
 /**
  * 各环境密钥配置，来自.env*、Aws Secret Manager、Vault 等。
  */
-export interface SecretConfig {
+export interface EnvSecrets {
   REDIS_PASSWORD: string;
 }
 
-type SharedConfig = typeof shared;
-
 /**
- * 各环境完整配置
+ * 应用运行时配置
  */
-export interface FullConfig extends SharedConfig {
+export interface AppConfig extends BaseConfig {
   redis: RedisOptions;
 }
