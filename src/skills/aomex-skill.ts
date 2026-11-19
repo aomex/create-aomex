@@ -21,7 +21,7 @@ export const generateAgentsMd = (): string => `# AGENTS.md
 export const generateAomexSkill = (): string => `# aomex 开发指引（给 AI）
 
 官方文档：https://aomex.js.org  
-包名用 \`@aomex/common\` / \`@aomex/web\` / \`@aomex/console\`。
+包名用 \`@aomex/common\` / \`@aomex/web\` / \`@aomex/console\`。升级任一 \`@aomex/*\` 时，\`package.json\` 里所有 \`@aomex/*\` 须锁同一版本号，不要只升其中一个。
 
 **用法**：先读现有 \`src/\` 再改。本文只说明「放哪、怎么写、场景选什么」；脚手架已生成的 \`web.ts\` / \`cli.ts\` / 全局插件配置通常不用动。
 
@@ -365,6 +365,7 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 - 登录接口挂 \`authenticate\`（会永远 401）
 - SSE / 文件下载开了 envelope 却忘了 \`skipEnvelope\`
 - \`@remember\` 挂有副作用的方法
+- 只升级部分 \`@aomex/*\`，导致版本不一致
 
 ## 动手前检查
 
