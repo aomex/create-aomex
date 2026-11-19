@@ -1,19 +1,20 @@
 /**
- * 写入【用户项目】根目录的 `aomex-skill.md` 正文（唯一源）。
- * 教 AI：东西放哪、路由怎么写、场景用什么；不要复述脚手架已生成内容。
+ * 写入【用户项目】根目录的 `aomex.md` 正文（唯一源）。
+ * 教 AI：东西放哪、路由怎么写、场景选什么；聚焦写业务代码。
+ * 脚手架已生成、通常不用再改的配置只随口一提，细节见官方文档。
  * 文档：https://aomex.js.org
  */
 
-export const AOMEX_SKILL_FILE = 'aomex-skill.md';
+export const AOMEX_SKILL_FILE = 'aomex.md';
 
-/** 写入用户项目的 AGENTS.md：入口指向同目录 aomex-skill.md */
+/** 写入用户项目的 AGENTS.md：入口指向同目录 aomex.md */
 export const generateAgentsMd = (): string => `# AGENTS.md
 
 本项目基于 [aomex](https://aomex.js.org)。
 
 编写或修改 \`src/web.ts\`、\`src/cli.ts\`、routers、middleware、services、schemas，或用户提到 aomex / WebApp / Router / combineServices 时：
 
-1. **先阅读并遵循** 根目录 [\`aomex-skill.md\`](./aomex-skill.md)
+1. **先阅读并遵循** 根目录 [\`aomex.md\`](./aomex.md)
 2. **先对照现有代码**，再动手改；不要重复发明脚手架已有能力
 `;
 
@@ -22,25 +23,23 @@ export const generateAomexSkill = (): string => `# aomex 开发指引（给 AI�
 官方文档：https://aomex.js.org  
 包名用 \`@aomex/common\` / \`@aomex/web\` / \`@aomex/console\`。
 
-**用法**：先读现有 \`src/\` 再改。本文只说明「放哪、怎么写、场景选什么」，不复述脚手架已经生成好的文件内容。
+**用法**：先读现有 \`src/\` 再改。本文只说明「放哪、怎么写、场景选什么」；脚手架已生成的 \`web.ts\` / \`cli.ts\` / 全局插件配置通常不用动。
 
 ## 东西放哪
 
 | 你要做的事 | 放这里 |
 | --- | --- |
 | 新 HTTP 接口 | \`src/routers/<领域>.router.ts\`（\`*.router.ts\` 才会被扫描） |
-| 可复用的请求级逻辑（鉴权、限流之外的业务中间件） | \`src/middleware/<名>.md.ts\`，再挂到 Router / 接口 \`mount\` |
+| 可复用的请求级逻辑 | \`src/middleware/<名>.md.ts\`，再挂到 Router / 接口 \`mount\` |
 | 业务逻辑、DB、外部 API | \`src/services/<名>.service.ts\`（\`export default class\`），并在 \`services/index.ts\` 注册 |
-| 入参/出参校验复用、Prisma 字段 override | \`src/schemas/\` |
+| 入参/出参校验复用、Prisma override | \`src/schemas/\`（可 \`*.schema.ts\`） |
 | 环境相关配置 | \`src/configs/\`（不要把密钥硬编码进路由） |
-| 一次性/运维指令 | \`src/commanders/<名>.cmd.ts\` |
-| 定时任务 | 同一个 \`*.cmd.ts\`，由 \`cli.ts\` 里的 \`crons\` 调度（不要另起进程乱写 setInterval） |
-| 改全局中间件顺序 / 语言 / envelope | 只改 \`src/web.ts\`（先看现有注释再动） |
-| 改控制台插件 | 只改 \`src/cli.ts\` |
+| 一次性/运维指令、定时任务 | \`src/commanders/<名>.cmd.ts\`（定时用 \`cron()\` 挂在指令上，由已有 \`cli.ts\` 调度） |
+| Mongoose 模型（若选了 mongoose） | \`src/models/\` + \`defineMongooseModel\`（与路由共用 \`rule\`） |
 
 路径别名：\`@/*\` → \`src/*\`。
 
-**分层**：Router 只做校验 + 鉴权挂载 + 调 Service + \`ctx.send\`；SQL / 事务 / 缓存 / 第三方调用进 Service。
+**分层**：Router 只做校验 + 鉴权挂载 + 调 Service + \`ctx.send\` / \`ctx.throw\`；SQL / 事务 / 缓存 / 第三方调用进 Service。不要自己 \`new XxxService()\`。
 
 ## 路由怎么写
 
@@ -50,32 +49,42 @@ import { rule } from '@aomex/common';
 import { services } from '@/services';
 // 若项目有鉴权：import { auth } from '@/middleware/auth.md';
 
-export const router = new Router({ prefix: '/articles' });
+export const router = new Router({
+  prefix: '/articles',
+  docs: { tags: ['Article'] }, // OpenAPI 侧栏分组；不写则默认用文件名，可读性差
+  // 整组要登录：mount: [auth.authenticate('bearer')],
+});
 
 router.get('/', {
+  docs: { summary: '文章列表' },
   mount: [
-    query({ page: rule.int().min(1).default(1) }),
+    query({
+      page: rule.int().min(1).default(1),
+      size: rule.int().min(1).max(50).default(20),
+    }),
     response({
       statusCode: 200,
-      content: rule.object({
-        list: rule.array({ id: rule.int(), title: rule.string() }),
-      }),
+      content: {
+        total: rule.int(),
+        items: rule.array({ id: rule.int(), title: rule.string() }),
+      },
     }),
   ],
   action: async (ctx) => {
-    const list = await services.article.list(ctx.query.page);
-    ctx.send({ list });
+    const result = await services.article.list(ctx.query);
+    ctx.send(result);
   },
 });
 
 router.post('/', {
+  docs: { summary: '创建文章' },
   mount: [
-    // auth.authenticate('bearer'),
     body({ title: rule.string(), content: rule.string() }),
     response({
       statusCode: 201,
       content: rule.object({ id: rule.int(), title: rule.string() }),
     }),
+    response({ statusCode: 400 }),
   ],
   action: async (ctx) => {
     const article = await services.article.create(ctx.body);
@@ -84,45 +93,104 @@ router.post('/', {
 });
 
 router.get('/:id', {
+  docs: { summary: '文章详情' },
   mount: [
     params({ id: rule.int() }),
     response({ statusCode: 200, content: rule.object({ id: rule.int() }) }),
+    response({ statusCode: 404 }), // 声明后 ctx.throw(404) 才是合法出口
   ],
   action: async (ctx) => {
     const article = await services.article.findById(ctx.params.id);
+    if (!article) return ctx.throw(404);
     ctx.send(article);
+  },
+});
+
+router.delete('/:id', {
+  docs: { summary: '删除文章' },
+  mount: [
+    params({ id: rule.int() }),
+    response({ statusCode: 204 }),
+    response({ statusCode: 404 }),
+  ],
+  action: async (ctx) => {
+    const ok = await services.article.remove(ctx.params.id);
+    if (!ok) return ctx.throw(404);
+    ctx.send(204); // 无 body，别塞 {}
   },
 });
 \`\`\`
 
 要点：
 
-- 入参：\`body\` / \`query\` / \`params\`；出参：\`response\`（OpenAPI 依赖它们）。
-- 同前缀共享中间件：\`new Router({ prefix, mount: [...] })\`；单接口放方法级 \`mount\`。
-- 不要在 \`action\` 里写长业务；\`ctx.send(status?, data)\` 即可。
+- 入参：\`body\` / \`query\` / \`params\`；出参：\`response\`（OpenAPI 与类型依赖它们）。可多次挂 \`response\`（成功 + 404/400 等）。
+- 同前缀共享中间件：\`new Router({ prefix, mount })\`；单接口放方法级 \`mount\`。公开接口与需登录接口**拆文件**，别在已鉴权 Router 里到处 skip。
+- 字面量路径优先于 \`:param\`（\`/articles/count\` 不会被 \`/:id\` 吃掉）。路径参数键名须与 \`params()\` 字段一致；不挂 \`params\` 时全是字符串。
 - 文件必须 \`export const router\`，文件名 \`*.router.ts\`。
+- OpenAPI：\`Router({ docs: { tags } })\` + 方法级 \`docs: { summary }\`；方法级 \`tags\` 会**整份替换** Router 的 tags（浅合并，不数组合并）。隐藏接口：\`docs: { showInOpenapi: false }\`。半成品可 \`disabled: true\`（或按环境变量）不注册。
+- 同路径多动词（webhook）：\`router.customize(['GET', 'POST'], '/webhook', { ... })\`。
 
-## 校验（rule）
+### 发响应 / 抛错
 
-- \`rule.array({ ... })\` 可直接传对象字段表，不必再包一层 \`rule.object\`。
-- \`rule.object({ ... })\` 可用对象字面量**深度嵌套**（字段里再写对象 / 数组即可），不必层层拆成多个临时 schema。
-- \`rule.enum(MyEnum)\` **可直接传入 TypeScript \`enum\`**，不要把成员一个个抄进数组。
+| 意图 | 写法 |
+| --- | --- |
+| 成功 200 | \`ctx.send(data)\` |
+| 成功其它 2xx | \`ctx.send(201, data)\`；204 用 \`ctx.send(204)\` |
+| 业务失败 | \`ctx.throw(404)\` / \`ctx.throw(403, { code: 'FORBIDDEN' })\` / \`ctx.throw(400, 'msg')\` |
+| 重定向 | \`ctx.redirect(302, url)\`（先声明对应 \`response\`） |
+| 特殊媒体类型 | \`response({ contentType: 'application/pdf' \\| 'text/event-stream', ... })\` |
+| 全站开了 envelope 仍要裸写 | 对应 \`response({ skipEnvelope: true })\`（下载、SSE 等） |
+
+不要用 \`send(404)\` 冒充错误；错误 JSON 形状已由脚手架的 \`format-error.md.ts\` 统一，业务里只 \`throw\`。改信封形态才去动那个文件，不要靠 \`app.on('error')\`。某前缀要另一套错误字段：在该 \`Router({ mount: [formatError(...)] })\` 再挂一层（洋葱内侧先接住）。
+
+\`response()\` 只约束类型与 OpenAPI，**不会**在运行时再验 \`send\` 的 body。
+
+## 校验（rule / schema）
+
+- \`rule.array({ ... })\` 可直接传对象字段表，不必再包 \`rule.object\`。
+- \`rule.object({ ... })\` 可深度嵌套对象/数组字面量。
+- \`rule.enum(MyEnum)\` **可直接传 TS enum**，不要手抄成员数组。
+- 复用字段表用 \`schema({...})\`，放 \`src/schemas/\`；路由上 \`body(userSchema.omit('id'))\`、\`body(userSchema.pick(...).partial())\`（PATCH）。
+- \`optional()\` = 可不传（\`undefined\`）；\`nullable()\` = 可 \`null\`（PATCH 清空字段）；\`default(v)\` = 没传则用默认。三者别混。
+- **query 不要 \`strict()\`**（查询串几乎全是字符串，strict 易整页 400）。
+- \`transform(fn)\` 只做整形（CSV 拆分、大小写）；权限/配额放 Service，别塞 transform。
+- 类型：\`type User = Validator.Infer<typeof userSchema>\`，与 \`ctx.body\` 对齐；别再手写一份 interface。
+- OpenAPI 组件名：\`schema(...).asName('User')\`；\`pick\`/\`omit\`/\`extend\` 后的新形状要各自再 \`asName\`。
+- 根级数组体：\`body(rule.array(rule.int()))\`。互斥形状：\`body(rule.oneOf([rule.object({ type: rule.literal('a'), ... }), ...]))\`（恰好一种命中）。
+- \`partial()\` 后空 \`{}\` 也能过校验——若必须「至少改一个字段」，在 action / Service 里再判。
 
 \`\`\`ts
-enum Status {
-  Draft = 'draft',
-  Published = 'published',
-}
+import { schema, rule, type Validator } from '@aomex/common';
 
-body({ status: rule.enum(Status) });
+export const userSchema = schema({
+  id: rule.int(),
+  name: rule.string().trim().length({ min: 1 }),
+  email: rule.email(),
+  password: rule.string().length({ min: 8 }),
+}).asName('User');
+
+export type User = Validator.Infer<typeof userSchema>;
+
+// 注册：body(userSchema.omit('id'))
+// 登录：body(userSchema.pick('email', 'password'))
+// PATCH：body(userSchema.pick('name', 'email').partial())
 \`\`\`
 
-### Prisma 字段收紧（Json / 业务 enum）
+### 文件上传
 
-生成器给出的字段类型偏宽松；业务要收紧时，**先**在 \`definePrismaSchema\` 第二个参数里 **override**（\`input\` / \`output\` 的 \`extend\`）：
+\`rule.file()\` 走 multipart；过关后 \`ctx.body.avatar\` 有 \`filepath\` / \`hash\` / \`mimetype\` 等。**本轮响应结束前**务必搬走或上传完，临时文件会被清掉。
 
-- **Json**：用 \`rule\` 描述结构；再用 \`Validator.Infer<typeof 那个 rule>\` 写进 \`declare global { namespace PrismaJson { ... } }\`；Prisma schema 用 \`/// [TypeName]\` 引用。
-- **库里是 \`Int\`、业务有对应 enum**：不要在路由里散落魔法数字；override 成 \`rule.enum(MyEnum)\`（可直接传 TS enum），让入参/出参与 Service 类型一致。
+\`\`\`ts
+body({
+  name: rule.string(),
+  avatar: rule.file().maxSize('2mb').mimeTypes('image/*'),
+  // 多文件：photos: rule.array(rule.file()).length({ max: 5 }),
+}),
+\`\`\`
+
+### Prisma 字段收紧
+
+生成器偏宽松；业务契约用 \`definePrismaSchema\` 的 \`input\` / \`output\` **omit / extend**（藏密码、收紧 Json、Int→业务 enum）：
 
 \`\`\`ts
 import { rule, Validator } from '@aomex/common';
@@ -135,7 +203,8 @@ export const { prismaInput, prismaOutput, prismaEnum } = definePrismaSchema(
   generated,
   {
     article: {
-      input: (s) => s.extend({ tags: articleTags }),
+      input: (s) =>
+        s.omit('id', 'created_at', 'updated_at').extend({ tags: articleTags }),
       output: (s) => s.extend({ tags: articleTags }),
     },
   },
@@ -148,189 +217,161 @@ declare global {
 }
 \`\`\`
 
-不要手写与 validator 脱节的 \`interface\` 去「假装」Json 类型。
+- Json：\`rule\` + \`Validator.Infer\` → \`PrismaJson\`；schema.prisma 用 \`/// [TypeName]\`。不要手写与 validator 脱节的 interface。
+- 路由：\`body(prismaInput.article.pick(...))\` / \`response({ content: prismaOutput.article })\`；改表后先 \`prisma generate\`。
+- 可空 Json 写入：进 Service 前把 JS \`null\` 转成 \`DbNull\`/\`JsonNull\`（或接口不收 null）。
 
-## 服务（懒加载）
+### Mongoose（若项目用了）
 
-\`combineServices\` 得到的 \`services.xxx\` 是**懒加载代理**：从外部（路由 / 其他 Service / commander）调用时，**方法一律按异步使用**（\`await services.article.foo()\`），即使 Class 里写的是同步方法。类型会精确提示为 \`Promise<...>\`。
+\`defineMongooseModel\` 与路由共用同一套 \`rule\`；\`import '@aomex/mongoose'\` 后才有 \`rule.mongoObjectId()\` 等。对外 DTO 用 \`response\` / schema pick，别把文档原样 \`ctx.send\`（易泄露仅 DB 字段）。
 
-- Service **内部** \`this.bar()\` / 同文件直调不受影响，该同步仍同步。
-- 不要对 \`services.xxx.method()\` 的返回值当成同步结果用。
+## 服务
+
+\`\`\`ts
+import { Service } from '@aomex/common';
+
+export default class ArticleService extends Service {
+  // 可选：protected override async onInit() / onDestroy()
+  async findById(id: number) {
+    // 查库 / 调第三方…
+  }
+}
+\`\`\`
+
+在 \`services/index.ts\` 注册（**必须**动态 import；测试注入才用 \`async () => Fake\`）：
+
+\`\`\`ts
+combineServices(
+  { article: () => import('./article.service.js') },
+  { eager: ['cache', 'logger'] }, // 进程一起来就要就绪的放 eager
+);
+\`\`\`
+
+\`services.xxx\` 是**懒加载代理**：从路由 / 其它 Service / commander 调用时**一律 \`await\`**（类型已是 \`Promise\`），即使 Class 里写的是同步方法。Service **内部** \`this.bar()\` 仍同步。互调：\`import { services } from '@/services'\` → \`await services.other....\`。\`onInit\` / \`onDestroy\` / private **不会**出现在 \`services.xxx\` 类型上。
+
+Prisma/Mongoose 连接跟现有 \`*.service.ts\` + \`registerLifecycle\`；**不要**再塞进 \`combineServices\`。
+
+## 鉴权（项目若已生成）
+
+- 整组私有 API：\`new Router({ mount: [auth.authenticate('<策略名>')] })\`；策略名看 \`auth.md.ts\` 的 \`strategies\` key（\`bearer\` / \`jwt\` / \`apiKey\`）。
+- 单接口更严：\`auth.authenticate(name).authorize(...)\` 或 \`auth.authorize(name, ...)\`。先认证再授权；未登录 **401**，已登录权限不够 **403**。
+- 通过后读身份：\`ctx.auth.bearer\`（或 jwt / apiKey）——名字与策略 key 一致。
+- **登录 / 刷新路由不要挂 authenticate**；签发用 \`auth.strategy(name).signature(...)\`，会话写入 \`services.cache\`（见 \`cache.service.ts\` 里 login-token 一类方法）。
+- 少数路径免鉴权优先拆公开 Router；临时绕过可用 \`.skip(ctx => ...)\`（**不改类型**，action 里仍要处理未登录）。
+
+## 缓存
+
+- 读写：\`services.cache\` 上你声明的方法；键用 \`this.key('前缀', 'v1').key(id)\`，发版改版本号即可整批失效。
+- 方法级缓存：从 \`cache.service.ts\` 引入 \`@remember(ms)\` / \`@remember({ duration, key, defaultValue })\`——**只挂读多写少**；写库/发短信/扣库存别挂。返回 \`null\` 默认不写缓存。
+- 幂等 / 抢锁：\`setNX\`；计数窗口：\`increment\` + \`expire\`。生产多实例 cache 应在 \`eager\`（脚手架一般已做）。
+
+## SSE（服务端推送）
+
+进度、通知、行情等单向推送用 \`ctx.sse()\`，**不要**同一路由再 \`ctx.send\` JSON。优先 \`stream\`（客户端断开 \`signal\` 会 abort）：
+
+\`\`\`ts
+router.get('/events', {
+  mount: [
+    response({
+      statusCode: 200,
+      contentType: 'text/event-stream',
+      content: rule.string(),
+      skipEnvelope: true, // 若开了 envelope
+    }),
+  ],
+  action: async (ctx) => {
+    const sse = ctx.sse({ retry: 3_000, heartbeat: 10_000 }); // 经反代建议开 heartbeat
+    await sse.stream(async (emit, signal) => {
+      for await (const item of watchEvents({ after: sse.lastEventId, signal })) {
+        emit({ id: String(item.id), event: 'item', data: item });
+      }
+    });
+  },
+});
+\`\`\`
 
 ## 场景 → 用什么
 
 | 场景 | 做法 |
 | --- | --- |
-| 需要登录 / 身份 | \`mount: [auth.authenticate('<策略名>'), ...]\`；策略名以 \`auth.md.ts\` 里 \`strategies\` 的 key 为准（如 \`bearer\` / \`jwt\` / \`apiKey\`） |
-| 需要权限（已登录后） | \`auth.authenticate(name).authorize(...)\` 或 \`auth.authorize(name, ...)\` |
-| 读写缓存 | \`services.cache\`；方法级缓存用 \`@remember\`（见 \`cache.service.ts\`） |
-| 业务日志 | \`services.logger\`（info/warn/error/fatal）；不要 \`console.log\` 打生产日志 |
-| HTTP 访问日志 | 用已有 \`@aomex/http-access-log\` 中间件；与业务 logger 分开 |
-| 统一改错误 JSON 形态 | 改 \`format-error.md.ts\` 的 \`globalErrorRewrite\`；不要再挂 \`app.on('error')\` 当唯一处理 |
-| 全体接口固定壳 + HTTP 200 | 解开 \`web.ts\` 里 \`envelope\` 相关注释 |
-| 按请求头切语言 | 解开 \`web.ts\` 里 dynamic \`language\` 注释 |
-| 入参校验 / 组合字段 | \`rule.*\`；复用 \`schema({...}).pick/omit/extend/partial\`；枚举用 \`rule.enum(TsEnum)\` |
-| Prisma 模型校验 | \`src/schemas\` + \`definePrismaSchema\`；\`body(prismaInput.x.pick(...))\` |
-| Prisma Json / Int↔业务 enum | 先 \`definePrismaSchema\` override；Json 再 \`Validator.Infer<>\` → \`PrismaJson\`（见上节） |
-| Prisma 可空 Json 写入 | 进 Service 前把 JS \`null\` 转成 \`DbNull\`/\`JsonNull\`（或接口不收 null） |
-| DB 连接生命周期 | Prisma/Mongoose：跟现有 \`*.service.ts\` + \`registerLifecycle\`；**不要**再塞进 \`combineServices\` |
-| 新业务 Service | 新文件 + \`combineServices({ xxx: () => import('./xxx.service.js') })\`；loader 必须是动态 import；启动即要连的放 \`eager\` |
-| 调 \`services.xxx\` | 一律 \`await\`（懒加载）；类型已是 \`Promise\`；Service 内部 \`this.\` 调用除外 |
-| Service 互调 | \`import { services } from '@/services'\` → \`await services.other....\` |
-| 控制台命令 / 定时任务 | 见下节「指令与定时任务」 |
-| 生产关掉文档 UI | 已有 \`swagger\`/\`redoc\`/\`scalar\` 用 \`.skip(isProduction)\`；新加敏感中间件同样模式 |
-| 慢请求追踪 | 已有 async-trace 时挂慢请求中间件；不要自己 setTimeout 统计 |
+| 缺资源 / 无权限 / 业务拒绝 | \`ctx.throw(404\\|403\\|400, …)\` + 对应 \`response({ statusCode })\` |
+| 需要登录 | \`auth.authenticate('<策略>')\`（Router 或方法级 \`mount\`） |
+| 读写缓存 / 方法级缓存 | \`services.cache\`；\`@remember\`（只挂查询） |
+| 业务日志 | \`services.logger\`（info/warn/error/fatal）；别 \`console.log\` 打生产 |
+| 入参复用 / PATCH | \`schema\` + \`pick\`/\`omit\`/\`extend\`/\`partial\` |
+| 上传文件 | \`rule.file()\` + 响应结束前搬走 |
+| 互斥 JSON / 根级数组体 | \`rule.oneOf([...])\` / \`body(rule.array(...))\` |
+| Prisma 模型校验 | \`body(prismaInput.x…)\` / \`response({ content: prismaOutput.x })\` |
+| 新业务 Service | 新文件 + \`combineServices\` 动态 import；需启动初始化的进 \`eager\` |
+| OpenAPI 分组 / 摘要 | \`docs.tags\` / \`docs.summary\`；隐藏用 \`showInOpenapi: false\` |
+| 服务端推送 | \`ctx.sse()\` + \`stream\`（见上节） |
+| 控制台指令 / 定时 | 见下节 |
+| 改错误 JSON 形态 | 仅改 \`format-error.md.ts\`（或 Router 内再挂一层） |
+| 改全局中间件 / envelope / 语言 | 仅改 \`web.ts\`（先看注释；compress 须在 etag 前，文档 UI 在 helmet 前） |
 
 ## 指令与定时任务
 
-定时任务**建立在指令之上**：先写 \`Commander\`，需要定时调度时再 \`mount: [cron(...)]\`。\`cli.ts\` 里已有 \`crons({ commanders, store, port })\` 负责收集并调度，**不要**自己 \`setInterval\`。
-
-### 怎么写指令
+定时建立在指令上：先写 \`Commander\`，要自动跑再 \`mount: [cron(...)]\`。\`cli.ts\` 已有 \`crons\` 收集调度，**不要**自己 \`setInterval\`。
 
 \`\`\`ts
-// src/commanders/hello.cmd.ts
+// src/commanders/report.cmd.ts
 import { Commander, options } from '@aomex/console';
 import { rule } from '@aomex/common';
+import { cron } from '@aomex/cron'; // 需要定时时再引
 
-export const commander = new Commander();
+export const commander = new Commander({ prefix: 'report:' });
 
-commander.create('hello', {
+commander.create('daily', {
+  docs: { summary: '日报' },
   mount: [
-    options(
-      { user: rule.string().default('World') },
-      { user: ['u'] }, // 短选项 -u
-    ),
+    options({ verbose: rule.boolean().default(false) }, { verbose: ['v'] }),
+    cron({ hour: '9', minute: '0' }), // 或 cron('0 9 * * *')；可挂多个 + args
   ],
   action: async (ctx) => {
-    await ctx.logger.info(\`Hello \${ctx.options.user}\`);
+    await services.report.runDaily(ctx.options);
   },
 });
+
+// 旧名并存：commander.create(['flush', 'clear'], { ... })
+// 特性开关：disabled: process.env['FEATURE_X'] !== '1'
 \`\`\`
 
-- 文件 \`*.cmd.ts\`，\`export const commander\`。
-- 业务进 Service；这里只编排。
+- 文件 \`*.cmd.ts\`，\`export const commander\`。手动跑：\`pnpm aomex report:daily\`（或项目包管理器等价命令）；\`pnpm aomex -h\` 看列表。
+- 长循环听停：\`while (ctx.cron.isAlive()) { … }\`（\`aomex cron:stop\` 后变 false）。本轮窗内做完就收：查 \`ctx.cron.isCurrentEpoch()\` 再 break。
+- 默认 \`concurrent: 1\` 防重叠；长任务跨点可加大 \`concurrent\` / \`waitingTimeout\`。定时参数走同一套 \`options()\`，用 \`cron({ ..., args: ['--verbose'] })\` 传入。
 
-### 什么时候加 \`cron()\`
-
-- **只要手动跑**：不要挂 \`cron\`，用包管理器执行指令即可。
-- **要按时间自动跑**：在该指令的 \`mount\` 里加 \`cron(...)\`（可挂多个，配合 \`args\` 区分参数）。
-- \`cli.ts\` 的 \`crons({...})\` 是调度器入口，和指令上的 \`cron()\` 不是一回事——前者收集，后者声明调度规则。
-
-### 调度规则写法
-
-\`\`\`ts
-import { cron } from '@aomex/cron';
-
-// 对象字段（推荐可读）
-cron({ minute: '*/10' })
-cron({ second: '0', minute: '0', hour: '2' }) // 每天 02:00:00
-
-// 或 cron 表达式字符串（5 段从分起，或 6 段含秒；验证可用 https://crontab.guru ）
-cron('0 */6 * * *')
-cron({ time: '0 0 2 * * *', args: ['--user', 'batch'] })
-\`\`\`
-
-### 长期运行不断开
-
-需要「一直转、直到被停」的循环任务时，用 \`ctx.cron.isAlive()\`（\`aomex cron:stop\` 后变为 \`false\`）：
-
-\`\`\`ts
-commander.create('consume', {
-  mount: [cron({ minute: '*' })],
-  action: async (ctx) => {
-    // 可选：isAlive(maxTimeoutMS) 限制本轮最长存活
-    while (ctx.cron.isAlive()) {
-      await services.queue.tick();
-      // ...
-      await sleep(3_000);
-    }
-  },
-});
-\`\`\`
-
-相关：\`ctx.cron.isCurrentEpoch()\` 判断是否仍处于本触发窗口（\`nextScheduleTime > now\`）。
-
-### \`concurrent\` 并发
-
-- 默认 \`concurrent: 1\`：同一任务同时只跑一个实例。
-- 允许跨时间点重叠、或多实例一起干：设 \`concurrent: N\` 或 \`'infinity'\`。
-- 达上限的新任务进等待池，超时丢弃；用 \`waitingTimeout\`（默认 \`10_000\` ms）调节。
-- 长循环任务若常跨点，适当加大 \`concurrent\` / \`waitingTimeout\`，避免下一轮抢不到执行权。
-
-\`\`\`ts
-cron({
-  minute: '*',
-  concurrent: 3,
-  waitingTimeout: 15_000,
-  args: ['--batch', '1'],
-})
-\`\`\`
-
-### 调用方式
-
-| 目的 | 命令（按项目包管理器替换） |
-| --- | --- |
-| 手动跑指令 | \`pnpm aomex hello\` / \`pnpm aomex hello -u World\`（yarn 同理；npm 用 \`npm exec -- aomex ...\`） |
-| 看全部指令 | \`pnpm aomex -h\` |
-| 启动定时调度 | \`pnpm aomex cron:start\`（脚手架 \`start\` 脚本通常已带） |
-| 查看运行中任务 | \`pnpm aomex cron:stats\` |
-| 优雅停止定时 | \`pnpm aomex cron:stop\`（\`isAlive()\` 变 \`false\`） |
-| 导出调度任务列表 | \`pnpm aomex cron:eject\` |
-
-## 中间件（自写时）
+## 中间件（自写业务中间件时）
 
 \`\`\`ts
 import { middleware } from '@aomex/common';
 
-export const xxx = middleware.web(async (ctx, next) => {
-  await next();
-});
-
-// 往 ctx 挂字段并保留类型
 export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => {
   ctx.userId = 1;
-  await next();
+  await next(); // 必须 await，截断可不调
 });
 \`\`\`
 
-- 仅 Web：\`middleware.web\`；Web+Console 共用：\`middleware.mixin\`。
-- 全局顺序在 \`web.ts\` 的 \`mount\`（洋葱：**越靠前越外层**；出站顺序相反）。改顺序前先对照下面约束，再看现有 \`mount\`。
-
-### \`web.ts\` mount 顺序关系
-
-推荐骨架（有则按此相对位置；没有的插件跳过）：
-
-\`accessLog → responseTime → cors → rateLimit → compress → etag → globalErrorRewrite → slowTrace → prettyJson → swagger/redoc/scalar → helmet → routers\`
-
-| 关系 | 要求 | 原因 |
-| --- | --- | --- |
-| \`responseTime\` | 尽量最外（\`accessLog\` 后） | 覆盖内侧全部耗时 |
-| \`cors\` | 靠外；在限流 / 业务 / 错误重写之前 | 预检早返回；429/错误响应也带 CORS 头 |
-| \`rateLimit\` | \`cors\` 后、重活前 | 尽早拒绝；被拒时可不再进 compress 等 |
-| \`compress\` → \`etag\` | **compress 必须在 etag 前面**（更外） | 出站先对明文算 ETag 再压缩；若 etag 更外，压缩后 body 变 Stream，etag 会跳过 |
-| \`swagger\`/\`redoc\`/\`scalar\` → \`helmet\` | 文档 UI 在 helmet 前面 | 命中文档则短路，避免 CSP 弄坏文档页 |
-| \`helmet\` → \`routers\` | helmet 在路由前 | 安全头留给业务接口 |
-
-注意：
-
-- \`compress\` 只需满足「在 etag 前」，可以紧跟 \`rateLimit\`，不必故意放很后面。
-- 启用 \`envelope\` 时套壳发生在 \`flush\`（整条中间件之后）；etag 签的是套壳前 body，与最终线上 body 可能不一致——属机制限制，单靠调顺序无法消除。
-- nginx 反代不会给动态 JSON 算 ETag；API 仍靠 \`@aomex/etag\`。nginx 自带 etag 只覆盖它直接提供的静态文件。
+- 仅 Web：\`middleware.web\`；Web+Console 共用：\`middleware.mixin\`。往 ctx 挂字段务必写泛型，下游才有类型。
+- 假定上游已挂某中间件、只借类型：\`middleware.dependsOn(上游).web(...)\`（运行时不会替你执行上游；挂载时仍要把上游放前面）。
+- 按条件跳过：\`.skip(boolean \\| (ctx) => boolean)\`（如测试环境关某层）；skip **不改** Props 类型。
+- 全局顺序在 \`web.ts\`，一般不用动。
 
 ## 不要做
 
-- 在路由里堆 SQL / 事务 / 第三方 SDK 调用
-- 只靠 \`app.on('error')\` 处理业务错误响应
-- \`combineServices\` 直接传 Class，或再写已废弃的 \`CombinedServices\` 模块扩充
-- 改完 Service 却忘了注册；或破坏现有 \`declare module '@aomex/web'\` 的 \`Infer\` 扩展
-- 为已有能力再造一套（鉴权、缓存、cron、错误格式、logger）——先搜现有文件
+- 在路由里堆 SQL / 事务 / 第三方 SDK
+- 自己 \`new Service()\`，或不走 \`combineServices\` 动态 import（正式代码写成 \`async () => Class\` 也等于没懒加载）
+- 用 \`send(4xx)\` 代替 \`throw\`；或再造一套错误/鉴权/缓存/cron/logger
+- 改完 Service 忘了注册；破坏现有 \`declare module '@aomex/web'\` 的 Infer 扩展
+- 登录接口挂 \`authenticate\`（会永远 401）
+- SSE / 文件下载开了 envelope 却忘了 \`skipEnvelope\`
+- \`@remember\` 挂有副作用的方法
 
 ## 动手前检查
 
-- [ ] 新文件落在正确目录，命名符合扫描约定
-- [ ] 接口有 \`body\`/\`query\`/\`params\`（若有入参）和 \`response\`
-- [ ] 业务在 Service；路由只编排
-- [ ] 新 Service 已 \`combineServices\` 注册；需启动初始化的进 \`eager\`
-- [ ] 鉴权 / 文档 / 生产跳过等复用现有模式，不另起炉灶
-- [ ] 若改了 \`web.ts\` \`mount\` 顺序：仍满足 compress→etag、文档→helmet、cors 靠外
+- [ ] 新文件目录与命名符合扫描约定（\`*.router.ts\` / \`*.cmd.ts\` / \`export default class\`）
+- [ ] 有入参则挂 \`body\`/\`query\`/\`params\`；有出参则挂 \`response\`（含会 throw 的状态码）
+- [ ] OpenAPI：\`tags\` + \`summary\`（或有意 \`showInOpenapi: false\`）
+- [ ] 业务在 Service；路由只编排；\`await services.xxx\`
+- [ ] 新 Service 已注册；需启动即连的进 \`eager\`
+- [ ] 鉴权 / 缓存 / 错误格式复用现有文件，不另起炉灶
 `;

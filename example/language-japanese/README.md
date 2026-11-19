@@ -71,8 +71,8 @@ See `Dockerfile.*` and `docker-compose-*.yml` for images and orchestration.
 .
 ├─ .husky/                            Git hooks
 ├─ .vscode/                           Editor recommendations
-├─ AGENTS.md                          AI entry → aomex-skill.md
-├─ aomex-skill.md                     aomex best practices for AI
+├─ AGENTS.md                          AI entry → aomex.md
+├─ aomex.md                           aomex best practices for AI
 ├─ scripts/                           Start / deploy scripts
 ├─ src/
    ├─ commanders/                   Console commands

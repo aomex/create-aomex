@@ -21,7 +21,7 @@ cd <project>
 pnpm start   # 或 yarn start / npm start
 ```
 
-生成项目根目录含 `AGENTS.md` → `aomex-skill.md`，供 AI 按约定扩展代码。
+生成项目根目录含 `AGENTS.md` → `aomex.md`，供 AI 按约定扩展代码。
 
 ## 非交互参数
 

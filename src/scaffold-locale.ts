@@ -130,10 +130,10 @@ const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
     note('.vscode/', zh ? '编辑器推荐与设置' : 'Editor recommendations'),
     note(
       'AGENTS.md',
-      zh ? 'AI 常驻入口（指向 aomex-skill.md）' : 'AI entry → aomex-skill.md',
+      zh ? 'AI 常驻入口（指向 aomex.md）' : 'AI entry → aomex.md',
     ),
     note(
-      'aomex-skill.md',
+      'aomex.md',
       zh ? 'aomex 最佳实践（给 AI）' : 'aomex best practices for AI',
     ),
   );

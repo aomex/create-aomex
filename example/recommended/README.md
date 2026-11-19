@@ -76,8 +76,8 @@ pnpm deploy:production
 .
 ├─ .husky/                            Git hooks
 ├─ .vscode/                           编辑器推荐与设置
-├─ AGENTS.md                          AI 常驻入口（指向 aomex-skill.md）
-├─ aomex-skill.md                     aomex 最佳实践（给 AI）
+├─ AGENTS.md                          AI 常驻入口（指向 aomex.md）
+├─ aomex.md                           aomex 最佳实践（给 AI）
 ├─ prisma/                            数据表结构与 migrations
 ├─ scripts/                           启动与部署脚本
 ├─ src/
