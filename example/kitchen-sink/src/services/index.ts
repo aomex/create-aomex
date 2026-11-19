@@ -6,5 +6,5 @@ export const services = await combineServices(
     cache: () => import('./cache.service.js'),
     article: () => import('./article.service.js'),
   },
-  { eager: ['logger', 'cache'] },
+  { eager: ['cache'] },
 );

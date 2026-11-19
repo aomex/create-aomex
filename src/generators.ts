@@ -896,7 +896,7 @@ export const generateServicesIndex = (orm: Orm): string => {
     `    logger: () => import('./logger.service.js'),`,
     `    cache: () => import('./cache.service.js'),`,
   ];
-  const eager = ['logger', 'cache'];
+  const eager = ['cache'];
   if (orm !== 'none') {
     loaders.push(`    article: () => import('./article.service.js'),`);
   }
