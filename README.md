@@ -73,10 +73,11 @@ pnpm test:update                       # 更新 example/* 快照
 pnpm build                             # 产出 dist（发布用）
 ```
 
-也可直接进入 `example/` 下某个快照目录安装并启动（与真实生成项目相同）：
+也可直接进入 `example/` 下某个快照目录安装并启动（与真实生成项目相同）。`.env*` 未入库，需先从示例复制：
 
 ```bash
 cd example/docs-ui-scalar   # 或 recommended / kitchen-sink / …
+cp .env.example .env
 pnpm install
 pnpm start
 ```

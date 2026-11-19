@@ -573,7 +573,8 @@ export default defineConfig({
   const deployEnv = generateEnvExample(opts.projectName, options, 'deploy');
   add(
     '.env',
-    text(`# 配置项有变化时建议及时同步 .env.example
+    text(`# 本地密钥配置，请勿随git提交
+# 配置项有变化时建议及时同步 .env.example
 ${localEnv}`),
   );
   add(
@@ -582,8 +583,16 @@ ${localEnv}`),
 # 配置项有变化时建议及时同步该文件
 ${localEnv}`),
   );
-  add('.env.integration', text(deployEnv));
-  add('.env.production', text(deployEnv));
+  add(
+    '.env.integration',
+    text(`# 集成环境密钥配置，复制到集成服务器。请勿随git提交
+${deployEnv}`),
+  );
+  add(
+    '.env.production',
+    text(`# 生产环境密钥配置，复制到生产服务器。请勿随git提交
+${deployEnv}`),
+  );
   add(
     'docker-compose.yml',
     text(
