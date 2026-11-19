@@ -1,4 +1,4 @@
-import { checkbox, confirm, select } from '@inquirer/prompts';
+import { checkbox, select } from '@inquirer/prompts';
 import { I18N_LANGUAGES, type DefaultLanguage } from './i18n-languages';
 import { buildTimezoneChoices, isValidTimezone } from './timezones';
 import {
@@ -260,12 +260,8 @@ export const selectOptions = async (
     return undefined;
   };
 
-  const docker =
-    parseBoolArg(argv['docker']) ??
-    (await confirm({
-      message: '是否使用 Docker 部署生产环境',
-      default: true,
-    }));
+  // 未传 --docker 时默认 Docker 部署；仅 CLI 可显式关闭（--docker=false）
+  const docker = parseBoolArg(argv['docker']) ?? true;
 
   const argvTz = (argv['tz'] ?? argv['timezone']) as string | undefined;
   let timezone: string;

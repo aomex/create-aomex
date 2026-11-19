@@ -40,7 +40,7 @@ pnpm start   # 或 yarn start / npm start
 | `--logger`              | 日志出口，逗号多选                                                       | `--logger=console,file`                           |
 | `--console-middlewares` | Console 插件；`cron` 始终安装，可追加                                    | `--console-middlewares=openapi`                   |
 | `--lang`                | 默认语言（BCP 47）                                                       | `--lang=zh-CN`                                    |
-| `--docker`              | 是否生成 Docker 生产部署产物                                             | `--docker=true` \| `false`                        |
+| `--docker`              | 是否生成 Docker 生产部署产物（默认 `true`，不询问）                      | `--docker=true` \| `false`                        |
 | `--tz` / `--timezone`   | 进程时区                                                                 | `--tz=Asia/Shanghai`                              |
 | `--cluster`             | 集群方案（勿叠用）                                                       | `--cluster=none` \| `cluster-listen` \| `pm2`     |
 
