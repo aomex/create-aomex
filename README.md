@@ -6,12 +6,12 @@
 
 ## 快速开始
 
-务必带上 `@latest`，否则本地缓存常会跑到旧版脚手架。用哪条命令启动，就会自动选用对应包管理器（也可用 `--pm` 覆盖）。
+用哪条命令启动，就会自动选用对应包管理器（也可用 `--pm` 覆盖）
 
 ```bash
-pnpm create aomex@latest
-yarn create aomex@latest
-npm create aomex@latest
+pnpm create aomex
+yarn create aomex
+npm create aomex
 ```
 
 按提示选择 ORM、认证、中间件等；生成后进入目录启动：

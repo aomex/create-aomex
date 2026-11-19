@@ -16,13 +16,6 @@
     "cron:stats": "node scripts/docker-cron-stats.mjs",
     "cron:stop": "node scripts/docker-cron-stop.mjs"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "12.21.0",
-      "onFail": "error"
-    }
-  },
   "dependencies": {
     "@aomex/cache": "4.1.0",
     "@aomex/cache-redis-adapter": "4.1.0",
@@ -47,5 +40,12 @@
     "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "@scarf/scarf": false,
+    "esbuild": true,
+    "prisma": true
   }
 }

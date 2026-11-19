@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'node:path/posix';
+import { createRequire } from 'node:module';
 import yargsParser from 'yargs-parser';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { terminal } from './terminal';
@@ -10,6 +11,7 @@ import { inputProject } from './input-project';
 import { selectNodeVersion } from './select-node-version';
 import { selectOptions } from './select-options';
 import { applyScaffoldVariables, generateProjectFiles } from './project-files';
+import { ensureLatestCreateAomex } from './ensure-latest';
 import {
   packageManagerExec,
   resolveAomexVersion,
@@ -17,14 +19,22 @@ import {
   resolvePrismaVersion,
 } from './generators';
 
+const { version: createAomexVersion } = createRequire(import.meta.url)(
+  '../package.json',
+) as { version: string };
+
 const runShell = async (command: string) => {
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const stream = spawn(command, {
       cwd: process.cwd(),
       env: process.env,
       shell: true,
+      stdio: 'inherit',
     });
-    stream.on('close', resolve);
+    stream.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`命令失败 (${code}): ${command}`));
+    });
     stream.on('error', reject);
   });
 };
@@ -33,6 +43,12 @@ const isExitPromptError = (err: unknown): boolean =>
   err instanceof Error && err.name === 'ExitPromptError';
 
 const main = async () => {
+  await ensureLatestCreateAomex(createAomexVersion);
+
+  console.log(
+    `${terminal.style('cyan', 'create-aomex')} ${terminal.style('gray', `v${createAomexVersion}`)}\n`,
+  );
+
   const argv = yargsParser(process.argv.slice(2));
   const projectName = await inputProject(argv);
   const nodeVersion = await selectNodeVersion(argv);
@@ -88,55 +104,47 @@ const main = async () => {
     {
       title: 'git初始化',
       skip: async () => {
-        return !/\d\.\d/.test(execSync('git -v', { encoding: 'utf8' }));
-      },
-      task: async () => {
-        await runShell('git init');
-        await setTimeout(500);
-      },
-    },
-    {
-      title: '安装依赖',
-      task: async () => {
-        const pm = options.packageManager;
-        const cmd =
-          pm === 'pnpm'
-            ? 'pnpm install'
-            : pm === 'yarn'
-              ? 'yarn'
-              : 'npm install';
-        await runShell(cmd);
-
-        if (pm === 'pnpm') {
-          await runShell('pnpm approve-builds --all -y');
+        try {
+          return !/\d\.\d/.test(execSync('git -v', { encoding: 'utf8' }));
+        } catch {
+          return true;
         }
       },
-    },
-    {
-      title: '生成prisma客户端',
-      skip: async () => options.orm !== 'prisma',
       task: async () => {
-        const exec = packageManagerExec(options.packageManager);
-        await runShell(`${exec} prisma generate`);
-      },
-    },
-    {
-      title: '格式化代码',
-      task: async () => {
-        const exec = packageManagerExec(options.packageManager);
-        await runShell(`${exec} prettier --cache --write .`);
+        execSync('git init', { stdio: 'ignore' });
+        await setTimeout(500);
       },
     },
   ]);
 
   if (error) process.exit(1);
 
+  const pm = options.packageManager;
+  const exec = packageManagerExec(pm);
+  const installCmd =
+    pm === 'pnpm' ? 'pnpm install' : pm === 'yarn' ? 'yarn' : 'npm install';
+
+  console.log(`\n${terminal.style('cyan', '→')} 安装依赖\n`);
+  await runShell(installCmd);
+  if (pm === 'pnpm') {
+    await runShell('pnpm approve-builds --all -y');
+  } else if (pm === 'npm') {
+    // 旧版 npm 可能无此命令；已预写 allowScripts，失败可忽略
+    await runShell(
+      'npm install-scripts approve --all --no-allow-scripts-pin || true',
+    );
+  }
+
+  if (options.orm === 'prisma') {
+    console.log(`\n${terminal.style('cyan', '→')} 生成 prisma 客户端\n`);
+    await runShell(`${exec} prisma generate`);
+  }
+
+  console.log(`\n${terminal.style('cyan', '→')} 格式化代码\n`);
+  await runShell(`${exec} prettier --cache --write .`);
+
   const startCmd =
-    options.packageManager === 'npm'
-      ? `npm start`
-      : options.packageManager === 'yarn'
-        ? `yarn start`
-        : `pnpm start`;
+    pm === 'npm' ? `npm start` : pm === 'yarn' ? `yarn start` : `pnpm start`;
 
   console.log(
     '\n项目创建成功：' +

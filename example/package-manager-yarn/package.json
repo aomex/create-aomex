@@ -41,5 +41,22 @@
     "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "dependenciesMeta": {
+    "@prisma/client": {
+      "built": true
+    },
+    "@prisma/engines": {
+      "built": true
+    },
+    "@scarf/scarf": {
+      "built": false
+    },
+    "esbuild": {
+      "built": true
+    },
+    "prisma": {
+      "built": true
+    }
   }
 }

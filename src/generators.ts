@@ -23,6 +23,48 @@ export const packageManagerExec = (pm: PackageManager): string => {
   return 'npm exec --';
 };
 
+/**
+ * 依赖安装脚本白名单，三家共用同一策略：
+ * - pnpm → `pnpm-workspace.yaml` allowBuilds
+ * - npm  → package.json allowScripts
+ * - yarn → package.json dependenciesMeta.*.built（Yarn 4.14+ 默认 enableScripts:false）
+ */
+export const buildAllowInstallScripts = (opts: {
+  docker: boolean;
+}): Record<string, boolean> => {
+  const allow: Record<string, boolean> = {
+    '@prisma/client': true,
+    '@prisma/engines': true,
+    '@scarf/scarf': false,
+    'prisma': true,
+  };
+  if (opts.docker) {
+    allow['esbuild'] = true;
+  }
+  return Object.fromEntries(
+    Object.entries(allow).sort(([a], [b]) => a.localeCompare(b)),
+  );
+};
+
+/** 渲染 pnpm-workspace.yaml 的 allowBuilds 段 */
+export const formatPnpmAllowBuilds = (
+  allow: Record<string, boolean>,
+): string => {
+  const lines = Object.entries(allow).map(([name, enabled]) => {
+    const key = name.startsWith('@') ? `'${name}'` : name;
+    return `  ${key}: ${enabled}`;
+  });
+  return `allowBuilds:\n${lines.join('\n')}\n`;
+};
+
+/** Yarn：dependenciesMeta.<pkg>.built */
+export const toYarnDependenciesMeta = (
+  allow: Record<string, boolean>,
+): Record<string, { built: boolean }> =>
+  Object.fromEntries(
+    Object.entries(allow).map(([name, built]) => [name, { built }]),
+  );
+
 export const prismaAdapterMeta = (
   db: PrismaDatabase,
 ): {
@@ -2078,7 +2120,7 @@ export const generatePackageJson = (opts: {
     groups.find((g) => g.dev)?.pkgs ?? [],
   );
 
-  // packageManager / devEngines 紧跟 scripts
+  // packageManager / devEngines 紧跟 scripts（devEngines 仅 pnpm 支持）
   let packageManager: string | undefined;
   let devEngines: Record<string, unknown> | undefined;
   if (opts.packageManager === 'pnpm') {
@@ -2092,19 +2134,17 @@ export const generatePackageJson = (opts: {
       },
     };
   } else if (opts.packageManager === 'yarn') {
-    // 顶层 packageManager 已够；不再重复写 devEngines.packageManager
     packageManager = `yarn@${opts.packageManagerVersion}`;
-    devEngines = undefined;
-  } else {
-    // npm 无顶层 packageManager 字段时，用 devEngines 声明期望版本
-    devEngines = {
-      packageManager: {
-        name: 'npm',
-        version: opts.packageManagerVersion,
-        onFail: 'error',
-      },
-    };
   }
+
+  const installScriptPolicy = buildAllowInstallScripts({ docker });
+  // npm allowScripts / yarn dependenciesMeta 放末尾（pnpm 写在 pnpm-workspace.yaml；Yarn 无独立文件）
+  const allowScripts =
+    opts.packageManager === 'npm' ? installScriptPolicy : undefined;
+  const dependenciesMeta =
+    opts.packageManager === 'yarn'
+      ? toYarnDependenciesMeta(installScriptPolicy)
+      : undefined;
 
   return {
     name: '{{projectName}}',
@@ -2119,6 +2159,8 @@ export const generatePackageJson = (opts: {
     ...(devEngines ? { devEngines } : {}),
     dependencies,
     devDependencies,
+    ...(allowScripts ? { allowScripts } : {}),
+    ...(dependenciesMeta ? { dependenciesMeta } : {}),
   };
 };
 

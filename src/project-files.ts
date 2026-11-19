@@ -1,6 +1,8 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { withBaseWebPlugins, type ScaffoldOptions } from './types';
 import {
+  buildAllowInstallScripts,
+  formatPnpmAllowBuilds,
   generateAuth,
   generateBareDeployScript,
   generateBuildInDockerScript,
@@ -243,25 +245,13 @@ ${exec} commitlint --edit $1
     skills: false
 `
         : '';
+    const allowBuilds = formatPnpmAllowBuilds(
+      buildAllowInstallScripts({ docker: options.docker }),
+    );
     add(
       'pnpm-workspace.yaml',
       text(
-        options.docker
-          ? `allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  '@scarf/scarf': false
-  esbuild: true
-  prisma: true
-minimumReleaseAgeExclude:
-  - '@aomex/*'
-${prismaSkillsDeny}`
-          : `allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  '@scarf/scarf': false
-  prisma: true
-minimumReleaseAgeExclude:
+        `${allowBuilds}minimumReleaseAgeExclude:
   - '@aomex/*'
 ${prismaSkillsDeny}`,
       ),
