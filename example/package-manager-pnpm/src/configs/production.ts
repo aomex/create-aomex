@@ -1,5 +1,4 @@
-import { type RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig } from './shared';
+import { shared, type FullConfig, type SecretConfig } from './shared';
 
 /**
  * 密钥配置请放 .env.production，需在生产服务器手动创建文件。
@@ -7,9 +6,9 @@ import { shared, type SecretConfig } from './shared';
  */
 const secrets = process.env as unknown as SecretConfig;
 
-export const production = {
+export const production: FullConfig = {
   ...shared,
-  redis: <RedisOptions>{
+  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',

@@ -1,4 +1,3 @@
-import type { RedisOptions } from '@aomex/cache-redis-adapter';
 import { shared, type SecretConfig, type FullConfig } from './shared';
 
 /**
@@ -9,7 +8,7 @@ const secrets = process.env as unknown as SecretConfig;
 
 export const integration: FullConfig = {
   ...shared,
-  redis: <RedisOptions>{
+  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',

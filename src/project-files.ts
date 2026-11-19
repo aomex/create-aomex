@@ -261,24 +261,36 @@ ${prismaSkillsDeny}`,
   // —— 配置 ——
   add(
     'src/configs/shared.ts',
-    text(`import type { production } from './production';
+    text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
+
 /**
  * 多环境共用的通用配置。
  * 各环境文件通过 \`...shared\` 展开后，再覆盖本环境特有项。
  */
-export const shared = {};
+export const shared = {
+  // timeout: 30_000,
+};
 
+/**
+ * 各环境密钥配置，来自.env*、Aws Secret Manager、Vault 等。
+ */
 export interface SecretConfig {
-  REDIS_PASSWORD?: string;
+  REDIS_PASSWORD: string;
 }
 
-export type FullConfig = typeof production;
+type SharedConfig = typeof shared;
+
+/**
+ * 各环境完整配置
+ */
+export interface FullConfig extends SharedConfig {
+  redis: RedisOptions;
+}
 `),
   );
   add(
     'src/configs/production.ts',
-    text(`import { type RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig } from './shared';
+    text(`import { shared, type FullConfig, type SecretConfig } from './shared';
 
 /**
  * 密钥配置请放 .env.production，需在生产服务器手动创建文件。
@@ -286,9 +298,9 @@ import { shared, type SecretConfig } from './shared';
  */
 const secrets = process.env as unknown as SecretConfig;
 
-export const production = {
+export const production: FullConfig = {
   ...shared,
-  redis: <RedisOptions>{
+  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',
@@ -299,8 +311,7 @@ export const production = {
   );
   add(
     'src/configs/development.ts',
-    text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig, type FullConfig } from './shared';
+    text(`import { shared, type SecretConfig, type FullConfig } from './shared';
 
 /**
  * 密钥配置请放 .env
@@ -309,7 +320,7 @@ const secrets = process.env as unknown as SecretConfig;
 
 export const development: FullConfig = {
   ...shared,
-  redis: <RedisOptions>{
+  redis: {
     host: 'localhost',
     port: 6379,
     password: secrets.REDIS_PASSWORD || 'abcde',
@@ -320,8 +331,7 @@ export const development: FullConfig = {
   );
   add(
     'src/configs/integration.ts',
-    text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
-import { shared, type SecretConfig, type FullConfig } from './shared';
+    text(`import { shared, type SecretConfig, type FullConfig } from './shared';
 
 /**
  * 密钥配置请放 .env.integration，需在集成服务器手动创建文件。
@@ -331,7 +341,7 @@ const secrets = process.env as unknown as SecretConfig;
 
 export const integration: FullConfig = {
   ...shared,
-  redis: <RedisOptions>{
+  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',
@@ -346,9 +356,7 @@ export const integration: FullConfig = {
 import type { FullConfig } from './shared';
 
 const env = (process.env['NODE_ENV'] || 'development') as
-  | 'development'
-  | 'production'
-  | 'integration';
+  'development' | 'production' | 'integration';
 
 const configList = await import(\`./\${env}.js\`);
 
