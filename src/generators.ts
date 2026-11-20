@@ -286,88 +286,207 @@ await registerLifecycle({
 `;
 };
 
-export const generateAuth = (strategies: AuthStrategy[]): string | null => {
-  if (strategies.length === 0) return null;
-
-  const imports = new Set<string>([
-    `import { Auth, AuthError } from '@aomex/auth';`,
-  ]);
-  const strategyEntries: string[] = [];
-  const notes: string[] = [];
-
-  if (strategies.includes('bearer')) {
-    imports.add(`import { AuthBearerStrategy } from '@aomex/auth/bearer';`);
-    imports.add(`import { CookieKey } from '@/constants/cookie-key';`);
-    imports.add(`import { services } from '@/services';`);
-    notes.push('Bearer：不透明令牌，可随时吊销');
-    strategyEntries.push(`    bearer: new AuthBearerStrategy({
-      async onLoaded(token) {
-        const userId = await services.cache.getUserIdByToken(token, true);
-        if (!userId) return false;
-        return { id: userId };
-      },
-      onAuthorize() {
-        return true;
-      },
-      tokenLoaders: [
-        { type: 'header', key: 'authorization' },
-        { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
-        { type: 'query', key: 'access_token' },
-      ],
-    }),`);
-  }
-
-  if (strategies.includes('jwt')) {
-    imports.add(`import { AuthJwtStrategy } from '@aomex/auth-jwt-strategy';`);
-    imports.add(`import { CookieKey } from '@/constants/cookie-key';`);
-    notes.push('JWT：无状态令牌');
-    strategyEntries.push(`    jwt: new AuthJwtStrategy({
-      secret: process.env['JWT_SECRET'] || 'change-me-in-production',
-      async onVerified(payload: { userId: number }) {
-        return { id: payload.userId };
-      },
-      onAuthorize() {
-        return true;
-      },
-      tokenLoaders: [
-        { type: 'header', key: 'authorization' },
-        { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
-        { type: 'query', key: 'access_token' },
-      ],
-    }),`);
-  }
-
-  if (strategies.includes('api-key')) {
-    imports.add(`import { AuthApiKeyStrategy } from '@aomex/auth/api-key';`);
-    notes.push('API Key：默认从 x-api-key 读取');
-    strategyEntries.push(`    apiKey: new AuthApiKeyStrategy({
-      async onLoaded(apiKey) {
-        // TODO: 按 apiKey 查询应用身份
-        if (!apiKey) return false;
-        return { apiKey };
-      },
-      onAuthorize() {
-        return true;
-      },
-      keyLoaders: [{ type: 'header', key: 'x-api-key' }],
-    }),`);
-  }
-
-  const authNames = [
-    ...(strategies.includes('bearer') ? ["'bearer'"] : []),
-    ...(strategies.includes('jwt') ? ["'jwt'"] : []),
-    ...(strategies.includes('api-key') ? ["'apiKey'"] : []),
-  ].join(' | ');
-
-  return `${[...imports].join('\n')}
+/** 启用则原样输出，否则整段加 `// `（空行保留） */
+const maybeComment = (enabled: boolean, code: string): string => {
+  if (enabled) return code;
+  return code
+    .split('\n')
+    .map((line) => (line.length === 0 ? '' : `// ${line}`))
+    .join('\n');
+};
 
 /**
- * ${notes.join('；')}。
- * 路由用法：\`auth.authenticate(${authNames})\`
+ * 始终生成 auth 中间件。
+ * - 未勾选任何策略：`strategies: {}`
+ * - 有勾选：启用的写入；未勾选的仍以注释保留，便于日后解开
+ */
+export const generateAuth = (strategies: AuthStrategy[]): string => {
+  if (strategies.length === 0) {
+    return `import { Auth, AuthError } from '@aomex/auth';
+
+/**
+ * 尚未启用鉴权策略。需要时在脚手架中重新选择，或自行往 \`strategies\` 添加策略。
+ * 路由用法：\`auth.authenticate('bearer' | 'jwt' | 'apiKey' | 'session')\`
  */
 export const auth = new Auth({
+  strategies: {},
+});
+
+export { AuthError };
+`;
+  }
+
+  const bearer = strategies.includes('bearer');
+  const jwt = strategies.includes('jwt');
+  const apiKey = strategies.includes('api-key');
+  const session = strategies.includes('session');
+  const needCookie = bearer || jwt || session;
+  // Bearer 用 cache 取 userId；查库示例已注释，其余策略暂不依赖 services
+  const needServices = bearer;
+
+  const importLines = [
+    `import { Auth, AuthError } from '@aomex/auth';`,
+    maybeComment(
+      bearer,
+      `import { AuthBearerStrategy } from '@aomex/auth/bearer';`,
+    ),
+    maybeComment(
+      jwt,
+      `import { AuthJwtStrategy } from '@aomex/auth-jwt-strategy';`,
+    ),
+    maybeComment(
+      apiKey,
+      `import { AuthApiKeyStrategy } from '@aomex/auth/api-key';`,
+    ),
+    maybeComment(
+      session,
+      `import { AuthSessionStrategy } from '@aomex/auth/session';`,
+    ),
+    maybeComment(
+      session,
+      `import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';`,
+    ),
+    maybeComment(
+      needCookie,
+      `import { CookieKey } from '@/constants/cookie-key';`,
+    ),
+    maybeComment(session, `import { configs } from '@/configs';`),
+    maybeComment(needServices, `import { services } from '@/services';`),
+  ].filter((line) => line.length > 0);
+
+  const enabledNames = [
+    ...(bearer ? ["'bearer'"] : []),
+    ...(jwt ? ["'jwt'"] : []),
+    ...(apiKey ? ["'apiKey'"] : []),
+    ...(session ? ["'session'"] : []),
+  ];
+  const authNamesHint = enabledNames.join(' | ');
+
+  const sessionDoc = ` *
+ * Session：登录 \`await auth.strategy('session').login(ctx, { userId })\`；
+ * 登出 \`logout(ctx)\`；防 fixation \`regenerateSessionId(ctx)\`。
+ * Cookie 会话须挂载 \`csrf()\`，并配置 \`cors.credentials\` + \`cors.origin\`。`;
+
+  const header = `/**
+ * 已启用：${[
+   ...(bearer ? ['Bearer'] : []),
+   ...(jwt ? ['JWT'] : []),
+   ...(apiKey ? ['API Key'] : []),
+   ...(session ? ['Session'] : []),
+ ].join(' / ')}。未勾选的策略仍保留为注释。
+ * 路由用法：\`auth.authenticate(${authNamesHint})\`${session ? `\n${sessionDoc}` : ''}
+ */`;
+
+  const bearerBlock = `/** Bearer：不透明令牌，可随时吊销 */
+${maybeComment(
+  bearer,
+  `bearer: new AuthBearerStrategy({
+  async onLoaded(token) {
+    const userId = await services.cache.getUserIdByToken(token, true);
+    if (!userId) return false;
+    // TODO: 按 userId 查询用户记录后返回
+    // const user = await services.user.findById(userId);
+    // if (!user) return false;
+    // return user;
+    return { id: userId };
+  },
+  onAuthorize() {
+    return true;
+  },
+  tokenLoaders: [
+    { type: 'header', key: 'authorization' },
+    { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
+    { type: 'query', key: 'access_token' },
+  ],
+}),`,
+)}`;
+
+  const jwtBlock = `/** JWT：无状态令牌 */
+${maybeComment(
+  jwt,
+  `jwt: new AuthJwtStrategy({
+  secret: process.env['JWT_SECRET'] || 'change-me-in-production',
+  async onVerified(payload: { userId: number }) {
+    // TODO: 按 userId 查询用户记录后返回
+    // const user = await services.user.findById(payload.userId);
+    // if (!user) return false;
+    // return user;
+    return { id: payload.userId };
+  },
+  onAuthorize() {
+    return true;
+  },
+  tokenLoaders: [
+    { type: 'header', key: 'authorization' },
+    { type: 'cookie', key: CookieKey.ACCESS_TOKEN },
+    { type: 'query', key: 'access_token' },
+  ],
+}),`,
+)}`;
+
+  const apiKeyBlock = `/** API Key：默认从 x-api-key 读取 */
+${maybeComment(
+  apiKey,
+  `apiKey: new AuthApiKeyStrategy({
+  async onLoaded(apiKey) {
+    if (!apiKey) return false;
+    // TODO: 按 apiKey 查询应用身份后返回
+    // const app = await services.app.findByApiKey(apiKey);
+    // if (!app) return false;
+    // return app;
+    return { apiKey };
+  },
+  onAuthorize() {
+    return true;
+  },
+  keyLoaders: [{ type: 'header', key: 'x-api-key' }],
+}),`,
+)}`;
+
+  const sessionBlock = `/** Session：Cookie 存 sessionId，数据在 cache（如 Redis） */
+${maybeComment(
+  session,
+  `session: new AuthSessionStrategy({
+  store: new CacheRedisAdapter(configs.redis),
+  cookie: {
+    name: CookieKey.SESSION_ID,
+    maxAge: 60 * 60 * 24 * 7, // 秒；同时作为缓存 TTL
+    httpOnly: true,
+    sameSite: 'lax',
+    // secure: true, // 仅 HTTPS
+  },
+  sliding: true,
+  async onLoaded(data: { userId: number }) {
+    // TODO: 按 userId 查询用户记录后返回
+    // const user = await services.user.findById(data.userId);
+    // if (!user) return false;
+    // return user;
+    return { id: data.userId };
+  },
+  onAuthorize() {
+    return true;
+  },
+}),`,
+)}`;
+
+  const indentStrategies = (block: string) =>
+    block
+      .split('\n')
+      .map((line) => (line.length ? `    ${line}` : ''))
+      .join('\n');
+
+  return `${importLines.join('\n')}
+
+${header}
+export const auth = new Auth({
   strategies: {
-${strategyEntries.join('\n')}
+${indentStrategies(bearerBlock)}
+
+${indentStrategies(jwtBlock)}
+
+${indentStrategies(apiKeyBlock)}
+
+${indentStrategies(sessionBlock)}
   },
 });
 
@@ -629,6 +748,8 @@ const pluginImport = (plugin: WebPlugin): string => {
       return `import { httpAccessLog } from '@/middleware/http-access-log.md';`;
     case 'async-trace':
       return `import { slowTrace } from '@/middleware/slow-trace.md';`;
+    case 'csrf':
+      return `import { csrf } from '@aomex/csrf';`;
   }
 };
 
@@ -636,8 +757,14 @@ const pluginMount = (plugin: WebPlugin): string => {
   switch (plugin) {
     case 'cors':
       return `    cors({
-      // 如果请求需要携带cookies，请解开下面这行注释
+      // 前端请求需携带 Cookies 时解开
       // credentials: true,
+      // 开启 credentials 后必须限制 origin（禁止 *）；仅此不能防 CSRF
+      // Cookie 会话（如 Session 鉴权）请再挂载 @aomex/csrf 做双提交校验
+      // origin: [
+      //   'https://www.example.com',
+      //   'https://admin.example.com',
+      // ],
     }),`;
     case 'etag':
       return `    etag(),`;
@@ -655,6 +782,9 @@ const pluginMount = (plugin: WebPlugin): string => {
       return `    httpAccessLog.skip(isProduction),`;
     case 'async-trace':
       return `    slowTrace,`;
+    case 'csrf':
+      // 双提交 Cookie：前端读 Cookie csrfToken，写入请求头 x-csrf-token
+      return `    csrf(),`;
   }
 };
 
@@ -663,6 +793,7 @@ const PLUGIN_ORDER: WebPlugin[] = [
   'http-access-log',
   'response-time',
   'cors',
+  'csrf',
   'rate-limit',
   // compress 只需在 etag 之前（出站先签明文再压）；可靠前，不依赖 slowTrace/prettyJson
   'compress',
@@ -1627,8 +1758,52 @@ export const slowTrace = traceMiddleware('${text.slowTrace}', async (record, ctx
 `;
 };
 
-export const generateCacheService = (auth: AuthStrategy[]): string => {
-  const rememberExport = `/**
+export const generateCacheService = (): string => {
+  return `import { BaseCacheService, createRemember } from '@aomex/cache';
+import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
+import { configs } from '@/configs';
+
+export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
+  protected readonly passportUserToken = this.key('passport-user-token', 'v1');
+  protected readonly captcha = this.key('captcha', 'v1');
+
+  protected createAdapter() {
+    return new CacheRedisAdapter(configs.redis);
+  }
+
+  /** Bearer 策略会话：token → userId（见 auth.md.ts） */
+  async getUserIdByToken(token: string, refreshTTL: boolean) {
+    const key = this.passportUserToken.keyHash(token);
+    const userId = await this.cache.get<number>(key);
+    if (!userId) return null;
+    if (refreshTTL) {
+      await this.cache.expire(key, this.ttl.DAY);
+    }
+    return userId;
+  }
+
+  async setUserIdInToken(token: string, userId: number) {
+    await this.cache.set(this.passportUserToken.keyHash(token), userId, this.ttl.DAY);
+  }
+
+  async deleteUserToken(token: string) {
+    await this.cache.delete(this.passportUserToken.keyHash(token));
+  }
+
+  async getCaptcha(sessionId: string) {
+    return this.cache.get<string>(this.captcha.key(sessionId));
+  }
+
+  async setCaptcha(sessionId: string, code: string) {
+    return this.cache.set(this.captcha.key(sessionId), code, this.ttl.MINUTE * 5);
+  }
+
+  async deleteCaptcha(sessionId: string) {
+    return this.cache.delete(this.captcha.key(sessionId));
+  }
+}
+
+/**
  * 方法装饰器：缓存异步方法返回值（绑定本 CacheService；未命中时并发只跑一次）。
  *
  * \`\`\`ts
@@ -1656,66 +1831,6 @@ export const generateCacheService = (auth: AuthStrategy[]): string => {
  */
 export const remember = createRemember(CacheService);
 `;
-
-  if (auth.includes('bearer')) {
-    return `import { BaseCacheService, createRemember } from '@aomex/cache';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
-import { configs } from '@/configs';
-
-export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
-  protected readonly passportUserToken = this.key('passport-user-token', 'v1');
-
-  protected createAdapter() {
-    return new CacheRedisAdapter(configs.redis);
-  }
-
-  async getUserIdByToken(token: string, refreshTTL: boolean) {
-    const key = this.passportUserToken.keyHash(token);
-    const userId = await this.cache.get<number>(key);
-    if (!userId) return null;
-    if (refreshTTL) {
-      await this.cache.expire(key, this.ttl.DAY);
-    }
-    return userId;
-  }
-
-  async setUserIdInToken(token: string, userId: number) {
-    await this.cache.set(this.passportUserToken.keyHash(token), userId, this.ttl.DAY);
-  }
-
-  async deleteUserToken(token: string) {
-    await this.cache.delete(this.passportUserToken.keyHash(token));
-  }
-}
-
-${rememberExport}`;
-  }
-
-  return `import { BaseCacheService, createRemember } from '@aomex/cache';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
-import { configs } from '@/configs';
-
-export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
-  protected readonly captcha = this.key('captcha', 'v1');
-
-  protected createAdapter() {
-    return new CacheRedisAdapter(configs.redis);
-  }
-
-  async getCaptcha(sessionId: string) {
-    return this.cache.get<string>(this.captcha.key(sessionId));
-  }
-
-  async setCaptcha(sessionId: string, code: string) {
-    return this.cache.set(this.captcha.key(sessionId), code, this.ttl.MINUTE * 5);
-  }
-
-  async deleteCaptcha(sessionId: string) {
-    return this.cache.delete(this.captcha.key(sessionId));
-  }
-}
-
-${rememberExport}`;
 };
 
 export const generateStartScript = (opts: {
@@ -1779,6 +1894,8 @@ ${cronKill}  api.kill('SIGINT');
 export const generateCookieKey = (): string => {
   return `export enum CookieKey {
   ACCESS_TOKEN = 'access_token',
+  /** AuthSessionStrategy Cookie 名 */
+  SESSION_ID = 'sessionId',
 }
 `;
 };
@@ -2028,22 +2145,6 @@ export const generateEnvExample = (
   }
 
   lines.push(`REDIS_PASSWORD=${password}`);
-
-  if (opts.auth.includes('jwt')) {
-    lines.push(
-      `JWT_SECRET=${mode === 'local' ? 'change-me-in-production' : 'CHANGE_ME'}`,
-    );
-  }
-  if (opts.loggerTransports.includes('webhook')) {
-    lines.push(`# LOG_WEBHOOK_URL=https://example.com/hook`);
-  }
-  if (opts.loggerTransports.includes('sentry')) {
-    lines.push(`# SENTRY_DSN=`);
-  }
-  if (opts.loggerTransports.includes('telegram')) {
-    lines.push(`# TELEGRAM_BOT_TOKEN=`);
-    lines.push(`# TELEGRAM_CHAT_ID=`);
-  }
 
   // TZ 固定第二行（有 DATABASE_URL 时紧随其后）
   lines.splice(1, 0, `TZ=${opts.timezone}`);
@@ -2597,6 +2698,9 @@ export const buildDependencyGroups = (
       case 'async-trace':
         deps.add(aomex('@aomex/async-trace'));
         break;
+      case 'csrf':
+        deps.add(aomex('@aomex/csrf'));
+        break;
     }
   }
 
@@ -2611,12 +2715,9 @@ export const buildDependencyGroups = (
     deps.add(aomex('@aomex/cron'));
   }
 
-  if (opts.auth.length > 0) {
-    deps.add(aomex('@aomex/auth'));
-  }
-  if (opts.auth.includes('jwt')) {
-    deps.add(aomex('@aomex/auth-jwt-strategy'));
-  }
+  // auth 中间件始终生成；jwt 包仅在启用或保留注释模板时安装，便于解开即用
+  deps.add(aomex('@aomex/auth'));
+  deps.add(aomex('@aomex/auth-jwt-strategy'));
 
   if (opts.loggerTransports.includes('sentry')) {
     deps.add(aomex('@aomex/logger-sentry'));

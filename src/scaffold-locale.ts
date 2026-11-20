@@ -82,7 +82,6 @@ type ReadmeOpts = {
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
   auth: AuthStrategy[];
-  hasCookie: boolean;
   docker: boolean;
   timezone: string;
   cluster: ClusterStrategy;
@@ -104,11 +103,17 @@ const authStrategyLabel = (auth: AuthStrategy): string => {
       return 'JWT';
     case 'api-key':
       return 'API Key';
+    case 'session':
+      return 'Session';
   }
 };
 
 const authLabel = (auth: AuthStrategy[], zh?: boolean): string => {
-  if (auth.length === 0) return zh ? '无' : 'None';
+  if (auth.length === 0) {
+    return zh
+      ? '未启用（auth.md.ts 模板已生成）'
+      : 'None (auth.md.ts scaffold kept)';
+  }
   return auth.map(authStrategyLabel).join(' + ');
 };
 
@@ -154,11 +159,9 @@ const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
   lines.push(
     `   ├─ configs/                      ${zh ? '多环境配置' : 'Environment configs'}`,
   );
-  if (opts.hasCookie) {
-    lines.push(
-      `   ├─ constants/                    ${zh ? '常量' : 'Constants'}`,
-    );
-  }
+  lines.push(
+    `   ├─ constants/                    ${zh ? '常量' : 'Constants'}`,
+  );
   lines.push(
     `   ├─ middleware/                   ${zh ? '中间件' : 'Middleware'}`,
   );
@@ -334,7 +337,6 @@ export const generateReadme = (opts: {
     orm,
     prismaDatabase: opts.prismaDatabase,
     auth,
-    hasCookie: auth.includes('bearer') || auth.includes('jwt'),
     docker,
     timezone: opts.timezone,
     cluster,

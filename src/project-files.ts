@@ -106,8 +106,6 @@ export const generateProjectFiles = (opts: {
   const { packageManagerVersion, aomexVersion, prismaVersion } = opts;
   const cronPort = opts.cronPort ?? randomInt(1024, 65536);
   const hasCron = options.consoleMiddlewares.includes('cron');
-  const needsCookie =
-    options.auth.includes('bearer') || options.auth.includes('jwt');
   const files: Record<string, ProjectFile> = {};
 
   const add = (path: string, file: ProjectFile) => {
@@ -478,19 +476,14 @@ commander.create('hello', {
     'src/services/logger.service.ts',
     text(generateLogger(options.loggerTransports)),
   );
-  add(
-    'src/services/cache.service.ts',
-    text(generateCacheService(options.auth)),
-  );
+  add('src/services/cache.service.ts', text(generateCacheService()));
 
   // —— 中间件 ——
   add('src/middleware/format-error.md.ts', text(generateGlobalErrorRewrite()));
 
-  // —— 认证 ——
-  const authContent = generateAuth(options.auth);
-  if (authContent) add('src/middleware/auth.md.ts', text(authContent));
-  if (needsCookie)
-    add('src/constants/cookie-key.ts', text(generateCookieKey()));
+  // —— 认证（始终生成；未勾选的策略以注释保留）——
+  add('src/middleware/auth.md.ts', text(generateAuth(options.auth)));
+  add('src/constants/cookie-key.ts', text(generateCookieKey()));
 
   // —— 文档 / 插件附属 ——
   const docs = generateDocsMiddleware(

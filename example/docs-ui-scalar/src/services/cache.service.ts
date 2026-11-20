@@ -4,11 +4,13 @@ import { configs } from '@/configs';
 
 export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
   protected readonly passportUserToken = this.key('passport-user-token', 'v1');
+  protected readonly captcha = this.key('captcha', 'v1');
 
   protected createAdapter() {
     return new CacheRedisAdapter(configs.redis);
   }
 
+  /** Bearer 策略会话：token → userId（见 auth.md.ts） */
   async getUserIdByToken(token: string, refreshTTL: boolean) {
     const key = this.passportUserToken.keyHash(token);
     const userId = await this.cache.get<number>(key);
@@ -25,6 +27,18 @@ export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
 
   async deleteUserToken(token: string) {
     await this.cache.delete(this.passportUserToken.keyHash(token));
+  }
+
+  async getCaptcha(sessionId: string) {
+    return this.cache.get<string>(this.captcha.key(sessionId));
+  }
+
+  async setCaptcha(sessionId: string, code: string) {
+    return this.cache.set(this.captcha.key(sessionId), code, this.ttl.MINUTE * 5);
+  }
+
+  async deleteCaptcha(sessionId: string) {
+    return this.cache.delete(this.captcha.key(sessionId));
   }
 }
 

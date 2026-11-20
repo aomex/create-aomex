@@ -4,15 +4,15 @@ Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs befo
 
 ## Stack
 
-| Item            | Value   |
-| --------------- | ------- |
-| Package manager | pnpm    |
-| ORM             | None    |
-| Auth            | None    |
-| Docs UI         | None    |
-| Deploy          | Docker  |
-| Timezone        | UTC     |
-| Cron            | Enabled |
+| Item            | Value                           |
+| --------------- | ------------------------------- |
+| Package manager | pnpm                            |
+| ORM             | None                            |
+| Auth            | None (auth.md.ts scaffold kept) |
+| Docs UI         | None                            |
+| Deploy          | Docker                          |
+| Timezone        | UTC                             |
+| Cron            | Enabled                         |
 
 ## Prerequisites
 
@@ -77,6 +77,7 @@ See `Dockerfile.*` and `docker-compose-*.yml` for images and orchestration.
 ├─ src/
    ├─ commanders/                   Console commands
    ├─ configs/                      Environment configs
+   ├─ constants/                    Constants
    ├─ middleware/                   Middleware
    ├─ routers/                      HTTP routers
    ├─ services/                     Business services

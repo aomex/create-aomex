@@ -4,15 +4,15 @@
 
 ## 技术选型
 
-| 项       | 值     |
-| -------- | ------ |
-| 包管理器 | pnpm   |
-| ORM      | 无 ORM |
-| 认证     | 无     |
-| 文档 UI  | 无     |
-| 部署方式 | Docker |
-| 时区     | UTC    |
-| 定时任务 | 已启用 |
+| 项       | 值                              |
+| -------- | ------------------------------- |
+| 包管理器 | pnpm                            |
+| ORM      | 无 ORM                          |
+| 认证     | 未启用（auth.md.ts 模板已生成） |
+| 文档 UI  | 无                              |
+| 部署方式 | Docker                          |
+| 时区     | UTC                             |
+| 定时任务 | 已启用                          |
 
 ## 环境准备
 
@@ -77,6 +77,7 @@ pnpm deploy:production
 ├─ src/
    ├─ commanders/                   控制台指令
    ├─ configs/                      多环境配置
+   ├─ constants/                    常量
    ├─ middleware/                   中间件
    ├─ routers/                      HTTP 路由
    ├─ services/                     业务服务

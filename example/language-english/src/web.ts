@@ -26,8 +26,14 @@ export const app = new WebApp({
   mount: [
     responseTime(),
     cors({
-      // 如果请求需要携带cookies，请解开下面这行注释
+      // 前端请求需携带 Cookies 时解开
       // credentials: true,
+      // 开启 credentials 后必须限制 origin（禁止 *）；仅此不能防 CSRF
+      // Cookie 会话（如 Session 鉴权）请再挂载 @aomex/csrf 做双提交校验
+      // origin: [
+      //   'https://www.example.com',
+      //   'https://admin.example.com',
+      // ],
     }),
     etag(),
     globalErrorRewrite,

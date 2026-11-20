@@ -17,6 +17,7 @@ const allWebPlugins: WebPlugin[] = [
   'rate-limit',
   'http-access-log',
   'async-trace',
+  'csrf',
 ];
 
 /** 推荐组合：基础插件 + 常用可选 */
@@ -47,7 +48,7 @@ const kitchenSink: ScaffoldOptions = {
   packageManager: 'pnpm',
   orm: 'prisma',
   prismaDatabase: 'mysql',
-  auth: ['bearer', 'jwt', 'api-key'],
+  auth: ['bearer', 'jwt', 'api-key', 'session'],
   webPlugins: [...allWebPlugins],
   docsUI: 'swagger',
   loggerTransports: [

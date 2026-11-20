@@ -251,12 +251,18 @@ combineServices(
 
 Prisma/Mongoose 连接跟现有 \`*.service.ts\` + \`registerLifecycle\`；**不要**再塞进 \`combineServices\`。
 
-## 鉴权（项目若已生成）
+## 鉴权
 
-- 整组私有 API：\`new Router({ mount: [auth.authenticate('<策略名>')] })\`；策略名看 \`auth.md.ts\` 的 \`strategies\` key（\`bearer\` / \`jwt\` / \`apiKey\`）。
+\`auth.md.ts\` **始终生成**。未勾选任何策略时 \`strategies: {}\`；有勾选则对应策略启用，其余以注释保留，解开即可用。
+
+- 整组私有 API：\`new Router({ mount: [auth.authenticate('<策略名>')] })\`；策略名看 \`auth.md.ts\` 的 \`strategies\` key（\`bearer\` / \`jwt\` / \`apiKey\` / \`session\`）。
 - 单接口更严：\`auth.authenticate(name).authorize(...)\` 或 \`auth.authorize(name, ...)\`。先认证再授权；未登录 **401**，已登录权限不够 **403**。
-- 通过后读身份：\`ctx.auth.bearer\`（或 jwt / apiKey）——名字与策略 key 一致。
-- **登录 / 刷新路由不要挂 authenticate**；签发用 \`auth.strategy(name).signature(...)\`，会话写入 \`services.cache\`（见 \`cache.service.ts\` 里 login-token 一类方法）。
+- 通过后读身份：\`ctx.auth.bearer\`（或 jwt / apiKey / session）——名字与策略 key 一致；Session 为 \`ctx.auth.session.data\`。
+- **Bearer / JWT**：登录路由不要挂 authenticate；签发用 \`auth.strategy(name).signature(...)\`，会话写入 \`services.cache\`（见 \`cache.service.ts\` 里 token 一类方法）。
+- **Session**（Cookie 会话）：登录 \`await auth.strategy('session').login(ctx, stored)\`；登出 \`logout(ctx)\`；登录后建议 \`regenerateSessionId(ctx)\` 防 fixation。启用 Session 时**必须**同时：
+  1. 安装并挂载 \`@aomex/csrf\`：\`pnpm add @aomex/csrf\`，在 \`web.ts\` 的 \`mount\` 里加 \`csrf()\`（脚手架可选 Web 中间件；与 \`cors\` 同开时放在 \`cors\` 之后）。
+  2. 配置 \`cors\`：解开 \`credentials: true\`，并**显式**配置 \`origin\` 为前端域名白名单（开启凭证时禁止 \`*\` / 盲反射 Origin，见 \`web.ts\` 注释）。
+- CSRF：双提交 Cookie；前端读 Cookie \`csrfToken\`，写入请求头 \`x-csrf-token\`；服务端可用 \`ctx.csrfToken\`。GET/HEAD/OPTIONS 默认跳过。跨域时浏览器会预检该头，不写 \`allowHeaders\` 时 cors 默认镜像预检头即可。
 - 少数路径免鉴权优先拆公开 Router；临时绕过可用 \`.skip(ctx => ...)\`（**不改类型**，action 里仍要处理未登录）。
 
 ## 缓存

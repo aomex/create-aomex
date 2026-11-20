@@ -10,13 +10,14 @@ export type Orm = 'prisma' | 'mongoose' | 'none';
 export type PrismaDatabase =
   'postgresql' | 'mysql' | 'sqlite' | 'sqlserver' | 'mongodb' | 'cockroachdb';
 
-/** 可选认证策略（空数组表示无认证） */
-export type AuthStrategy = 'bearer' | 'jwt' | 'api-key';
+/** 可选认证策略（空数组表示均不启用，但仍生成 auth 中间件） */
+export type AuthStrategy = 'bearer' | 'jwt' | 'api-key' | 'session';
 
 export const AUTH_STRATEGIES: readonly AuthStrategy[] = [
   'bearer',
   'jwt',
   'api-key',
+  'session',
 ] as const;
 
 /** 规范化认证选项：含 `none` 或空 → []；否则去重并去掉 none */
@@ -44,7 +45,8 @@ export type WebPlugin =
   | 'pretty-json'
   | 'rate-limit'
   | 'http-access-log'
-  | 'async-trace';
+  | 'async-trace'
+  | 'csrf';
 
 /** 所有项目默认安装、不询问的 Web 插件 */
 export const BASE_WEB_PLUGINS: readonly WebPlugin[] = [
@@ -81,7 +83,7 @@ export interface ScaffoldOptions {
   packageManager: PackageManager;
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
-  /** 认证策略，可多选；空数组表示无认证 */
+  /** 启用的认证策略，可多选；空数组仍生成 auth.md.ts（策略注释保留） */
   auth: AuthStrategy[];
   webPlugins: WebPlugin[];
   docsUI: DocsUI;

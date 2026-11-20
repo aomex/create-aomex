@@ -106,7 +106,7 @@ export const selectOptions = async (
       }));
   }
 
-  // 可多选；若勾选「无」则清空其他策略
+  // 可多选；若勾选「无」则清空其他策略。无论是否勾选都会生成 auth.md.ts
   const authArg = parseList(argv['auth']);
   const auth =
     authArg.length > 0
@@ -128,6 +128,11 @@ export const selectOptions = async (
               {
                 name: 'API Key（x-api-key）',
                 value: 'api-key',
+                checked: false,
+              },
+              {
+                name: 'Session（Cookie 会话；需配合 csrf + cors.credentials/origin）',
+                value: 'session',
                 checked: false,
               },
               { name: '无', value: 'none', checked: false },
@@ -168,6 +173,11 @@ export const selectOptions = async (
               name: 'rate-limit（接口限流防刷）',
               value: 'rate-limit',
               checked: false,
+            },
+            {
+              name: 'csrf（双提交 Cookie，Session 鉴权时建议开启）',
+              value: 'csrf',
+              checked: auth.includes('session'),
             },
           ],
           loop: false,
