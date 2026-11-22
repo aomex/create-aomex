@@ -25,6 +25,22 @@ export const generateAomexSkill = (): string => `# aomex 开发指引（给 AI�
 
 **用法**：先读现有 \`src/\` 再改。本文只说明「放哪、怎么写、场景选什么」；脚手架已生成的 \`web.ts\` / \`cli.ts\` / 全局插件配置通常不用动。
 
+## 找包：先 aomex / aomex-contrib
+
+需要中间件、鉴权、缓存适配、登录厂商、OpenAPI UI、日志出口、限流压缩等能力时，**先在下列仓库找现成包**，不要一上来就 \`npm search\` 第三方或自写一套：
+
+| 仓库 | 范围 | 包名 |
+| --- | --- | --- |
+| [aomex/aomex](https://github.com/aomex/aomex) | 框架核心与官方插件（Web / Console / auth / cache / cron / cors / compress / rate-limit / openapi UI 等） | \`@aomex/*\` |
+| [aomex/aomex-contrib](https://github.com/aomex/aomex-contrib) | 周边集成（OAuth2 厂商、Google GIS、微信小程序登录等） | \`@aomex-contrib/*\` |
+
+**怎么查**：
+
+1. 打开仓库 README / \`packages/\` 目录，或文档站 https://aomex.js.org 对照能力表。
+2. 项目里已装的 \`@aomex/*\` / \`@aomex-contrib/*\`（及 \`web.ts\` 注释模板）优先复用；未装再 \`pnpm add\`。
+3. **只有**官方仓没有对应能力时，再考虑通用 npm 包或自写 Service / middleware。
+4. 新增 \`@aomex/*\`：版本必须与现有 \`@aomex/*\` **同一号**；\`@aomex-contrib/*\` 按各包独立版本，勿与 \`@aomex/*\` 混锁。
+
 ## 东西放哪
 
 | 你要做的事 | 放这里 |
@@ -368,6 +384,7 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 - 在路由里堆 SQL / 事务 / 第三方 SDK
 - 自己 \`new Service()\`，或不走 \`combineServices\` 动态 import（正式代码写成 \`async () => Class\` 也等于没懒加载）
 - 用 \`send(4xx)\` 代替 \`throw\`；或再造一套错误/鉴权/缓存/cron/logger
+- 官方仓已有能力却去装无关第三方（先查 [aomex](https://github.com/aomex/aomex) / [aomex-contrib](https://github.com/aomex/aomex-contrib)）
 - 改完 Service 忘了注册；破坏现有 \`declare module '@aomex/web'\` 的 Infer 扩展
 - 登录接口挂 \`authenticate\`（会永远 401）
 - SSE / 文件下载开了 envelope 却忘了 \`skipEnvelope\`
@@ -376,6 +393,7 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 
 ## 动手前检查
 
+- [ ] 新能力是否已有 \`@aomex/*\` / \`@aomex-contrib/*\`（先查两仓再装别的）
 - [ ] 新文件目录与命名符合扫描约定（\`*.router.ts\` / \`*.cmd.ts\` / \`export default class\`）
 - [ ] 有入参则挂 \`body\`/\`query\`/\`params\`；有出参则挂 \`response\`（含会 throw 的状态码）
 - [ ] OpenAPI：\`tags\` + \`summary\`（或有意 \`showInOpenapi: false\`）
