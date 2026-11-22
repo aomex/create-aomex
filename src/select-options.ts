@@ -1,15 +1,26 @@
 import { checkbox, select } from '@inquirer/prompts';
-import { I18N_LANGUAGES, type DefaultLanguage } from './i18n-languages';
+import {
+  I18N_LANGUAGES,
+  detectLocalLanguage,
+  type DefaultLanguage,
+} from './i18n-languages';
 import { buildTimezoneChoices, isValidTimezone } from './timezones';
+import { OAUTH2_PRESET_META, OAUTH_ENTRY_LABELS } from './oauth2-presets';
 import {
   CLUSTER_STRATEGIES,
-  normalizeAuthStrategies,
+  OAUTH2_VENDOR_PRESETS,
+  OAUTH_ENTRIES,
+  normalizeOAuth2VendorPresets,
+  parseAuthSelection,
   withBaseWebPlugins,
   type AuthStrategy,
   type ClusterStrategy,
   type ConsoleMiddleware,
   type DocsUI,
   type LoggerTransport,
+  type OAuth2Preset,
+  type OAuth2VendorPreset,
+  type OAuthEntry,
   type Orm,
   type PackageManager,
   type PrismaDatabase,
@@ -35,7 +46,7 @@ const parseClusterArg = (value: unknown): ClusterStrategy | undefined => {
   return undefined;
 };
 
-const languageLabels = new Intl.DisplayNames(['zh-CN'], { type: 'language' });
+const localLanguage = detectLocalLanguage();
 
 const parseList = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map(String);
@@ -106,134 +117,114 @@ export const selectOptions = async (
       }));
   }
 
-  // 可多选；若勾选「无」则清空其他策略。无论是否勾选都会生成 auth.md.ts
+  // 可多选；Auth + 首屏 OAuth/微信入口。选 oauth2-client 后再选厂商（可空＝仅注释模板）。选「无」清空。
+  type AuthChoice = AuthStrategy | OAuthEntry | 'none';
   const authArg = parseList(argv['auth']);
-  const auth =
-    authArg.length > 0
-      ? normalizeAuthStrategies(authArg)
-      : normalizeAuthStrategies(
-          await checkbox<AuthStrategy | 'none'>({
-            message: '身份认证策略（可多选；选「无」将清空其他项）',
-            choices: [
-              {
-                name: 'Bearer Token（不透明令牌，可吊销）',
-                value: 'bearer',
-                checked: true,
-              },
-              {
-                name: 'JWT（无状态令牌）',
-                value: 'jwt',
-                checked: false,
-              },
-              {
-                name: 'API Key（x-api-key）',
-                value: 'api-key',
-                checked: false,
-              },
-              {
-                name: 'Session（Cookie 会话；需配合 csrf + cors.credentials/origin）',
-                value: 'session',
-                checked: false,
-              },
-              { name: '无', value: 'none', checked: false },
-            ],
-            loop: false,
-          }),
-        );
+  const presetsArg = parseList(
+    argv['oauth2-presets'] ?? argv['oauth2Presets'] ?? argv['oauth2'],
+  );
+  let auth: AuthStrategy[];
+  let oauth2Presets: OAuth2Preset[];
+  let oauth2Client: boolean;
+  if (authArg.length > 0 || presetsArg.length > 0) {
+    const parsed = parseAuthSelection([...authArg, ...presetsArg]);
+    auth = parsed.auth;
+    oauth2Presets = parsed.oauth2Presets;
+    oauth2Client = parsed.oauth2Client;
+  } else {
+    const selected = await checkbox<AuthChoice>({
+      message: '身份认证（可多选；选「无」将清空其他项）',
+      choices: [
+        {
+          name: 'Bearer Token（不透明令牌，可吊销）',
+          value: 'bearer' as const,
+          checked: true,
+        },
+        {
+          name: 'JWT（无状态令牌）',
+          value: 'jwt' as const,
+          checked: false,
+        },
+        {
+          name: 'API Key（x-api-key）',
+          value: 'api-key' as const,
+          checked: false,
+        },
+        {
+          name: 'Session（Cookie 会话；需配合 csrf + cors.credentials/origin）',
+          value: 'session' as const,
+          checked: false,
+        },
+        ...OAUTH_ENTRIES.map((id) => ({
+          name: OAUTH_ENTRY_LABELS[id],
+          value: id as AuthChoice,
+          checked: false,
+        })),
+        { name: '无', value: 'none' as const, checked: false },
+      ],
+      loop: false,
+      pageSize: 16,
+    });
+    let parsed = parseAuthSelection(selected);
+    if (parsed.oauth2Client) {
+      const vendors = normalizeOAuth2VendorPresets(
+        await checkbox<OAuth2VendorPreset>({
+          message:
+            'OAuth2 厂商预设（可多选；可不选＝仅安装 @aomex/oauth2-client）',
+          choices: OAUTH2_VENDOR_PRESETS.map((id) => ({
+            name: OAUTH2_PRESET_META[id].label,
+            value: id,
+            checked: false,
+          })),
+          loop: false,
+          pageSize: 12,
+          required: false,
+        }),
+      );
+      if (vendors.length > 0) {
+        parsed = parseAuthSelection([
+          ...selected.filter((s) => s !== 'oauth2-client' && s !== 'oauth2'),
+          'oauth2-client',
+          ...vendors,
+        ]);
+      }
+    }
+    auth = parsed.auth;
+    oauth2Presets = parsed.oauth2Presets;
+    oauth2Client = parsed.oauth2Client;
+  }
 
-  // response-time / cors / etag / helmet 为基础插件，不询问，始终安装
+  // Web 中间件不询问：默认 http-access-log + async-trace；可用 --web-plugins 覆盖
   const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
-  const selectedWebPlugins =
+  const selectedWebPlugins: WebPlugin[] =
     webPluginsArg.length > 0
       ? (webPluginsArg as WebPlugin[])
-      : await checkbox<WebPlugin>({
-          message: '需要用到的Web中间件',
-          choices: [
-            {
-              name: 'http-access-log（HTTP 访问日志）',
-              value: 'http-access-log',
-              checked: true,
-            },
-            {
-              name: 'async-trace（慢请求追踪）',
-              value: 'async-trace',
-              checked: true,
-            },
-            {
-              name: 'compress（Gzip/Brotli 响应压缩）',
-              value: 'compress',
-              checked: false,
-            },
-            {
-              name: 'pretty-json（开发时美化 JSON 响应）',
-              value: 'pretty-json',
-              checked: false,
-            },
-            {
-              name: 'rate-limit（接口限流防刷）',
-              value: 'rate-limit',
-              checked: false,
-            },
-            {
-              name: 'csrf（双提交 Cookie，Session 鉴权时建议开启）',
-              value: 'csrf',
-              checked: auth.includes('session'),
-            },
-          ],
-          loop: false,
-        });
-  const webPlugins = withBaseWebPlugins(selectedWebPlugins);
+      : ['http-access-log', 'async-trace'];
+  // Session 鉴权必须配合 csrf：CLI 漏传时也自动补上
+  const webPlugins = withBaseWebPlugins(
+    auth.includes('session') && !selectedWebPlugins.includes('csrf')
+      ? [...selectedWebPlugins, 'csrf']
+      : selectedWebPlugins,
+  );
 
-  const docsUI =
-    (argv['docs'] as DocsUI | undefined) ??
-    (await select<DocsUI>({
-      message: '文档 UI',
-      choices: [
-        { name: 'Swagger UI', value: 'swagger' },
-        { name: 'Redoc UI', value: 'redoc' },
-        { name: 'Scalar UI', value: 'scalar' },
-        { name: '无', value: 'none' },
-      ],
-      default: 'swagger',
-    }));
+  // 文档 UI 不询问：默认 scalar（@aomex/scalar-ui）；可用 --docs 覆盖
+  const docsArg = argv['docs'] as string | undefined;
+  const docsUI: DocsUI =
+    docsArg === 'swagger' ||
+    docsArg === 'redoc' ||
+    docsArg === 'scalar' ||
+    docsArg === 'none'
+      ? docsArg
+      : 'scalar';
 
+  // 日志出口不询问：默认 console + file；可用 --logger 覆盖
   const loggerArg = parseList(argv['logger']);
-  const loggerTransports =
+  const loggerTransports: LoggerTransport[] =
     loggerArg.length > 0
       ? (loggerArg as LoggerTransport[])
-      : await checkbox<LoggerTransport>({
-          message: '日志出口',
-          choices: [
-            { name: 'Console（终端输出）', value: 'console', checked: true },
-            { name: 'File（写入本地日志文件）', value: 'file', checked: true },
-            {
-              name: 'Stream（自定义可写流）',
-              value: 'stream',
-              checked: false,
-            },
-            {
-              name: 'Webhook（HTTP 回调上报）',
-              value: 'webhook',
-              checked: false,
-            },
-            {
-              name: 'Sentry（错误监控上报）',
-              value: 'sentry',
-              checked: false,
-            },
-            {
-              name: 'Telegram（机器人消息通知）',
-              value: 'telegram',
-              checked: false,
-            },
-          ],
-          required: true,
-          loop: false,
-          validate: (items) =>
-            items.length > 0 ? true : '至少选择一个日志出口',
-        });
+      : ['console', 'file'];
 
-  // Console 中间件不再询问：统一安装 cron；可用 argv 追加 openapi 等
+  // Console 中间件不询问：统一安装 cron；可用 --console-middlewares 追加 openapi 等
   const consoleArg = parseList(
     argv['console-middlewares'] ?? argv['consoleMiddlewares'],
   ) as ConsoleMiddleware[];
@@ -244,20 +235,12 @@ export const selectOptions = async (
     ]),
   ];
 
+  // 语言不询问：默认本机 locale；可用 --lang 覆盖
   const argvLang = argv['lang'] as string | undefined;
-  const language =
+  const language: DefaultLanguage =
     argvLang && (I18N_LANGUAGES as readonly string[]).includes(argvLang)
       ? (argvLang as DefaultLanguage)
-      : await select<DefaultLanguage>({
-          message: '默认语言',
-          choices: I18N_LANGUAGES.map((code) => ({
-            name: `${code}（${languageLabels.of(code) ?? code}）`,
-            value: code,
-          })),
-          default: 'zh-CN',
-          loop: false,
-          pageSize: 15,
-        });
+      : localLanguage;
 
   const parseBoolArg = (value: unknown): boolean | undefined => {
     if (value === undefined) return undefined;
@@ -287,24 +270,16 @@ export const selectOptions = async (
     });
   }
 
-  const cluster =
-    parseClusterArg(argv['cluster']) ??
-    (await select<ClusterStrategy>({
-      message: '集群方案（勿叠用）',
-      choices: [
-        { name: '单进程', value: 'none' },
-        { name: '内置 clusterListen', value: 'cluster-listen' },
-        { name: 'PM2', value: 'pm2' },
-      ],
-      default: 'none',
-      loop: false,
-    }));
+  // 集群不询问：默认单进程；可用 --cluster 覆盖
+  const cluster = parseClusterArg(argv['cluster']) ?? 'none';
 
   return {
     packageManager,
     orm,
     prismaDatabase,
     auth,
+    oauth2Client,
+    oauth2Presets,
     webPlugins,
     docsUI,
     loggerTransports,

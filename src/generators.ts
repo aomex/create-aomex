@@ -5,12 +5,19 @@ import type {
   DefaultLanguage,
   DocsUI,
   LoggerTransport,
+  OAuth2Preset,
   Orm,
   PackageManager,
   PrismaDatabase,
   ScaffoldOptions,
   WebPlugin,
 } from './types';
+import { OAUTH2_VENDOR_PRESETS } from './types';
+import {
+  OAUTH2_PRESET_META,
+  oauth2PresetMetas,
+  type OAuth2PresetMeta,
+} from './oauth2-presets';
 import { scaffoldText } from './scaffold-locale';
 
 /**
@@ -295,18 +302,32 @@ const maybeComment = (enabled: boolean, code: string): string => {
     .join('\n');
 };
 
+type ClassicAuthStrategy = Exclude<AuthStrategy, 'oauth2'>;
+
 /**
  * 始终生成 auth 中间件。
  * - 未勾选任何策略：`strategies: {}`
  * - 有勾选：启用的写入；未勾选的仍以注释保留，便于日后解开
+ * - `oauth2` 不进入 strategies（授权码登录见 `oauth2.router.ts`）
  */
 export const generateAuth = (strategies: AuthStrategy[]): string => {
-  if (strategies.length === 0) {
+  const classic = strategies.filter(
+    (s): s is ClassicAuthStrategy => s !== 'oauth2',
+  );
+  const hasOAuth2 = strategies.includes('oauth2');
+  const oauth2Note = hasOAuth2
+    ? `\n * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 \`src/routers/oauth2.router.ts\`（常用厂商多为注释模板，解开并 \`pnpm add @aomex-contrib/oauth2-*\` 后启用；回调后自行建立 session / JWT / bearer）。`
+    : '';
+
+  if (classic.length === 0) {
+    const emptyHint = hasOAuth2
+      ? '已启用 OAuth / 微信登录集成。'
+      : '需要时在脚手架中重新选择，或自行往 `strategies` 添加策略。';
     return `import { Auth, AuthError } from '@aomex/auth';
 
 /**
- * 尚未启用鉴权策略。需要时在脚手架中重新选择，或自行往 \`strategies\` 添加策略。
- * 路由用法：\`auth.authenticate('bearer' | 'jwt' | 'apiKey' | 'session')\`
+ * 尚未启用 Auth 策略（bearer / jwt / api-key / session）。${emptyHint}
+ * 路由用法：\`auth.authenticate('bearer' | 'jwt' | 'apiKey' | 'session')\`${oauth2Note}
  */
 export const auth = new Auth({
   strategies: {},
@@ -316,10 +337,10 @@ export { AuthError };
 `;
   }
 
-  const bearer = strategies.includes('bearer');
-  const jwt = strategies.includes('jwt');
-  const apiKey = strategies.includes('api-key');
-  const session = strategies.includes('session');
+  const bearer = classic.includes('bearer');
+  const jwt = classic.includes('jwt');
+  const apiKey = classic.includes('api-key');
+  const session = classic.includes('session');
   const needCookie = bearer || jwt || session;
   // Bearer 用 cache 取 userId；查库示例已注释，其余策略暂不依赖 services
   const needServices = bearer;
@@ -373,8 +394,9 @@ export { AuthError };
    ...(jwt ? ['JWT'] : []),
    ...(apiKey ? ['API Key'] : []),
    ...(session ? ['Session'] : []),
- ].join(' / ')}。未勾选的策略仍保留为注释。
- * 路由用法：\`auth.authenticate(${authNamesHint})\`${session ? `\n${sessionDoc}` : ''}
+   ...(hasOAuth2 ? ['OAuth2'] : []),
+ ].join(' / ')}。未勾选的 Auth 策略仍保留为注释。
+ * 路由用法：\`auth.authenticate(${authNamesHint})\`${session ? `\n${sessionDoc}` : ''}${oauth2Note}
  */`;
 
   const bearerBlock = `/** Bearer：不透明令牌，可随时吊销 */
@@ -491,6 +513,392 @@ ${indentStrategies(sessionBlock)}
 });
 
 export { AuthError };
+`;
+};
+
+const oauthConfigPath = (meta: OAuth2PresetMeta): string => {
+  // wechat-mini → configs.oauth.wechatMini
+  const key = meta.serviceKey;
+  return `configs.oauth.${key}`;
+};
+
+const oauth2ClientOptions = (meta: OAuth2PresetMeta): string => {
+  const redirect = `(ctx) => \`\${ctx.request.origin}/oauth/${meta.pathSegment}/callback\``;
+  const store = `new CacheRedisAdapter(configs.redis)`;
+  const cfg = oauthConfigPath(meta);
+  const fromConfig = meta.configFields
+    .map((f) => `${f.key}: ${cfg}.${f.key},`)
+    .join('\n      ');
+  switch (meta.ctor) {
+    case 'wechat-open':
+      return `{
+      ${fromConfig}
+      redirectUri: ${redirect},
+      store: ${store},
+      scopes: ['snsapi_login'],
+    }`;
+    case 'wecom':
+      return `{
+      ${fromConfig}
+      redirectUri: ${redirect},
+      store: ${store},
+      scopes: ['snsapi_base'],
+    }`;
+    case 'wechat-mini':
+      return `{
+      ${fromConfig}
+      store: ${store},
+    }`;
+    case 'google-identity':
+      return `{
+      ${fromConfig}
+    }`;
+    default:
+      return `{
+      ${fromConfig}
+      redirectUri: ${redirect},
+      store: ${store},
+    }`;
+  }
+};
+
+/** 已启用预设 +（可选）oauth2-client 厂商注释模板，按启用优先去重 */
+const oauth2PresetPlan = (
+  active: readonly OAuth2Preset[],
+  commentVendors: boolean,
+): { meta: OAuth2PresetMeta; enabled: boolean }[] => {
+  const activeSet = new Set(active);
+  const out: { meta: OAuth2PresetMeta; enabled: boolean }[] = [];
+  const seen = new Set<OAuth2Preset>();
+  if (commentVendors) {
+    for (const id of OAUTH2_VENDOR_PRESETS) {
+      out.push({ meta: OAUTH2_PRESET_META[id], enabled: activeSet.has(id) });
+      seen.add(id);
+    }
+  }
+  for (const id of active) {
+    if (seen.has(id)) continue;
+    out.push({ meta: OAUTH2_PRESET_META[id], enabled: true });
+    seen.add(id);
+  }
+  return out;
+};
+
+/** EnvSecrets 中 OAuth 相关字段（未启用厂商的键以注释保留） */
+export const generateOAuthEnvSecretsFields = (
+  presets: OAuth2Preset[],
+  opts?: { commentVendors?: boolean },
+): string => {
+  const keyEnabled = new Map<string, boolean>();
+  for (const { meta, enabled } of oauth2PresetPlan(
+    presets,
+    opts?.commentVendors === true,
+  )) {
+    for (const key of meta.envKeys) {
+      keyEnabled.set(key, (keyEnabled.get(key) ?? false) || enabled);
+    }
+  }
+  if (keyEnabled.size === 0) return '';
+  return (
+    [...keyEnabled.entries()]
+      .map(([k, enabled]) => maybeComment(enabled, `  ${k}: string;`))
+      .join('\n') + '\n'
+  );
+};
+
+/** AppConfig.oauth 类型块；无预设时返回空字符串 */
+export const generateOAuthAppConfigType = (
+  presets: OAuth2Preset[],
+  opts?: { commentVendors?: boolean },
+): string => {
+  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true);
+  if (plan.length === 0) return '';
+  const providerBlock = (meta: OAuth2PresetMeta) => {
+    const fields = meta.configFields
+      .map((f) => `    ${f.key}: string;`)
+      .join('\n');
+    return `  ${meta.serviceKey}: {\n${fields}\n  };`;
+  };
+  const anyEnabled = plan.some((p) => p.enabled);
+  if (!anyEnabled) {
+    const inner = plan.map(({ meta }) => providerBlock(meta)).join('\n');
+    return maybeComment(false, `  oauth: {\n${inner}\n  };\n`);
+  }
+  const providers = plan
+    .map(({ meta, enabled }) => maybeComment(enabled, providerBlock(meta)))
+    .join('\n');
+  return `  oauth: {\n${providers}\n  };\n`;
+};
+
+/**
+ * 各环境 AppConfig.oauth 赋值。
+ * local：缺省 `change-me`；deploy：缺省空串。
+ */
+export const generateOAuthAppConfigValue = (
+  presets: OAuth2Preset[],
+  mode: 'local' | 'deploy',
+  opts?: { commentVendors?: boolean },
+): string => {
+  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true);
+  if (plan.length === 0) return '';
+  const fallback = mode === 'local' ? "'change-me'" : "''";
+  const providerBlock = (meta: OAuth2PresetMeta) => {
+    const fields = meta.configFields
+      .map((f) => `      ${f.key}: secrets.${f.env} || ${fallback},`)
+      .join('\n');
+    return `    ${meta.serviceKey}: {\n${fields}\n    },`;
+  };
+  const anyEnabled = plan.some((p) => p.enabled);
+  if (!anyEnabled) {
+    const inner = plan.map(({ meta }) => providerBlock(meta)).join('\n');
+    return maybeComment(false, `  oauth: {\n${inner}\n  },\n`);
+  }
+  const providers = plan
+    .map(({ meta, enabled }) => maybeComment(enabled, providerBlock(meta)))
+    .join('\n');
+  return `  oauth: {\n${providers}\n  },\n`;
+};
+
+/** `@aomex-contrib/foo` → GitHub packages 目录 */
+const aomexContribPackageDocsUrl = (npmPackage: string): string => {
+  const name = npmPackage.replace(/^@aomex-contrib\//, '');
+  return `https://github.com/aomex/aomex-contrib/tree/main/packages/${name}`;
+};
+
+/** 单个登录集成 Service（一厂商一文件） */
+export const generateOAuth2Service = (preset: OAuth2Preset): string => {
+  const meta = OAUTH2_PRESET_META[preset];
+  const docsUrl = aomexContribPackageDocsUrl(meta.npmPackage);
+  if (meta.kind === 'wechat-mini') {
+    return `import { Service } from '@aomex/common';
+import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
+import { ${meta.className} } from '${meta.npmPackage}';
+import { configs } from '@/configs';
+
+/**
+ * ${meta.label}（非 OAuth2；\`code2Session\` / 手机号）。
+ * @see ${docsUrl}
+ */
+export default class ${meta.serviceClassName} extends Service {
+  protected readonly auth = new ${meta.className}(${oauth2ClientOptions(meta)});
+
+  /** \`wx.login\` code → openid / session_key */
+  code2Session(code: string) {
+    return this.auth.code2Session(code);
+  }
+
+  /** 新版手机号组件 code → 手机号 */
+  getPhoneNumber(code: string) {
+    return this.auth.getPhoneNumber(code);
+  }
+}
+`;
+  }
+
+  if (meta.kind === 'google-identity') {
+    return `import { Service } from '@aomex/common';
+import { ${meta.className} } from '${meta.npmPackage}';
+import { configs } from '@/configs';
+
+/**
+ * ${meta.label}（非 redirect OAuth2；前端 GIS 交 credential / token / code）。
+ * @see ${docsUrl}
+ */
+export default class ${meta.serviceClassName} extends Service {
+  protected readonly auth = new ${meta.className}(${oauth2ClientOptions(meta)});
+
+  /** Sign In With Google / One Tap 的 \`credential\`（id_token）验签 */
+  verifyCredential(credential: string) {
+    return this.auth.verifyCredential(credential);
+  }
+
+  /** \`initTokenClient\` 拿到的 access_token → userinfo */
+  fetchUserInfo(accessToken: string) {
+    return this.auth.fetchUserInfo(accessToken);
+  }
+
+  /** \`initCodeClient\` 的 auth-code 换票（需 clientSecret） */
+  exchangeAuthCode(code: string) {
+    return this.auth.exchangeAuthCode(code);
+  }
+}
+`;
+  }
+
+  return `import { Service } from '@aomex/common';
+import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
+import type { WebContext } from '@aomex/web';
+import { ${meta.className} } from '${meta.npmPackage}';
+import { configs } from '@/configs';
+
+/**
+ * ${meta.label} OAuth2 / OIDC 授权码客户端（PKCE；\`@aomex-contrib\`）。
+ * 回调后自行建立登录态（session / JWT / bearer）。
+ * @see ${docsUrl}
+ */
+export default class ${meta.serviceClassName} extends Service {
+  protected readonly oauth = new ${meta.className}(${oauth2ClientOptions(meta)});
+
+  oauthRedirect(ctx: WebContext) {
+    return this.oauth.redirect(ctx);
+  }
+
+  oauthCallback(ctx: WebContext) {
+    return this.oauth.callback(ctx);
+  }
+}
+`;
+};
+
+/** 登录集成 Service 文件：相对路径 → 内容（未启用厂商整文件注释） */
+export const generateOAuth2Services = (
+  presets: OAuth2Preset[],
+  opts?: { commentVendors?: boolean },
+): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const { meta, enabled } of oauth2PresetPlan(
+    presets,
+    opts?.commentVendors === true,
+  )) {
+    const body = generateOAuth2Service(meta.id);
+    out[`src/services/${meta.serviceFile}`] = enabled
+      ? body
+      : `// 解开本文件注释，并：pnpm add ${meta.npmPackage}
+// 同时解开 services/index、configs.oauth、.env、oauth2.router 中对应项
+${maybeComment(false, body.trimEnd())}
+`;
+  }
+  return out;
+};
+
+const oauth2RouteBlock = (m: OAuth2PresetMeta): string => {
+  const cb =
+    m.callbackMethod === 'post'
+      ? `router.post('/${m.pathSegment}/callback', {
+  docs: { showInOpenapi: false },
+  action: async (ctx) => {
+    const profile = await services.${m.serviceKey}.oauthCallback(ctx);
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    ctx.send(profile);
+  },
+});`
+      : `router.get('/${m.pathSegment}/callback', {
+  docs: { showInOpenapi: false },
+  action: async (ctx) => {
+    const profile = await services.${m.serviceKey}.oauthCallback(ctx);
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    ctx.send(profile);
+  },
+});`;
+  return `/** ${m.label} — pnpm add ${m.npmPackage} */
+router.get('/${m.pathSegment}', {
+  docs: { showInOpenapi: false },
+  action: async (ctx) => {
+    await services.${m.serviceKey}.oauthRedirect(ctx);
+  },
+});
+
+${cb}`;
+};
+
+/** `/oauth/:provider` 发起登录 + callback（oauth2-client 时厂商路由以注释保留） */
+export const generateOAuth2Router = (
+  presets: OAuth2Preset[],
+  opts?: { commentVendors?: boolean },
+): string | null => {
+  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true).filter(
+    ({ meta }) => meta.kind === 'oauth2',
+  );
+  if (plan.length === 0) return null;
+  const anyEnabled = plan.some((p) => p.enabled);
+  const routes = plan
+    .map(({ meta, enabled }) => maybeComment(enabled, oauth2RouteBlock(meta)))
+    .join('\n\n');
+
+  return `import { Router } from '@aomex/web';
+${maybeComment(anyEnabled, `import { services } from '@/services';`)}
+
+/**
+ * OAuth2 / OIDC 授权码登录。
+ * 未启用的厂商路由以注释保留；解开后安装对应 \`@aomex-contrib/oauth2-*\`，并启用 Service / configs / .env。
+ */
+export const router = new Router({ prefix: '/oauth' });
+
+${routes}
+`;
+};
+
+/** 微信小程序登录路由（\`POST /wechat-mini/login|phone\`） */
+export const generateWechatMiniRouter = (): string => {
+  return `import { body, Router } from '@aomex/web';
+import { rule } from '@aomex/common';
+import { services } from '@/services';
+
+export const router = new Router({ prefix: '/wechat-mini' });
+
+router.post('/login', {
+  docs: { showInOpenapi: false },
+  mount: [body({ code: rule.string() })],
+  action: async (ctx) => {
+    const session = await services.wechatMini.code2Session(ctx.body.code);
+    // TODO: 落库 / 建立登录态；session_key 仅服务端使用，勿下发前端
+    ctx.send({ openid: session.openid, unionid: session.unionid });
+  },
+});
+
+router.post('/phone', {
+  docs: { showInOpenapi: false },
+  mount: [body({ code: rule.string() })],
+  action: async (ctx) => {
+    const phone = await services.wechatMini.getPhoneNumber(ctx.body.code);
+    // TODO: 绑定手机号
+    ctx.send(phone);
+  },
+});
+`;
+};
+
+/** Google GIS 登录路由（\`POST /google-identity/credential|userinfo|auth-code\`） */
+export const generateGoogleIdentityRouter = (): string => {
+  return `import { body, Router } from '@aomex/web';
+import { rule } from '@aomex/common';
+import { services } from '@/services';
+
+export const router = new Router({ prefix: '/google-identity' });
+
+router.post('/credential', {
+  docs: { showInOpenapi: false },
+  mount: [body({ credential: rule.string() })],
+  action: async (ctx) => {
+    const claims = await services.googleIdentity.verifyCredential(
+      ctx.body.credential,
+    );
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    ctx.send(claims);
+  },
+});
+
+router.post('/userinfo', {
+  docs: { showInOpenapi: false },
+  mount: [body({ accessToken: rule.string() })],
+  action: async (ctx) => {
+    const profile = await services.googleIdentity.fetchUserInfo(
+      ctx.body.accessToken,
+    );
+    // TODO: 落库 / 建立登录态
+    ctx.send(profile);
+  },
+});
+
+router.post('/auth-code', {
+  docs: { showInOpenapi: false },
+  mount: [body({ code: rule.string() })],
+  action: async (ctx) => {
+    const token = await services.googleIdentity.exchangeAuthCode(ctx.body.code);
+    // TODO: 落库 / 建立登录态；有 id_token 时可再 verifyCredential
+    ctx.send(token);
+  },
+});
 `;
 };
 
@@ -771,13 +1179,15 @@ const pluginMount = (plugin: WebPlugin): string => {
     case 'helmet':
       return `    helmet(),`;
     case 'compress':
-      return `    compress(),`;
+      return `    // 生产亦可交给 nginx gzip / brotli
+    compress(),`;
     case 'response-time':
       return `    responseTime(),`;
     case 'pretty-json':
       return `    prettyJson(),`;
     case 'rate-limit':
-      return `    rateLimit(),`;
+      return `    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
+    rateLimit(),`;
     case 'http-access-log':
       return `    httpAccessLog.skip(isProduction),`;
     case 'async-trace':
@@ -803,6 +1213,25 @@ const PLUGIN_ORDER: WebPlugin[] = [
   'helmet',
 ];
 
+/** 未勾选时仍以注释写入，并提示优先用 nginx */
+const NGINX_PREFERRED_PLUGINS: readonly WebPlugin[] = [
+  'rate-limit',
+  'compress',
+];
+
+const nginxPreferredMount = (
+  plugin: 'compress' | 'rate-limit',
+  enabled: boolean,
+): string => {
+  if (enabled) return pluginMount(plugin);
+  if (plugin === 'compress') {
+    return `    // 优先用 nginx gzip / brotli；确需 Node 层再解开并：pnpm add @aomex/compress
+    // compress(),`;
+  }
+  return `    // 优先用 nginx limit_req / limit_conn；确需 Node 层再解开并：pnpm add @aomex/rate-limit
+    // rateLimit(),`;
+};
+
 export const generateWeb = (opts: {
   plugins: WebPlugin[];
   docsUI: DocsUI;
@@ -813,7 +1242,10 @@ export const generateWeb = (opts: {
   cluster: ClusterStrategy;
 }): string => {
   const useClusterListen = opts.cluster === 'cluster-listen';
-  const ordered = PLUGIN_ORDER.filter((p) => opts.plugins.includes(p));
+  const enabled = new Set(opts.plugins);
+  const ordered = PLUGIN_ORDER.filter(
+    (p) => enabled.has(p) || NGINX_PREFERRED_PLUGINS.includes(p),
+  );
   const webImportNames = [
     ...(useClusterListen ? (['clusterListen'] as const) : []),
     'routers',
@@ -824,10 +1256,14 @@ export const generateWeb = (opts: {
   const imports = [
     webImports,
     `import { globalErrorRewrite } from '@/middleware/format-error.md';`,
-    ...ordered.map(pluginImport),
+    ...ordered.filter((p) => enabled.has(p)).map(pluginImport),
   ];
 
-  const mounts = ordered.map(pluginMount);
+  const mounts = ordered.map((p) =>
+    p === 'compress' || p === 'rate-limit'
+      ? nginxPreferredMount(p, enabled.has(p))
+      : pluginMount(p),
+  );
 
   // globalErrorRewrite：紧跟 etag（有则），否则 cors / responseTime 之后
   {
@@ -1022,7 +1458,10 @@ declare module '@aomex/console' {
 `;
 };
 
-export const generateServicesIndex = (orm: Orm): string => {
+export const generateServicesIndex = (
+  orm: Orm,
+  opts?: { oauth2Presets?: OAuth2Preset[]; commentVendors?: boolean },
+): string => {
   const loaders = [
     `    logger: () => import('./logger.service.js'),`,
     `    cache: () => import('./cache.service.js'),`,
@@ -1030,6 +1469,13 @@ export const generateServicesIndex = (orm: Orm): string => {
   const eager = ['cache'];
   if (orm !== 'none') {
     loaders.push(`    article: () => import('./article.service.js'),`);
+  }
+  for (const { meta, enabled } of oauth2PresetPlan(
+    opts?.oauth2Presets ?? [],
+    opts?.commentVendors === true,
+  )) {
+    const line = `    ${meta.serviceKey}: () => import('./${meta.serviceFile.replace(/\.ts$/, '.js')}'),`;
+    loaders.push(enabled ? line : maybeComment(false, line));
   }
 
   // mongoose 无 Service 类进 combineServices；侧效导入保证启动即 registerLifecycle
@@ -2149,6 +2595,34 @@ export const generateEnvExample = (
   // TZ 固定第二行（有 DATABASE_URL 时紧随其后）
   lines.splice(1, 0, `TZ=${opts.timezone}`);
 
+  if (
+    opts.auth.includes('oauth2') &&
+    (opts.oauth2Client || opts.oauth2Presets.length > 0)
+  ) {
+    const hasVendorPreset = opts.oauth2Presets.some((id) =>
+      (OAUTH2_VENDOR_PRESETS as readonly string[]).includes(id),
+    );
+    const commentVendors = opts.oauth2Client && hasVendorPreset;
+    const plan = oauth2PresetPlan(opts.oauth2Presets, commentVendors);
+    if (plan.length > 0) {
+      const placeholder = mode === 'local' ? 'change-me' : 'CHANGE_ME';
+      lines.push('');
+      lines.push(
+        '# OAuth2 / OIDC / 微信（厂商后台回调须与路由一致；未启用项可保持注释）',
+      );
+      const seen = new Set<string>();
+      for (const { meta, enabled } of plan) {
+        for (const key of meta.envKeys) {
+          if (seen.has(key)) continue;
+          seen.add(key);
+          lines.push(
+            enabled ? `${key}=${placeholder}` : `# ${key}=${placeholder}`,
+          );
+        }
+      }
+    }
+  }
+
   return lines.join('\n') + '\n';
 };
 
@@ -2182,6 +2656,8 @@ export const generatePackageJson = (opts: {
   scaffoldOptions: ScaffoldOptions;
   /** @aomex/* 统一版本（由 resolveAomexVersion 解析） */
   aomexVersion: string;
+  /** @aomex-contrib/* 各包版本；无 oauth2 可省略 */
+  aomexContribVersions?: Record<string, string>;
   /** prisma / @prisma/* 统一版本（由 resolvePrismaVersion 解析，仅 7.x）；非 prisma 可省略 */
   prismaVersion?: string;
 }): Record<string, any> => {
@@ -2215,6 +2691,7 @@ export const generatePackageJson = (opts: {
     opts.scaffoldOptions,
     opts.aomexVersion,
     opts.prismaVersion,
+    opts.aomexContribVersions,
   );
   const dependencies = dependencyRecord(groups.find((g) => !g.dev)?.pkgs ?? []);
   const devDependencies = dependencyRecord(
@@ -2595,6 +3072,43 @@ export const resolveAomexVersion = async (): Promise<string> => {
   return version;
 };
 
+/** 查询 npm 上某包 latest 版本 */
+export const resolveNpmLatest = async (pkg: string): Promise<string> => {
+  let res: Response;
+  try {
+    res = await fetch(`https://registry.npmjs.org/${pkg}`);
+  } catch (err) {
+    throw new Error(
+      `无法获取 ${pkg} 版本（网络不可用）：${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+  if (!res.ok) {
+    throw new Error(`无法获取 ${pkg} 版本：HTTP ${res.status}`);
+  }
+  const data = (await res.json()) as {
+    'dist-tags'?: Record<string, string>;
+  };
+  const version = data['dist-tags']?.['latest'];
+  if (!version) {
+    throw new Error(`npm 上未找到 ${pkg} 的 latest 标签`);
+  }
+  return version;
+};
+
+/**
+ * 为已选 OAuth 预设解析各自 `@aomex-contrib/*` 的 latest。
+ */
+export const resolveAomexContribVersions = async (
+  presets: OAuth2Preset[],
+): Promise<Record<string, string>> => {
+  const out: Record<string, string> = {};
+  for (const meta of oauth2PresetMetas(presets)) {
+    if (out[meta.npmPackage]) continue;
+    out[meta.npmPackage] = await resolveNpmLatest(meta.npmPackage);
+  }
+  return out;
+};
+
 const compareSemver = (a: string, b: string): number => {
   const pa = a.split('.').map(Number);
   const pb = b.split('.').map(Number);
@@ -2638,6 +3152,7 @@ export const buildDependencyGroups = (
   opts: ScaffoldOptions,
   aomexVersion: string,
   prismaVersion?: string,
+  aomexContribVersions?: Record<string, string>,
 ): { label: string; pkgs: string[]; dev?: boolean }[] => {
   const aomex = (name: string) => `${name}@${aomexVersion}`;
   const prisma = (name: string) => `${name}@${prismaVersion!}`;
@@ -2718,6 +3233,28 @@ export const buildDependencyGroups = (
   // auth 中间件始终生成；jwt 包仅在启用或保留注释模板时安装，便于解开即用
   deps.add(aomex('@aomex/auth'));
   deps.add(aomex('@aomex/auth-jwt-strategy'));
+
+  if (
+    opts.auth.includes('oauth2') &&
+    (opts.oauth2Client || opts.oauth2Presets.length > 0)
+  ) {
+    const metas = oauth2PresetMetas(opts.oauth2Presets);
+    if (opts.oauth2Client || metas.some((m) => m.kind === 'oauth2')) {
+      deps.add(aomex('@aomex/oauth2-client'));
+    }
+    if (metas.length > 0) {
+      if (!aomexContribVersions) {
+        throw new Error('启用登录集成时必须提供 aomexContribVersions');
+      }
+      for (const meta of metas) {
+        const ver = aomexContribVersions[meta.npmPackage];
+        if (!ver) {
+          throw new Error(`缺少 ${meta.npmPackage} 版本`);
+        }
+        deps.add(`${meta.npmPackage}@${ver}`);
+      }
+    }
+  }
 
   if (opts.loggerTransports.includes('sentry')) {
     deps.add(aomex('@aomex/logger-sentry'));

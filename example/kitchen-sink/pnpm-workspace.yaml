@@ -6,6 +6,7 @@ allowBuilds:
   prisma: true
 minimumReleaseAgeExclude:
   - '@aomex/*'
+  - '@aomex-contrib/*'
 permissions:
   prisma-json-types-generator:
     skills: false

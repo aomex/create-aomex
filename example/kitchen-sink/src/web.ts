@@ -48,7 +48,9 @@ export const app = new WebApp({
       // ],
     }),
     csrf(),
+    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
     rateLimit(),
+    // 生产亦可交给 nginx gzip / brotli
     compress(),
     etag(),
     globalErrorRewrite,

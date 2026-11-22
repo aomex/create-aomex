@@ -1,5 +1,9 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import { withBaseWebPlugins, type ScaffoldOptions } from './types';
+import {
+  OAUTH2_VENDOR_PRESETS,
+  withBaseWebPlugins,
+  type ScaffoldOptions,
+} from './types';
 import {
   buildAllowInstallScripts,
   formatPnpmAllowBuilds,
@@ -19,6 +23,13 @@ import {
   generateDockerDeployScript,
   generateDockerfile,
   generateEnvExample,
+  generateOAuth2Router,
+  generateOAuth2Services,
+  generateOAuthAppConfigType,
+  generateOAuthAppConfigValue,
+  generateOAuthEnvSecretsFields,
+  generateGoogleIdentityRouter,
+  generateWechatMiniRouter,
   packageManagerExec,
   generateGlobalErrorRewrite,
   generateHttpAccessLog,
@@ -92,6 +103,8 @@ export const generateProjectFiles = (opts: {
   packageManagerVersion: string;
   /** @aomex/* 统一版本 */
   aomexVersion: string;
+  /** @aomex-contrib/* 各包版本；启用 oauth2 时必填 */
+  aomexContribVersions?: Record<string, string>;
   /** prisma / @prisma/* 统一版本（仅 7.x）；非 prisma 可省略 */
   prismaVersion?: string;
   /** 文档 UI 路径随机后缀；不传则每次生成新的 */
@@ -103,9 +116,22 @@ export const generateProjectFiles = (opts: {
     ...opts.options,
     webPlugins: withBaseWebPlugins(opts.options.webPlugins),
   };
-  const { packageManagerVersion, aomexVersion, prismaVersion } = opts;
+  const {
+    packageManagerVersion,
+    aomexVersion,
+    aomexContribVersions,
+    prismaVersion,
+  } = opts;
   const cronPort = opts.cronPort ?? randomInt(1024, 65536);
   const hasCron = options.consoleMiddlewares.includes('cron');
+  const hasOAuth2 =
+    options.auth.includes('oauth2') &&
+    (options.oauth2Client || options.oauth2Presets.length > 0);
+  // 选了至少一个 oauth2 厂商预设时，其余厂商以注释模板保留；仅 oauth2-client 不落预设文件
+  const hasVendorPreset = options.oauth2Presets.some((id) =>
+    (OAUTH2_VENDOR_PRESETS as readonly string[]).includes(id),
+  );
+  const commentVendors = options.oauth2Client && hasVendorPreset;
   const files: Record<string, ProjectFile> = {};
 
   const add = (path: string, file: ProjectFile) => {
@@ -226,6 +252,7 @@ ${exec} commitlint --edit $1
           hasCron,
           scaffoldOptions: options,
           aomexVersion,
+          aomexContribVersions,
           prismaVersion,
         }),
         null,
@@ -251,12 +278,31 @@ ${exec} commitlint --edit $1
       text(
         `${allowBuilds}minimumReleaseAgeExclude:
   - '@aomex/*'
+  - '@aomex-contrib/*'
 ${prismaSkillsDeny}`,
       ),
     );
   }
 
   // —— 配置 ——
+  const oauthSecretsFields = generateOAuthEnvSecretsFields(
+    hasOAuth2 ? options.oauth2Presets : [],
+    { commentVendors },
+  );
+  const oauthAppConfigType = generateOAuthAppConfigType(
+    hasOAuth2 ? options.oauth2Presets : [],
+    { commentVendors },
+  );
+  const oauthConfigLocal = generateOAuthAppConfigValue(
+    hasOAuth2 ? options.oauth2Presets : [],
+    'local',
+    { commentVendors },
+  );
+  const oauthConfigDeploy = generateOAuthAppConfigValue(
+    hasOAuth2 ? options.oauth2Presets : [],
+    'deploy',
+    { commentVendors },
+  );
   add(
     'src/configs/shared.ts',
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
@@ -276,14 +322,14 @@ type BaseConfig = typeof baseConfig;
  */
 export interface EnvSecrets {
   REDIS_PASSWORD: string;
-}
+${oauthSecretsFields}}
 
 /**
  * 应用运行时配置
  */
 export interface AppConfig extends BaseConfig {
   redis: RedisOptions;
-}
+${oauthAppConfigType}}
 `),
   );
   add(
@@ -304,7 +350,7 @@ export const production: AppConfig = {
     password: secrets.REDIS_PASSWORD || '',
     db: 0,
   },
-};
+${oauthConfigDeploy}};
 `),
   );
   add(
@@ -324,7 +370,7 @@ export const development: AppConfig = {
     password: secrets.REDIS_PASSWORD || 'abcde',
     db: 0,
   },
-};
+${oauthConfigLocal}};
 `),
   );
   add(
@@ -345,7 +391,7 @@ export const integration: AppConfig = {
     password: secrets.REDIS_PASSWORD || '',
     db: 0,
   },
-};
+${oauthConfigDeploy}};
 `),
   );
   add(
@@ -465,7 +511,15 @@ commander.create('hello', {
   );
 
   // —— 服务 ——
-  add('src/services/index.ts', text(generateServicesIndex(options.orm)));
+  add(
+    'src/services/index.ts',
+    text(
+      generateServicesIndex(options.orm, {
+        oauth2Presets: hasOAuth2 ? options.oauth2Presets : [],
+        commentVendors,
+      }),
+    ),
+  );
   if (options.orm !== 'none') {
     add(
       'src/services/article.service.ts',
@@ -477,6 +531,13 @@ commander.create('hello', {
     text(generateLogger(options.loggerTransports)),
   );
   add('src/services/cache.service.ts', text(generateCacheService()));
+  if (hasOAuth2) {
+    for (const [rel, content] of Object.entries(
+      generateOAuth2Services(options.oauth2Presets, { commentVendors }),
+    )) {
+      add(rel, text(content));
+    }
+  }
 
   // —— 中间件 ——
   add('src/middleware/format-error.md.ts', text(generateGlobalErrorRewrite()));
@@ -484,6 +545,27 @@ commander.create('hello', {
   // —— 认证（始终生成；未勾选的策略以注释保留）——
   add('src/middleware/auth.md.ts', text(generateAuth(options.auth)));
   add('src/constants/cookie-key.ts', text(generateCookieKey()));
+
+  if (hasOAuth2) {
+    const oauthRouter = generateOAuth2Router(options.oauth2Presets, {
+      commentVendors,
+    });
+    if (oauthRouter) {
+      add('src/routers/oauth2.router.ts', text(oauthRouter));
+    }
+    if (options.oauth2Presets.includes('wechat-mini')) {
+      add(
+        'src/routers/wechat-mini.router.ts',
+        text(generateWechatMiniRouter()),
+      );
+    }
+    if (options.oauth2Presets.includes('google-identity')) {
+      add(
+        'src/routers/google-identity.router.ts',
+        text(generateGoogleIdentityRouter()),
+      );
+    }
+  }
 
   // —— 文档 / 插件附属 ——
   const docs = generateDocsMiddleware(

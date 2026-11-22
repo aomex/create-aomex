@@ -14,6 +14,7 @@ import { applyScaffoldVariables, generateProjectFiles } from './project-files';
 import { ensureLatestCreateAomex } from './ensure-latest';
 import {
   packageManagerExec,
+  resolveAomexContribVersions,
   resolveAomexVersion,
   resolvePackageManagerVersion,
   resolvePrismaVersion,
@@ -51,17 +52,53 @@ const main = async () => {
 
   const argv = yargsParser(process.argv.slice(2));
   const projectName = await inputProject(argv);
-  const nodeVersion = await selectNodeVersion(argv);
   const options = await selectOptions(argv);
-  const packageManagerVersion = await resolvePackageManagerVersion(
-    options.packageManager,
-  );
-  const aomexVersion = await resolveAomexVersion();
-  const prismaVersion =
-    options.orm === 'prisma' ? await resolvePrismaVersion() : undefined;
   const targetDir = path.resolve(projectName);
 
-  const { error } = await terminal.runTasks([
+  type PrepContext = {
+    nodeVersion: string;
+    packageManagerVersion: string;
+    aomexVersion: string;
+    aomexContribVersions?: Record<string, string>;
+    prismaVersion?: string;
+  };
+
+  // 选完后立刻进入动画，网络解析版本放在「准备中」里，避免静默卡住
+  const { error } = await terminal.runTasks<PrepContext>([
+    {
+      title: '准备中',
+      task: async (ctx, api) => {
+        api.suffix = '解析 Node / 依赖版本…';
+        const [nodeVersion, packageManagerVersion, aomexVersion] =
+          await Promise.all([
+            selectNodeVersion(argv),
+            resolvePackageManagerVersion(options.packageManager),
+            resolveAomexVersion(),
+          ]);
+        ctx.nodeVersion = nodeVersion;
+        ctx.packageManagerVersion = packageManagerVersion;
+        ctx.aomexVersion = aomexVersion;
+
+        if (
+          options.auth.includes('oauth2') &&
+          options.oauth2Presets.length > 0
+        ) {
+          api.suffix = '解析 @aomex-contrib 版本…';
+          ctx.aomexContribVersions = await resolveAomexContribVersions(
+            options.oauth2Presets,
+          );
+        } else if (options.oauth2Client) {
+          ctx.aomexContribVersions = {};
+        }
+
+        if (options.orm === 'prisma') {
+          api.suffix = '解析 Prisma 版本…';
+          ctx.prismaVersion = await resolvePrismaVersion();
+        }
+
+        api.suffix = '';
+      },
+    },
     {
       title: '创建目录',
       task: async () => {
@@ -72,20 +109,21 @@ const main = async () => {
     },
     {
       title: '生成项目文件',
-      task: async () => {
+      task: async (ctx) => {
         const variables: Record<string, string> = {
           projectName,
-          nodeVersion,
-          pnpmVersion: packageManagerVersion,
-          nodeMajorVersion: nodeVersion.split('.')[0]!,
+          nodeVersion: ctx.nodeVersion,
+          pnpmVersion: ctx.packageManagerVersion,
+          nodeMajorVersion: ctx.nodeVersion.split('.')[0]!,
         };
 
         const files = generateProjectFiles({
           projectName,
           options,
-          packageManagerVersion,
-          aomexVersion,
-          prismaVersion,
+          packageManagerVersion: ctx.packageManagerVersion,
+          aomexVersion: ctx.aomexVersion,
+          aomexContribVersions: ctx.aomexContribVersions,
+          prismaVersion: ctx.prismaVersion,
         });
 
         for (const [relPath, file] of Object.entries(files)) {

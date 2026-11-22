@@ -6,3 +6,4 @@ allowBuilds:
   prisma: true
 minimumReleaseAgeExclude:
   - '@aomex/*'
+  - '@aomex-contrib/*'

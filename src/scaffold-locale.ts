@@ -3,6 +3,7 @@ import type {
   AuthStrategy,
   ClusterStrategy,
   DocsUI,
+  OAuth2Preset,
   Orm,
   PackageManager,
   PrismaDatabase,
@@ -82,6 +83,7 @@ type ReadmeOpts = {
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
   auth: AuthStrategy[];
+  oauth2Presets: OAuth2Preset[];
   docker: boolean;
   timezone: string;
   cluster: ClusterStrategy;
@@ -95,7 +97,10 @@ const ormLabel = (orm: Orm, db?: PrismaDatabase, zh?: boolean): string => {
   return zh ? '无 ORM' : 'None';
 };
 
-const authStrategyLabel = (auth: AuthStrategy): string => {
+const authStrategyLabel = (
+  auth: AuthStrategy,
+  oauth2Presets: OAuth2Preset[],
+): string => {
   switch (auth) {
     case 'bearer':
       return 'Bearer Token';
@@ -105,16 +110,24 @@ const authStrategyLabel = (auth: AuthStrategy): string => {
       return 'API Key';
     case 'session':
       return 'Session';
+    case 'oauth2':
+      return oauth2Presets.length > 0
+        ? `OAuth / 微信 (${oauth2Presets.join(', ')})`
+        : 'OAuth2（厂商注释模板）';
   }
 };
 
-const authLabel = (auth: AuthStrategy[], zh?: boolean): string => {
+const authLabel = (
+  auth: AuthStrategy[],
+  oauth2Presets: OAuth2Preset[],
+  zh?: boolean,
+): string => {
   if (auth.length === 0) {
     return zh
       ? '未启用（auth.md.ts 模板已生成）'
       : 'None (auth.md.ts scaffold kept)';
   }
-  return auth.map(authStrategyLabel).join(' + ');
+  return auth.map((a) => authStrategyLabel(a, oauth2Presets)).join(' + ');
 };
 
 const docsLabel = (docs: DocsUI): string => {
@@ -318,6 +331,7 @@ export const generateReadme = (opts: {
   orm?: Orm;
   prismaDatabase?: PrismaDatabase;
   auth?: AuthStrategy[];
+  oauth2Presets?: OAuth2Preset[];
   docker?: boolean;
   timezone: string;
   cluster?: ClusterStrategy;
@@ -328,6 +342,7 @@ export const generateReadme = (opts: {
   const docker = opts.docker ?? true;
   const cluster = opts.cluster ?? 'none';
   const auth = opts.auth ?? [];
+  const oauth2Presets = opts.oauth2Presets ?? [];
   const readme: ReadmeOpts = {
     projectName: opts.projectName,
     language: opts.language,
@@ -337,6 +352,7 @@ export const generateReadme = (opts: {
     orm,
     prismaDatabase: opts.prismaDatabase,
     auth,
+    oauth2Presets,
     docker,
     timezone: opts.timezone,
     cluster,
@@ -442,7 +458,7 @@ ${bareDeployHintEn}
 | --- | --- |
 | 包管理器 | ${pm} |
 | ORM | ${ormLabel(orm, opts.prismaDatabase, true)} |
-| 认证 | ${authLabel(readme.auth, true)} |
+| 认证 | ${authLabel(readme.auth, readme.oauth2Presets, true)} |
 | 文档 UI | ${docsName || '无'} |
 | 部署方式 | ${docker ? 'Docker' : cluster === 'pm2' ? 'PM2' : '裸机 / 进程'} |
 | 时区 | ${readme.timezone} |
@@ -501,7 +517,7 @@ Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs befo
 | --- | --- |
 | Package manager | ${pm} |
 | ORM | ${ormLabel(orm, opts.prismaDatabase)} |
-| Auth | ${authLabel(readme.auth)} |
+| Auth | ${authLabel(readme.auth, readme.oauth2Presets)} |
 | Docs UI | ${docsName || 'None'} |
 | Deploy | ${docker ? 'Docker' : cluster === 'pm2' ? 'PM2' : 'Bare metal'} |
 | Timezone | ${readme.timezone} |
@@ -555,6 +571,7 @@ export const generateReadmeFromOptions = (
     orm: options.orm,
     prismaDatabase: options.prismaDatabase,
     auth: options.auth,
+    oauth2Presets: options.oauth2Presets,
     docker: options.docker,
     timezone: options.timezone,
     cluster: options.cluster,

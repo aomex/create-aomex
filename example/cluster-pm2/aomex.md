@@ -225,7 +225,7 @@ Prisma/Mongoose 连接跟现有 `*.service.ts` + `registerLifecycle`；**不要*
 
 ## 鉴权
 
-`auth.md.ts` **始终生成**。未勾选任何策略时 `strategies: {}`；有勾选则对应策略启用，其余以注释保留，解开即可用。
+`auth.md.ts` **始终生成**。未勾选任何 Auth 策略时 `strategies: {}`；有勾选则对应策略启用，其余以注释保留，解开即可用。
 
 - 整组私有 API：`new Router({ mount: [auth.authenticate('<策略名>')] })`；策略名看 `auth.md.ts` 的 `strategies` key（`bearer` / `jwt` / `apiKey` / `session`）。
 - 单接口更严：`auth.authenticate(name).authorize(...)` 或 `auth.authorize(name, ...)`。先认证再授权；未登录 **401**，已登录权限不够 **403**。
@@ -234,6 +234,7 @@ Prisma/Mongoose 连接跟现有 `*.service.ts` + `registerLifecycle`；**不要*
 - **Session**（Cookie 会话）：登录 `await auth.strategy('session').login(ctx, stored)`；登出 `logout(ctx)`；登录后建议 `regenerateSessionId(ctx)` 防 fixation。启用 Session 时**必须**同时：
   1. 安装并挂载 `@aomex/csrf`：`pnpm add @aomex/csrf`，在 `web.ts` 的 `mount` 里加 `csrf()`（脚手架可选 Web 中间件；与 `cors` 同开时放在 `cors` 之后）。
   2. 配置 `cors`：解开 `credentials: true`，并**显式**配置 `origin` 为前端域名白名单（开启凭证时禁止 `*` / 盲反射 Origin，见 `web.ts` 注释）。
+- **OAuth2 / GIS / 微信登录**：**不是** `auth.authenticate` 策略。脚手架首屏提供 `oauth2-client` / Google GIS / 微信系；选 `oauth2-client` 后再多选厂商（**可不选**则只装 `@aomex/oauth2-client`，不生成厂商文件）。选了厂商后，未启用的以注释写入。GIS / 微信为首屏直选。凭证经 `configs.oauth.*`。详见 [aomex-contrib](https://github.com/aomex/aomex-contrib)。
 - CSRF：双提交 Cookie；前端读 Cookie `csrfToken`，写入请求头 `x-csrf-token`；服务端可用 `ctx.csrfToken`。GET/HEAD/OPTIONS 默认跳过。跨域时浏览器会预检该头，不写 `allowHeaders` 时 cors 默认镜像预检头即可。
 - 少数路径免鉴权优先拆公开 Router；临时绕过可用 `.skip(ctx => ...)`（**不改类型**，action 里仍要处理未登录）。
 
@@ -270,22 +271,22 @@ router.get('/events', {
 
 ## 场景 → 用什么
 
-| 场景                           | 做法                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| 缺资源 / 无权限 / 业务拒绝     | `ctx.throw(404\|403\|400, …)` + 对应 `response({ statusCode })`        |
-| 需要登录                       | `auth.authenticate('<策略>')`（Router 或方法级 `mount`）               |
-| 读写缓存 / 方法级缓存          | `services.cache`；`@remember`（只挂查询）                              |
-| 业务日志                       | `services.logger`（info/warn/error/fatal）；别 `console.log` 打生产    |
-| 入参复用 / PATCH               | `schema` + `pick`/`omit`/`extend`/`partial`                            |
-| 上传文件                       | `rule.file()` + 响应结束前搬走                                         |
-| 互斥 JSON / 根级数组体         | `rule.oneOf([...])` / `body(rule.array(...))`                          |
-| Prisma 模型校验                | `body(prismaInput.x…)` / `response({ content: prismaOutput.x })`       |
-| 新业务 Service                 | 新文件 + `combineServices` 动态 import；需启动初始化的进 `eager`       |
-| OpenAPI 分组 / 摘要            | `docs.tags` / `docs.summary`；隐藏用 `showInOpenapi: false`            |
-| 服务端推送                     | `ctx.sse()` + `stream`（见上节）                                       |
-| 控制台指令 / 定时              | 见下节                                                                 |
-| 改错误 JSON 形态               | 仅改 `format-error.md.ts`（或 Router 内再挂一层）                      |
-| 改全局中间件 / envelope / 语言 | 仅改 `web.ts`（先看注释；compress 须在 etag 前，文档 UI 在 helmet 前） |
+| 场景                           | 做法                                                                                                                         |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 缺资源 / 无权限 / 业务拒绝     | `ctx.throw(404\|403\|400, …)` + 对应 `response({ statusCode })`                                                              |
+| 需要登录                       | `auth.authenticate('<策略>')`（Router 或方法级 `mount`）                                                                     |
+| 读写缓存 / 方法级缓存          | `services.cache`；`@remember`（只挂查询）                                                                                    |
+| 业务日志                       | `services.logger`（info/warn/error/fatal）；别 `console.log` 打生产                                                          |
+| 入参复用 / PATCH               | `schema` + `pick`/`omit`/`extend`/`partial`                                                                                  |
+| 上传文件                       | `rule.file()` + 响应结束前搬走                                                                                               |
+| 互斥 JSON / 根级数组体         | `rule.oneOf([...])` / `body(rule.array(...))`                                                                                |
+| Prisma 模型校验                | `body(prismaInput.x…)` / `response({ content: prismaOutput.x })`                                                             |
+| 新业务 Service                 | 新文件 + `combineServices` 动态 import；需启动初始化的进 `eager`                                                             |
+| OpenAPI 分组 / 摘要            | `docs.tags` / `docs.summary`；隐藏用 `showInOpenapi: false`                                                                  |
+| 服务端推送                     | `ctx.sse()` + `stream`（见上节）                                                                                             |
+| 控制台指令 / 定时              | 见下节                                                                                                                       |
+| 改错误 JSON 形态               | 仅改 `format-error.md.ts`（或 Router 内再挂一层）                                                                            |
+| 改全局中间件 / envelope / 语言 | 仅改 `web.ts`（先看注释；compress / rate-limit 未启用时以注释保留并优先 nginx；compress 须在 etag 前，文档 UI 在 helmet 前） |
 
 ## 指令与定时任务
 

@@ -37,5 +37,5 @@
     "transpileOnly": true,
     "experimentalSpecifierResolution": "node"
   },
-  "exclude": ["hello-aomex", "112", "example"]
+  "exclude": ["hello-aomex", "112", "example", "tttt", "tttttt", "abcde"]
 }

@@ -24,7 +24,24 @@ import { exampleCases } from './example-cases';
 
 const PACKAGE_MANAGER_VERSION = '12.21.0';
 /** 示例固定 aomex 版本（真实脚手架运行时 resolveAomexVersion → latest） */
-const AOMEX_VERSION = '4.2.0';
+const AOMEX_VERSION = '4.4.0';
+/** 示例固定 @aomex-contrib/*（真实脚手架运行时 resolveAomexContribVersions） */
+const AOMEX_CONTRIB_VERSIONS: Record<string, string> = {
+  '@aomex-contrib/oauth2-github': '0.1.0',
+  '@aomex-contrib/oauth2-google': '0.1.0',
+  '@aomex-contrib/google-identity-login': '0.1.0',
+  '@aomex-contrib/oauth2-microsoft': '0.1.0',
+  '@aomex-contrib/oauth2-apple': '0.1.0',
+  '@aomex-contrib/oauth2-discord': '0.1.0',
+  '@aomex-contrib/oauth2-gitlab': '0.1.0',
+  '@aomex-contrib/oauth2-linkedin': '0.1.0',
+  '@aomex-contrib/oauth2-facebook': '0.1.0',
+  '@aomex-contrib/oauth2-twitter': '0.1.0',
+  '@aomex-contrib/oauth2-spotify': '0.1.0',
+  '@aomex-contrib/oauth2-wechat': '0.1.0',
+  '@aomex-contrib/oauth2-wecom': '0.1.0',
+  '@aomex-contrib/wechat-mini-program-login': '0.2.0',
+};
 /** 示例固定 prisma 7.x（真实脚手架运行时 resolvePrismaVersion） */
 const PRISMA_VERSION = '7.10.1';
 const PROJECT_NAME = 'snapshot-demo';
@@ -225,6 +242,7 @@ describe('generateProjectFiles examples', () => {
           options,
           packageManagerVersion: PACKAGE_MANAGER_VERSION,
           aomexVersion: AOMEX_VERSION,
+          aomexContribVersions: AOMEX_CONTRIB_VERSIONS,
           prismaVersion: PRISMA_VERSION,
           docsPathSecret: DOCS_PATH_SECRET,
           cronPort: CRON_PORT,

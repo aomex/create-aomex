@@ -9,7 +9,7 @@
 | 包管理器 | pnpm            |
 | ORM      | Prisma（mysql） |
 | 认证     | Bearer Token    |
-| 文档 UI  | Swagger UI      |
+| 文档 UI  | Scalar UI       |
 | 部署方式 | Docker          |
 | 时区     | UTC             |
 | 定时任务 | 已启用          |

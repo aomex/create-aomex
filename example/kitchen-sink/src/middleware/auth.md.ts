@@ -9,12 +9,13 @@ import { configs } from '@/configs';
 import { services } from '@/services';
 
 /**
- * 已启用：Bearer / JWT / API Key / Session。未勾选的策略仍保留为注释。
+ * 已启用：Bearer / JWT / API Key / Session / OAuth2。未勾选的 Auth 策略仍保留为注释。
  * 路由用法：`auth.authenticate('bearer' | 'jwt' | 'apiKey' | 'session')`
  *
  * Session：登录 `await auth.strategy('session').login(ctx, { userId })`；
  * 登出 `logout(ctx)`；防 fixation `regenerateSessionId(ctx)`。
  * Cookie 会话须挂载 `csrf()`，并配置 `cors.credentials` + `cors.origin`。
+ * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 `src/routers/oauth2.router.ts`（常用厂商多为注释模板，解开并 `pnpm add @aomex-contrib/oauth2-*` 后启用；回调后自行建立 session / JWT / bearer）。
  */
 export const auth = new Auth({
   strategies: {

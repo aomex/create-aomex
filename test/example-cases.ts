@@ -33,6 +33,8 @@ const bareMinimum: ScaffoldOptions = {
   orm: 'none',
   prismaDatabase: undefined,
   auth: [],
+  oauth2Client: false,
+  oauth2Presets: [],
   webPlugins: [...BASE_WEB_PLUGINS],
   docsUI: 'none',
   loggerTransports: ['console'],
@@ -43,12 +45,14 @@ const bareMinimum: ScaffoldOptions = {
   cluster: 'none',
 };
 
-/** 全家桶：尽量全开 */
+/** 全家桶：尽量全开（启用 github/google，其余 oauth2 厂商注释模板） */
 const kitchenSink: ScaffoldOptions = {
   packageManager: 'pnpm',
   orm: 'prisma',
   prismaDatabase: 'mysql',
-  auth: ['bearer', 'jwt', 'api-key', 'session'],
+  auth: ['bearer', 'jwt', 'api-key', 'session', 'oauth2'],
+  oauth2Client: true,
+  oauth2Presets: ['github', 'google'],
   webPlugins: [...allWebPlugins],
   docsUI: 'swagger',
   loggerTransports: [
@@ -72,8 +76,10 @@ const recommended: ScaffoldOptions = {
   orm: 'prisma',
   prismaDatabase: 'mysql',
   auth: ['bearer'],
+  oauth2Client: false,
+  oauth2Presets: [],
   webPlugins: [...recommendedPlugins],
-  docsUI: 'swagger',
+  docsUI: 'scalar',
   loggerTransports: ['console', 'file'],
   consoleMiddlewares: ['cron'],
   language: 'zh-CN',

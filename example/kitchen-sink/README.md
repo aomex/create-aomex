@@ -4,15 +4,15 @@
 
 ## 技术选型
 
-| 项       | 值                                     |
-| -------- | -------------------------------------- |
-| 包管理器 | pnpm                                   |
-| ORM      | Prisma（mysql）                        |
-| 认证     | Bearer Token + JWT + API Key + Session |
-| 文档 UI  | Swagger UI                             |
-| 部署方式 | Docker                                 |
-| 时区     | UTC                                    |
-| 定时任务 | 已启用                                 |
+| 项       | 值                                                                     |
+| -------- | ---------------------------------------------------------------------- |
+| 包管理器 | pnpm                                                                   |
+| ORM      | Prisma（mysql）                                                        |
+| 认证     | Bearer Token + JWT + API Key + Session + OAuth / 微信 (github, google) |
+| 文档 UI  | Swagger UI                                                             |
+| 部署方式 | Docker                                                                 |
+| 时区     | UTC                                                                    |
+| 定时任务 | 已启用                                                                 |
 
 ## 环境准备
 

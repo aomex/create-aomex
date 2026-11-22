@@ -41,6 +41,10 @@ export const app = new WebApp({
       //   'https://admin.example.com',
       // ],
     }),
+    // 优先用 nginx limit_req / limit_conn；确需 Node 层再解开并：pnpm add @aomex/rate-limit
+    // rateLimit(),
+    // 优先用 nginx gzip / brotli；确需 Node 层再解开并：pnpm add @aomex/compress
+    // compress(),
     etag(),
     globalErrorRewrite,
     slowTrace,

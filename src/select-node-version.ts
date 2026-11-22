@@ -1,6 +1,3 @@
-import { select } from '@inquirer/prompts';
-import { terminal } from './terminal';
-
 export const selectNodeVersion = async (
   argv: Record<string, any>,
 ): Promise<string> => {
@@ -9,15 +6,11 @@ export const selectNodeVersion = async (
 
   if (!nodeVersion) {
     const nodes = await promise;
-    nodeVersion = await select({
-      message: '请选择node.js稳定版本',
-      choices: nodes.map((item) => ({
-        name: `${item.version} ${terminal.style(['gray', 'dim'], item.date)}`,
-        value: item.version,
-        short: item.version,
-      })),
-      loop: false,
-    });
+    const latest = nodes[0];
+    if (!latest) {
+      throw new Error('未找到可用的 Node.js LTS 版本（需 >= 24）');
+    }
+    nodeVersion = latest.version;
   }
 
   return nodeVersion.replace(/^v/, '');

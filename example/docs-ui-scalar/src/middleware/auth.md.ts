@@ -9,7 +9,7 @@ import { CookieKey } from '@/constants/cookie-key';
 import { services } from '@/services';
 
 /**
- * 已启用：Bearer。未勾选的策略仍保留为注释。
+ * 已启用：Bearer。未勾选的 Auth 策略仍保留为注释。
  * 路由用法：`auth.authenticate('bearer')`
  */
 export const auth = new Auth({

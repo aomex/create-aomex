@@ -10,3 +10,4 @@ allowBuilds:
   tree-sitter-json: false
 minimumReleaseAgeExclude:
   - '@aomex/*'
+  - '@aomex-contrib/*'
