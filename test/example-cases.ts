@@ -16,7 +16,7 @@ const allWebPlugins: WebPlugin[] = [
   'compress',
   'pretty-json',
   'rate-limit',
-  'http-access-log',
+  'access-log',
   'async-trace',
   'csrf',
 ];
@@ -24,7 +24,7 @@ const allWebPlugins: WebPlugin[] = [
 /** 推荐组合：基础插件 + 常用可选 */
 const recommendedPlugins: WebPlugin[] = [
   ...BASE_WEB_PLUGINS,
-  'http-access-log',
+  'access-log',
   'async-trace',
 ];
 

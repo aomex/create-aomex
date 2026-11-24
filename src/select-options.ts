@@ -229,14 +229,14 @@ export const selectOptions = async (
     }
   }
 
-  // Web 中间件不询问：默认 http-access-log + async-trace；可用 --web-plugins 覆盖
+  // Web 中间件不询问：默认 access-log + async-trace；可用 --web-plugins 覆盖
   let webPlugins: WebPlugin[] = [];
   if (enableWeb) {
     const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
     const selectedWebPlugins: WebPlugin[] =
       webPluginsArg.length > 0
         ? (webPluginsArg as WebPlugin[])
-        : ['http-access-log', 'async-trace'];
+        : ['access-log', 'async-trace'];
     // Session 鉴权必须配合 csrf：CLI 漏传时也自动补上
     webPlugins = withBaseWebPlugins(
       auth.includes('session') && !selectedWebPlugins.includes('csrf')

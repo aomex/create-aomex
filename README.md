@@ -37,7 +37,7 @@ pnpm start   # 或 yarn start / npm start
 | `--db`                  | Prisma 数据库（仅 `--orm=prisma`）                                                                                                                  | `--db=mysql` \| `postgresql` \| …                              |
 | `--auth`                | 认证，逗号多选：策略 + 入口（`oauth2-client`/`google-identity`/`wechat`…）+ 可选厂商（`github`…）；仅 `oauth2-client` 时厂商为注释模板；`none` 清空 | `--auth=bearer,oauth2-client` \| `--auth=oauth2-client,github` |
 | `--oauth2-presets`      | 显式启用 OAuth2 厂商（可与 `oauth2-client` 合用；未列厂商仍写注释模板）                                                                             | `--oauth2-presets=github,google`                               |
-| `--web-plugins`         | Web 中间件（不询问；默认 `http-access-log,async-trace`；`cors`/`etag`/`helmet`/`response-time` 始终安装）                                           | `--web-plugins=http-access-log,async-trace,csrf`               |
+| `--web-plugins`         | Web 中间件（不询问；默认 `access-log,async-trace`；`cors`/`etag`/`helmet`/`response-time` 始终安装）                                                | `--web-plugins=access-log,async-trace,csrf`                    |
 | `--docs`                | OpenAPI 文档 UI（不询问；默认 `scalar`；Websocket 平台另有 AsyncAPI）                                                                               | `--docs=scalar` \| `swagger` \| `redoc` \| `none`              |
 | `--logger`              | 日志出口（不询问；默认 `console,file`）                                                                                                             | `--logger=console,file,sentry`                                 |
 | `--console-middlewares` | Console 插件；`cron` 始终安装，可追加                                                                                                               | `--console-middlewares=openapi`                                |
@@ -59,7 +59,7 @@ pnpm create aomex@latest -- \
   --lang=zh-CN \
   --docker=true \
   --tz=Asia/Shanghai \
-  --web-plugins=http-access-log,async-trace \
+  --web-plugins=access-log,async-trace \
   --logger=console,file \
   --cluster=none
 ```

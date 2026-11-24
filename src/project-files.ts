@@ -456,7 +456,7 @@ export const configs = configList[env] as AppConfig;
       text(
         generateWs({
           language: options.language,
-          withAccessLog: options.webPlugins.includes('http-access-log'),
+          withAccessLog: options.webPlugins.includes('access-log'),
         }),
       ),
     );
@@ -640,7 +640,7 @@ commander.create('hello', {
     add('src/channels/chat.channel.ts', text(generateChatChannel()));
   }
 
-  if (enableWeb && options.webPlugins.includes('http-access-log')) {
+  if (enableWeb && options.webPlugins.includes('access-log')) {
     add(
       'src/middleware/access-log.md.ts',
       text(

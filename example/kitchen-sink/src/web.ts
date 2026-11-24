@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { clusterListen, routers, WebApp } from '@aomex/web';
 // import { envelope } from '@aomex/web';
 import { globalErrorRewrite } from '@/middleware/format-error.md';
-import { accessLog } from '@/middleware/access-log.md';
+import { httpAccessLog } from '@/middleware/access-log.md';
 import { responseTime } from '@aomex/response-time';
 import { cors } from '@aomex/cors';
 import { csrf } from '@aomex/csrf';
@@ -40,7 +40,7 @@ export const app = new WebApp({
   //   },
   // },
   mount: [
-    accessLog.skip(isProduction),
+    httpAccessLog.skip(isProduction),
     abuse.web(),
     responseTime(),
     cors({

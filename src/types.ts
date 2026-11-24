@@ -174,7 +174,7 @@ export type WebPlugin =
   | 'response-time'
   | 'pretty-json'
   | 'rate-limit'
-  | 'http-access-log'
+  | 'access-log'
   | 'async-trace'
   | 'csrf';
 

@@ -1401,8 +1401,8 @@ const pluginImport = (
         ? `import { rateLimit } from '@aomex/rate-limit';
 import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';`
         : `import { rateLimit } from '@aomex/rate-limit';`;
-    case 'http-access-log':
-      return `import { accessLog } from '@/middleware/access-log.md';`;
+    case 'access-log':
+      return `import { httpAccessLog } from '@/middleware/access-log.md';`;
     case 'async-trace':
       return `import { slowTrace } from '@/middleware/slow-trace.md';`;
     case 'csrf':
@@ -1444,8 +1444,8 @@ const pluginMount = (
     }),`
         : `    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
     rateLimit(),`;
-    case 'http-access-log':
-      return `    accessLog.skip(isProduction),`;
+    case 'access-log':
+      return `    httpAccessLog.skip(isProduction),`;
     case 'async-trace':
       return `    slowTrace,`;
     case 'csrf':
@@ -1456,7 +1456,7 @@ const pluginMount = (
 
 /** 中间件挂载顺序（越靠前越外层） */
 const PLUGIN_ORDER: WebPlugin[] = [
-  'http-access-log',
+  'access-log',
   'response-time',
   'cors',
   'csrf',
@@ -1536,7 +1536,7 @@ export const generateWeb = (opts: {
 
   // abuse.web：紧跟 access-log（有则），否则最前；与 WS 共用封禁态
   if (opts.websocket) {
-    const accessIdx = mounts.findIndex((m) => m.includes('accessLog'));
+    const accessIdx = mounts.findIndex((m) => m.includes('httpAccessLog'));
     const insertAt = accessIdx >= 0 ? accessIdx + 1 : 0;
     mounts.splice(insertAt, 0, `    abuse.web(),`);
   }
@@ -1640,7 +1640,7 @@ import { fileURLToPath } from 'node:url';
   const needsIsProduction =
     opts.docsUI !== 'none' ||
     opts.asyncapiDocs ||
-    opts.plugins.includes('http-access-log');
+    opts.plugins.includes('access-log');
   const isProductionDecl = needsIsProduction
     ? `\nconst isProduction = process.env['NODE_ENV'] === 'production';\n`
     : '\n';
@@ -2712,7 +2712,7 @@ export const generateAccessLog = (
   lines.push(
     `import { ${[...loggerImports].join(', ')} } from '@aomex/logger';`,
     '',
-    `export const accessLog = createHttpAccessLog({`,
+    `export const httpAccessLog = createHttpAccessLog({`,
     `  transports: [`,
     ...httpList,
     `  ],`,
@@ -3547,7 +3547,7 @@ export const buildDependencyGroups = (
         case 'rate-limit':
           deps.add(aomex('@aomex/rate-limit'));
           break;
-        case 'http-access-log':
+        case 'access-log':
           deps.add(aomex('@aomex/access-log'));
           break;
         case 'async-trace':
@@ -3602,7 +3602,7 @@ export const buildDependencyGroups = (
     deps.add(aomex('@aomex/rate-limit'));
     deps.add(aomex('@aomex/rate-limit-redis-store'));
     deps.add(aomex('@aomex/abuse'));
-    if (opts.webPlugins.includes('http-access-log')) {
+    if (opts.webPlugins.includes('access-log')) {
       deps.add(aomex('@aomex/access-log'));
     }
   }
