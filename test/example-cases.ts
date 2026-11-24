@@ -1,5 +1,6 @@
 import {
   BASE_WEB_PLUGINS,
+  type Platform,
   type ScaffoldOptions,
   type WebPlugin,
 } from '../src/types';
@@ -27,9 +28,12 @@ const recommendedPlugins: WebPlugin[] = [
   'async-trace',
 ];
 
+const defaultPlatforms: Platform[] = ['web', 'console'];
+
 /** 精简底版：变体以此为基底（含基础 Web 插件） */
 const bareMinimum: ScaffoldOptions = {
   packageManager: 'pnpm',
+  platforms: [...defaultPlatforms],
   orm: 'none',
   prismaDatabase: undefined,
   auth: [],
@@ -48,6 +52,7 @@ const bareMinimum: ScaffoldOptions = {
 /** 全家桶：尽量全开（启用 github/google，其余 oauth2 厂商注释模板） */
 const kitchenSink: ScaffoldOptions = {
   packageManager: 'pnpm',
+  platforms: ['web', 'console', 'websocket'],
   orm: 'prisma',
   prismaDatabase: 'mysql',
   auth: ['bearer', 'jwt', 'api-key', 'session', 'oauth2'],
@@ -73,6 +78,7 @@ const kitchenSink: ScaffoldOptions = {
 /** 推荐默认：Prisma + Bearer + 常用插件 + cron */
 const recommended: ScaffoldOptions = {
   packageManager: 'pnpm',
+  platforms: [...defaultPlatforms],
   orm: 'prisma',
   prismaDatabase: 'mysql',
   auth: ['bearer'],
@@ -101,11 +107,12 @@ const fromBare = (
  * 1. bare-minimum / kitchen-sink / recommended
  * 2. ORM：prisma-mysql / mongoose
  * 3. 文档 UI：docs-ui-scalar（router OpenAPI 字段加满）
- * 4. 时区：timezone-shanghai
- * 5. 包管理器：package-manager-*
- * 6. 语言：language-*
- * 7. 集群：cluster-node / cluster-pm2
- * 8. 部署：deploy-without-docker / cluster-pm2-without-docker
+ * 4. WebSocket 专场：websocket
+ * 5. 时区：timezone-shanghai
+ * 6. 包管理器：package-manager-*
+ * 7. 语言：language-*
+ * 8. 集群：cluster-node / cluster-pm2
+ * 9. 部署：deploy-without-docker / cluster-pm2-without-docker
  */
 export const exampleCases: ExampleCase[] = [
   // 精简示例：无 Docker 部署、无 PM2（变体基底 bareMinimum 仍默认 docker，便于对照）
@@ -128,6 +135,17 @@ export const exampleCases: ExampleCase[] = [
   {
     name: 'docs-ui-scalar',
     options: { ...recommended, docsUI: 'scalar' },
+  },
+  // WebSocket 专场：三平台 + AsyncAPI（HTTP OpenAPI 关闭）
+  {
+    name: 'websocket',
+    options: {
+      ...bareMinimum,
+      platforms: ['web', 'console', 'websocket'],
+      docsUI: 'none',
+      webPlugins: [...recommendedPlugins],
+      loggerTransports: ['console', 'file'],
+    },
   },
 
   fromBare('timezone-shanghai', { timezone: 'Asia/Shanghai' }),

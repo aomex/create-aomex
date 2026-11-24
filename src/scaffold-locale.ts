@@ -1,13 +1,15 @@
 import type { DefaultLanguage } from './i18n-languages';
-import type {
-  AuthStrategy,
-  ClusterStrategy,
-  DocsUI,
-  OAuth2Preset,
-  Orm,
-  PackageManager,
-  PrismaDatabase,
-  ScaffoldOptions,
+import {
+  hasPlatform,
+  type AuthStrategy,
+  type ClusterStrategy,
+  type DocsUI,
+  type OAuth2Preset,
+  type Orm,
+  type PackageManager,
+  type Platform,
+  type PrismaDatabase,
+  type ScaffoldOptions,
 } from './types';
 
 export const isChineseLanguage = (language: DefaultLanguage) =>
@@ -78,6 +80,7 @@ type ReadmeOpts = {
   projectName: string;
   language: DefaultLanguage;
   packageManager: PackageManager;
+  platforms: Platform[];
   docsUI: DocsUI;
   hasCron: boolean;
   orm: Orm;
@@ -137,6 +140,16 @@ const docsLabel = (docs: DocsUI): string => {
   return '';
 };
 
+const platformsLabel = (platforms: Platform[], zh?: boolean): string => {
+  const labels: string[] = [];
+  if (platforms.includes('web')) labels.push('Web');
+  if (platforms.includes('console')) labels.push('Console');
+  if (platforms.includes('websocket')) {
+    labels.push(zh ? 'Websocket' : 'Websocket');
+  }
+  return labels.join(' + ') || (zh ? '无' : 'None');
+};
+
 const docsMiddlewareFile = (_docs: DocsUI): string => 'docs.md.ts';
 
 const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
@@ -166,26 +179,41 @@ const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
     note('scripts/', zh ? '启动与部署脚本' : 'Start / deploy scripts'),
   );
   lines.push(zh ? '├─ src/' : '├─ src/');
-  lines.push(
-    `   ├─ commanders/                   ${zh ? '控制台指令' : 'Console commands'}`,
-  );
+  const enableWeb = hasPlatform(opts.platforms, 'web');
+  const enableConsole = hasPlatform(opts.platforms, 'console');
+  const enableWebsocket = hasPlatform(opts.platforms, 'websocket');
+
+  if (enableConsole) {
+    lines.push(
+      `   ├─ commanders/                   ${zh ? '控制台指令' : 'Console commands'}`,
+    );
+  }
   lines.push(
     `   ├─ configs/                      ${zh ? '多环境配置' : 'Environment configs'}`,
   );
-  lines.push(
-    `   ├─ constants/                    ${zh ? '常量' : 'Constants'}`,
-  );
-  lines.push(
-    `   ├─ middleware/                   ${zh ? '中间件' : 'Middleware'}`,
-  );
+  if (enableWeb) {
+    lines.push(
+      `   ├─ constants/                    ${zh ? '常量' : 'Constants'}`,
+    );
+    lines.push(
+      `   ├─ middleware/                   ${zh ? '中间件' : 'Middleware'}`,
+    );
+  }
   if (opts.orm === 'mongoose') {
     lines.push(
       `   ├─ models/                       ${zh ? 'Mongoose 模型' : 'Mongoose models'}`,
     );
   }
-  lines.push(
-    `   ├─ routers/                      ${zh ? 'HTTP 路由' : 'HTTP routers'}`,
-  );
+  if (enableWeb) {
+    lines.push(
+      `   ├─ routers/                      ${zh ? 'HTTP 路由' : 'HTTP routers'}`,
+    );
+  }
+  if (enableWebsocket) {
+    lines.push(
+      `   ├─ channels/                     ${zh ? 'WebSocket Channel' : 'WebSocket channels'}`,
+    );
+  }
   if (opts.orm === 'prisma') {
     lines.push(
       `   ├─ schemas/                      ${zh ? 'Prisma 验证器入口' : 'Prisma validator entry'}`,
@@ -197,12 +225,27 @@ const buildTree = (opts: ReadmeOpts, zh: boolean): string => {
   lines.push(
     `   ├─ services/                     ${zh ? '业务服务' : 'Business services'}`,
   );
-  lines.push(
-    `   ├─ cli.ts                        ${zh ? 'Console 入口' : 'Console entry'}`,
-  );
-  lines.push(
-    `   └─ web.ts                        ${zh ? 'HTTP 入口' : 'HTTP entry'}`,
-  );
+  const entries: string[] = [];
+  if (enableConsole) {
+    entries.push(
+      `   ├─ cli.ts                        ${zh ? 'Console 入口' : 'Console entry'}`,
+    );
+  }
+  if (enableWeb) {
+    entries.push(
+      `   ├─ web.ts                        ${zh ? 'HTTP 入口' : 'HTTP entry'}`,
+    );
+  }
+  if (enableWebsocket) {
+    entries.push(
+      `   ├─ ws.ts                         ${zh ? 'WebSocket 入口' : 'WebSocket entry'}`,
+    );
+  }
+  if (entries.length > 0) {
+    const last = entries[entries.length - 1]!.replace('├─', '└─');
+    entries[entries.length - 1] = last;
+    lines.push(...entries);
+  }
 
   lines.push(
     note('.env.example', zh ? '环境变量示例' : 'Env example'),
@@ -324,6 +367,7 @@ export const generateReadme = (opts: {
   projectName: string;
   language: DefaultLanguage;
   packageManager: PackageManager | string;
+  platforms: Platform[];
   docsUI: DocsUI;
   /** @deprecated 使用 orm */
   hasPrisma?: boolean;
@@ -343,10 +387,14 @@ export const generateReadme = (opts: {
   const cluster = opts.cluster ?? 'none';
   const auth = opts.auth ?? [];
   const oauth2Presets = opts.oauth2Presets ?? [];
+  const platforms = opts.platforms;
+  const enableWeb = hasPlatform(platforms, 'web');
+  const enableWebsocket = hasPlatform(platforms, 'websocket');
   const readme: ReadmeOpts = {
     projectName: opts.projectName,
     language: opts.language,
     packageManager: pm,
+    platforms,
     docsUI: opts.docsUI,
     hasCron: opts.hasCron,
     orm,
@@ -360,6 +408,7 @@ export const generateReadme = (opts: {
 
   const docsName = docsLabel(opts.docsUI);
   const docsFile = docsMiddlewareFile(opts.docsUI);
+  const platformName = platformsLabel(platforms, zh);
 
   const bareDeployHintZh =
     cluster === 'pm2'
@@ -439,12 +488,25 @@ ${bareDeployHintEn}
 `;
 
   if (zh) {
+    const docsParts: string[] = [];
+    if (opts.docsUI !== 'none') {
+      docsParts.push(
+        `- OpenAPI：\`src/middleware/${docsFile}\` 的 \`uriPrefix\``,
+      );
+    }
+    if (enableWebsocket) {
+      docsParts.push(
+        '- AsyncAPI：`src/middleware/asyncapi.md.ts` 的 `uriPrefix`；WebSocket：`ws://localhost:$PORT/ws`',
+      );
+    }
     const docsSection =
-      opts.docsUI === 'none'
+      docsParts.length === 0
         ? ''
         : `## API 文档
 
-启动后访问 \`src/middleware/${docsFile}\` 中配置的 \`uriPrefix\`（**生产环境默认关闭**）。
+启动后访问（**生产环境默认关闭**）：
+
+${docsParts.join('\n')}
 
 `;
 
@@ -457,9 +519,10 @@ ${bareDeployHintEn}
 | 项 | 值 |
 | --- | --- |
 | 包管理器 | ${pm} |
+| 平台 | ${platformName} |
 | ORM | ${ormLabel(orm, opts.prismaDatabase, true)} |
-| 认证 | ${authLabel(readme.auth, readme.oauth2Presets, true)} |
-| 文档 UI | ${docsName || '无'} |
+| 认证 | ${enableWeb ? authLabel(readme.auth, readme.oauth2Presets, true) : '—'} |
+| 文档 UI | ${docsName || (enableWebsocket ? 'AsyncAPI UI' : '无')} |
 | 部署方式 | ${docker ? 'Docker' : cluster === 'pm2' ? 'PM2' : '裸机 / 进程'} |
 | 时区 | ${readme.timezone} |
 | 定时任务 | ${opts.hasCron ? '已启用' : '未启用'} |
@@ -484,8 +547,7 @@ ${pm} start
 默认会：
 
 - \`docker compose up\` 拉起本地依赖
-${orm === 'prisma' ? '- 执行 \`prisma generate\` / migrate 或 db push\n' : ''}- 启动 HTTP 服务（\`src/web.ts\`）
-${opts.hasCron ? '- 启动 cron（\`aomex cron:start\`）\n' : ''}
+${orm === 'prisma' ? '- 执行 \`prisma generate\` / migrate 或 db push\n' : ''}${enableWeb ? '- 启动 HTTP 服务（`src/web.ts`）\n' : ''}${enableWebsocket ? '- 挂载 WebSocket（`src/ws.ts` → `/ws`）\n' : ''}${opts.hasCron ? '- 启动 cron（`aomex cron:start`）\n' : ''}
 ${docsSection}## 常用脚本
 
 ${buildScriptsTable(readme, true)}
@@ -498,16 +560,30 @@ ${buildTree(readme, true)}
 `;
   }
 
-  const docsSection =
-    opts.docsUI === 'none'
-      ? ''
-      : `## API docs
+  {
+    const docsParts: string[] = [];
+    if (opts.docsUI !== 'none') {
+      docsParts.push(
+        `- OpenAPI: \`uriPrefix\` in \`src/middleware/${docsFile}\``,
+      );
+    }
+    if (enableWebsocket) {
+      docsParts.push(
+        '- AsyncAPI: `uriPrefix` in `src/middleware/asyncapi.md.ts`; WebSocket: `ws://localhost:$PORT/ws`',
+      );
+    }
+    const docsSection =
+      docsParts.length === 0
+        ? ''
+        : `## API docs
 
-After start, open the \`uriPrefix\` in \`src/middleware/${docsFile}\` (**disabled** in production by default).
+After start (**disabled** in production by default):
+
+${docsParts.join('\n')}
 
 `;
 
-  return `# ${opts.projectName}
+    return `# ${opts.projectName}
 
 Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs before coding.
 
@@ -516,9 +592,10 @@ Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs befo
 | Item | Value |
 | --- | --- |
 | Package manager | ${pm} |
+| Platforms | ${platformName} |
 | ORM | ${ormLabel(orm, opts.prismaDatabase)} |
-| Auth | ${authLabel(readme.auth, readme.oauth2Presets)} |
-| Docs UI | ${docsName || 'None'} |
+| Auth | ${enableWeb ? authLabel(readme.auth, readme.oauth2Presets) : '—'} |
+| Docs UI | ${docsName || (enableWebsocket ? 'AsyncAPI UI' : 'None')} |
 | Deploy | ${docker ? 'Docker' : cluster === 'pm2' ? 'PM2' : 'Bare metal'} |
 | Timezone | ${readme.timezone} |
 | Cron | ${opts.hasCron ? 'Enabled' : 'Disabled'} |
@@ -543,8 +620,7 @@ ${pm} start
 This will:
 
 - \`docker compose up\` local dependencies
-${orm === 'prisma' ? '- run \`prisma generate\` / migrate or db push\n' : ''}- start HTTP (\`src/web.ts\`)
-${opts.hasCron ? '- start cron (\`aomex cron:start\`)\n' : ''}
+${orm === 'prisma' ? '- run \`prisma generate\` / migrate or db push\n' : ''}${enableWeb ? '- start HTTP (`src/web.ts`)\n' : ''}${enableWebsocket ? '- attach WebSocket (`src/ws.ts` → `/ws`)\n' : ''}${opts.hasCron ? '- start cron (`aomex cron:start`)\n' : ''}
 ${docsSection}## Scripts
 
 ${buildScriptsTable(readme, false)}
@@ -555,6 +631,7 @@ ${deploySectionEn}## Structure
 ${buildTree(readme, false)}
 \`\`\`
 `;
+  }
 };
 
 /** 供 project-files 传入完整选项 */
@@ -566,8 +643,11 @@ export const generateReadmeFromOptions = (
     projectName,
     language: options.language,
     packageManager: options.packageManager,
+    platforms: options.platforms,
     docsUI: options.docsUI,
-    hasCron: options.consoleMiddlewares.includes('cron'),
+    hasCron:
+      hasPlatform(options.platforms, 'console') &&
+      options.consoleMiddlewares.includes('cron'),
     orm: options.orm,
     prismaDatabase: options.prismaDatabase,
     auth: options.auth,

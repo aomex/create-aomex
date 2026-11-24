@@ -7,6 +7,7 @@
 | 项       | 值                                                                     |
 | -------- | ---------------------------------------------------------------------- |
 | 包管理器 | pnpm                                                                   |
+| 平台     | Web + Console + Websocket                                              |
 | ORM      | Prisma（mysql）                                                        |
 | 认证     | Bearer Token + JWT + API Key + Session + OAuth / 微信 (github, google) |
 | 文档 UI  | Swagger UI                                                             |
@@ -36,11 +37,15 @@ pnpm start
 - `docker compose up` 拉起本地依赖
 - 执行 `prisma generate` / migrate 或 db push
 - 启动 HTTP 服务（`src/web.ts`）
+- 挂载 WebSocket（`src/ws.ts` → `/ws`）
 - 启动 cron（`aomex cron:start`）
 
 ## API 文档
 
-启动后访问 `src/middleware/docs.md.ts` 中配置的 `uriPrefix`（**生产环境默认关闭**）。
+启动后访问（**生产环境默认关闭**）：
+
+- OpenAPI：`src/middleware/docs.md.ts` 的 `uriPrefix`
+- AsyncAPI：`src/middleware/asyncapi.md.ts` 的 `uriPrefix`；WebSocket：`ws://localhost:$PORT/ws`
 
 ## 常用脚本
 
@@ -86,11 +91,13 @@ pnpm deploy:production
    ├─ constants/                    常量
    ├─ middleware/                   中间件
    ├─ routers/                      HTTP 路由
+   ├─ channels/                     WebSocket Channel
    ├─ schemas/                      Prisma 验证器入口
    ├─ generated/                    Prisma / aomex 生成代码
    ├─ services/                     业务服务
    ├─ cli.ts                        Console 入口
-   └─ web.ts                        HTTP 入口
+   ├─ web.ts                        HTTP 入口
+   └─ ws.ts                         WebSocket 入口
 ├─ .env.example                       环境变量示例
 ├─ docker-compose.yml                 本地依赖（数据库 / Redis）
 ├─ docker-compose-*.yml               集成 / 生产部署编排

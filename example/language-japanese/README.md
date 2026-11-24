@@ -7,6 +7,7 @@ Node.js server scaffolded with [aomex](https://aomex.js.org). Read the docs befo
 | Item            | Value                           |
 | --------------- | ------------------------------- |
 | Package manager | pnpm                            |
+| Platforms       | Web + Console                   |
 | ORM             | None                            |
 | Auth            | None (auth.md.ts scaffold kept) |
 | Docs UI         | None                            |

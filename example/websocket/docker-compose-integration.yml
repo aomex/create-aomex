@@ -1,0 +1,19 @@
+services:
+  api:
+    image: snapshot-demo:integration
+    env_file:
+      - .env.integration
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    ports:
+      - 3000:3000
+  cron:
+    image: snapshot-demo:integration
+    env_file:
+      - .env.integration
+    init: true
+    command: aomex cron:start
+    restart: unless-stopped

@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import {
   OAUTH2_VENDOR_PRESETS,
+  hasPlatform,
   withBaseWebPlugins,
   type ScaffoldOptions,
 } from './types';
@@ -8,13 +9,18 @@ import {
   buildAllowInstallScripts,
   formatPnpmAllowBuilds,
   generateAuth,
+  generateAsyncapiDocsMiddleware,
   generateBareDeployScript,
   generateBuildInDockerScript,
   generateCacheService,
   generateCli,
   generateCookieKey,
   generateDeployCompose,
+  generateAbuse,
+  generateChatChannel,
   generateDocsMiddleware,
+  generatePingChannel,
+  generateWs,
   generateDockerCompose,
   generateDockerCronStatsScript,
   generateDockerCronStopScript,
@@ -32,7 +38,7 @@ import {
   generateWechatMiniRouter,
   packageManagerExec,
   generateGlobalErrorRewrite,
-  generateHttpAccessLog,
+  generateAccessLog,
   generateLogger,
   generateArticleSchema,
   generateArticleService,
@@ -112,9 +118,19 @@ export const generateProjectFiles = (opts: {
   /** cron 端口（1024–65535）；不传则每次随机 */
   cronPort?: number;
 }): Record<string, ProjectFile> => {
+  const enableWebsocketEarly = hasPlatform(opts.options.platforms, 'websocket');
   const options: ScaffoldOptions = {
     ...opts.options,
-    webPlugins: withBaseWebPlugins(opts.options.webPlugins),
+    webPlugins: hasPlatform(opts.options.platforms, 'web')
+      ? withBaseWebPlugins([
+          ...opts.options.webPlugins,
+          // Websocket 平台默认带上 Node 层 rate-limit（Redis store）
+          ...(enableWebsocketEarly &&
+          !opts.options.webPlugins.includes('rate-limit')
+            ? (['rate-limit'] as const)
+            : []),
+        ])
+      : [],
   };
   const {
     packageManagerVersion,
@@ -122,11 +138,17 @@ export const generateProjectFiles = (opts: {
     aomexContribVersions,
     prismaVersion,
   } = opts;
+  const enableWeb = hasPlatform(options.platforms, 'web');
+  const enableConsole = hasPlatform(options.platforms, 'console');
+  const enableWebsocket = hasPlatform(options.platforms, 'websocket');
   const cronPort = opts.cronPort ?? randomInt(1024, 65536);
-  const hasCron = options.consoleMiddlewares.includes('cron');
+  const hasCron = enableConsole && options.consoleMiddlewares.includes('cron');
   const hasOAuth2 =
+    enableWeb &&
     options.auth.includes('oauth2') &&
     (options.oauth2Client || options.oauth2Presets.length > 0);
+  const docsPathSecret = opts.docsPathSecret ?? randomBytes(8).toString('hex');
+  const enrichOpenapi = enableWeb && options.docsUI === 'scalar';
   // 选了至少一个 oauth2 厂商预设时，其余厂商以注释模板保留；仅 oauth2-client 不落预设文件
   const hasVendorPreset = options.oauth2Presets.some((id) =>
     (OAUTH2_VENDOR_PRESETS as readonly string[]).includes(id),
@@ -161,6 +183,7 @@ logs/
 pnpm-lock.yaml
 coverage/
 openapi.json
+asyncapi.json
 build/
 src/generated
 `),
@@ -233,7 +256,7 @@ ${exec} commitlint --edit $1
           'js/ts.suggest.autoImports': true,
           'js/ts.experimental.useTsgo': true,
           'js/ts.tsdk.path': './node_modules/typescript',
-          'cSpell.words': ['openapi', 'aomex'],
+          'cSpell.words': ['openapi', 'asyncapi', 'aomex'],
         },
         null,
         2,
@@ -409,35 +432,54 @@ export const configs = configList[env] as AppConfig;
   );
 
   // —— 入口 / 路由 / 指令 ——
-  add(
-    'src/web.ts',
-    text(
-      generateWeb({
-        plugins: options.webPlugins,
-        docsUI: options.docsUI,
-        language: options.language,
-        separateListen: options.consoleMiddlewares.includes('openapi'),
-        cluster: options.cluster,
-      }),
-    ),
-  );
-  add(
-    'src/cli.ts',
-    text(
-      generateCli({
-        consoleMiddlewares: options.consoleMiddlewares,
-        language: options.language,
-        cronPort,
-      }),
-    ),
-  );
-  const enrichOpenapi = options.docsUI === 'scalar';
-  const indexText = scaffoldText(options.language);
-  add(
-    'src/routers/index.router.ts',
-    text(
-      enrichOpenapi
-        ? `import { Router } from '@aomex/web';
+  if (enableWeb) {
+    add(
+      'src/web.ts',
+      text(
+        generateWeb({
+          plugins: options.webPlugins,
+          docsUI: options.docsUI,
+          language: options.language,
+          separateListen:
+            enableConsole && options.consoleMiddlewares.includes('openapi'),
+          cluster: options.cluster,
+          websocket: enableWebsocket,
+          asyncapiDocs: enableWebsocket,
+        }),
+      ),
+    );
+  }
+  if (enableWebsocket) {
+    add('src/middleware/abuse.md.ts', text(generateAbuse()));
+    add(
+      'src/ws.ts',
+      text(
+        generateWs({
+          language: options.language,
+          withAccessLog: options.webPlugins.includes('http-access-log'),
+        }),
+      ),
+    );
+  }
+  if (enableConsole) {
+    add(
+      'src/cli.ts',
+      text(
+        generateCli({
+          consoleMiddlewares: options.consoleMiddlewares,
+          language: options.language,
+          cronPort,
+        }),
+      ),
+    );
+  }
+  if (enableWeb) {
+    const indexText = scaffoldText(options.language);
+    add(
+      'src/routers/index.router.ts',
+      text(
+        enrichOpenapi
+          ? `import { Router } from '@aomex/web';
 
 export const router = new Router({
   docs: {
@@ -464,7 +506,7 @@ router.get('/', {
   },
 });
 `
-        : `import { Router } from '@aomex/web';
+          : `import { Router } from '@aomex/web';
 
 export const router = new Router();
 
@@ -475,11 +517,13 @@ router.get('/', {
   },
 });
 `,
-    ),
-  );
-  add(
-    'src/commanders/hello.cmd.ts',
-    text(`import { Commander, options } from '@aomex/console';
+      ),
+    );
+  }
+  if (enableConsole) {
+    add(
+      'src/commanders/hello.cmd.ts',
+      text(`import { Commander, options } from '@aomex/console';
 import { rule } from '@aomex/common';
 
 export const commander = new Commander();
@@ -508,7 +552,8 @@ commander.create('hello', {
   },
 });
 `),
-  );
+    );
+  }
 
   // —— 服务 ——
   add(
@@ -539,12 +584,16 @@ commander.create('hello', {
     }
   }
 
-  // —— 中间件 ——
-  add('src/middleware/format-error.md.ts', text(generateGlobalErrorRewrite()));
-
-  // —— 认证（始终生成；未勾选的策略以注释保留）——
-  add('src/middleware/auth.md.ts', text(generateAuth(options.auth)));
-  add('src/constants/cookie-key.ts', text(generateCookieKey()));
+  // —— 中间件 / 认证（Web）——
+  if (enableWeb) {
+    add(
+      'src/middleware/format-error.md.ts',
+      text(generateGlobalErrorRewrite()),
+    );
+    // 始终生成；未勾选的策略以注释保留
+    add('src/middleware/auth.md.ts', text(generateAuth(options.auth)));
+    add('src/constants/cookie-key.ts', text(generateCookieKey()));
+  }
 
   if (hasOAuth2) {
     const oauthRouter = generateOAuth2Router(options.oauth2Presets, {
@@ -568,24 +617,40 @@ commander.create('hello', {
   }
 
   // —— 文档 / 插件附属 ——
-  const docs = generateDocsMiddleware(
-    options.docsUI,
-    opts.projectName,
-    opts.docsPathSecret ?? randomBytes(8).toString('hex'),
-    options.language,
-  );
-  if (docs) {
-    add(`src/middleware/${docs.filename}`, text(docs.content));
-    add(docs.markdown.filename, text(docs.markdown.content));
+  if (enableWeb) {
+    const docs = generateDocsMiddleware(
+      options.docsUI,
+      opts.projectName,
+      docsPathSecret,
+      options.language,
+    );
+    if (docs) {
+      add(`src/middleware/${docs.filename}`, text(docs.content));
+      add(docs.markdown.filename, text(docs.markdown.content));
+    }
+  }
+  if (enableWebsocket) {
+    const asyncapiDocs = generateAsyncapiDocsMiddleware(
+      opts.projectName,
+      docsPathSecret,
+    );
+    add(`src/middleware/${asyncapiDocs.filename}`, text(asyncapiDocs.content));
+    add(asyncapiDocs.markdown.filename, text(asyncapiDocs.markdown.content));
+    add('src/channels/ping.channel.ts', text(generatePingChannel()));
+    add('src/channels/chat.channel.ts', text(generateChatChannel()));
   }
 
-  if (options.webPlugins.includes('http-access-log')) {
+  if (enableWeb && options.webPlugins.includes('http-access-log')) {
     add(
-      'src/middleware/http-access-log.md.ts',
-      text(generateHttpAccessLog(options.loggerTransports)),
+      'src/middleware/access-log.md.ts',
+      text(
+        generateAccessLog(options.loggerTransports, {
+          websocket: enableWebsocket,
+        }),
+      ),
     );
   }
-  if (options.webPlugins.includes('async-trace')) {
+  if (enableWeb && options.webPlugins.includes('async-trace')) {
     add(
       'src/middleware/slow-trace.md.ts',
       text(generateSlowTrace(options.language)),
@@ -626,21 +691,25 @@ export default defineConfig({
     ) {
       add('src/utils/prisma-json.ts', text(generatePrismaJsonUtil()));
     }
-    add(
-      'src/routers/article.router.ts',
-      text(
-        generatePrismaArticleRouter(
-          options.language,
-          options.prismaDatabase,
-          enrichOpenapi,
+    if (enableWeb) {
+      add(
+        'src/routers/article.router.ts',
+        text(
+          generatePrismaArticleRouter(
+            options.language,
+            options.prismaDatabase,
+            enrichOpenapi,
+          ),
         ),
-      ),
-    );
+      );
+    }
   } else if (options.orm === 'mongoose') {
     const mongo = generateMongooseFiles(options.language, enrichOpenapi);
     add('src/services/mongoose.service.ts', text(mongo.mongoose));
     add('src/models/article.model.ts', text(mongo.articleModel));
-    add('src/routers/article.router.ts', text(mongo.articleRouter));
+    if (enableWeb) {
+      add('src/routers/article.router.ts', text(mongo.articleRouter));
+    }
   }
 
   // —— env / 本地依赖 compose ——
@@ -686,6 +755,7 @@ ${deployEnv}`),
       generateStartScript({
         orm: options.orm,
         hasCron,
+        hasWeb: enableWeb,
         packageManager: options.packageManager,
       }),
     ),

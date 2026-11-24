@@ -32,12 +32,13 @@ pnpm start   # 或 yarn start / npm start
 | `--project`             | 项目目录名                                                                                                                                          | `--project=my-api`                                             |
 | `--node`                | Node 版本（不询问；默认最新 LTS ≥24）                                                                                                               | `--node=24.22.0`                                               |
 | `--pm`                  | 包管理器（默认跟 create 命令走）                                                                                                                    | `--pm=pnpm` \| `yarn` \| `npm`                                 |
+| `--platforms`           | 平台（可多选；默认询问且 Web+Console 勾选；`websocket` 会自动带上 `web`）                                                                           | `--platforms=web,console` \| `web,console,websocket`           |
 | `--orm`                 | ORM                                                                                                                                                 | `--orm=prisma` \| `mongoose` \| `none`                         |
 | `--db`                  | Prisma 数据库（仅 `--orm=prisma`）                                                                                                                  | `--db=mysql` \| `postgresql` \| …                              |
 | `--auth`                | 认证，逗号多选：策略 + 入口（`oauth2-client`/`google-identity`/`wechat`…）+ 可选厂商（`github`…）；仅 `oauth2-client` 时厂商为注释模板；`none` 清空 | `--auth=bearer,oauth2-client` \| `--auth=oauth2-client,github` |
 | `--oauth2-presets`      | 显式启用 OAuth2 厂商（可与 `oauth2-client` 合用；未列厂商仍写注释模板）                                                                             | `--oauth2-presets=github,google`                               |
 | `--web-plugins`         | Web 中间件（不询问；默认 `http-access-log,async-trace`；`cors`/`etag`/`helmet`/`response-time` 始终安装）                                           | `--web-plugins=http-access-log,async-trace,csrf`               |
-| `--docs`                | 文档 UI（不询问；默认 `scalar` / `@aomex/scalar-ui`）                                                                                               | `--docs=scalar` \| `swagger` \| `redoc` \| `none`              |
+| `--docs`                | OpenAPI 文档 UI（不询问；默认 `scalar`；Websocket 平台另有 AsyncAPI）                                                                               | `--docs=scalar` \| `swagger` \| `redoc` \| `none`              |
 | `--logger`              | 日志出口（不询问；默认 `console,file`）                                                                                                             | `--logger=console,file,sentry`                                 |
 | `--console-middlewares` | Console 插件；`cron` 始终安装，可追加                                                                                                               | `--console-middlewares=openapi`                                |
 | `--lang`                | 默认语言（不询问；默认本机 locale，匹配不到则 `en-US`）                                                                                             | `--lang=zh-CN`                                                 |
@@ -77,7 +78,7 @@ pnpm build                             # 产出 dist（发布用）
 也可直接进入 `example/` 下某个快照目录安装并启动（与真实生成项目相同）。`.env*` 未入库，需先从示例复制：
 
 ```bash
-cd example/docs-ui-scalar   # 或 recommended / kitchen-sink / …
+cd example/websocket   # 或 docs-ui-scalar / recommended / kitchen-sink / …
 cp .env.example .env
 pnpm install
 pnpm start

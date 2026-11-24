@@ -141,6 +141,31 @@ export const parseAuthSelection = (
 
 export type DocsUI = 'swagger' | 'redoc' | 'scalar' | 'none';
 
+/** 运行时平台（可多选；Websocket 会自动带上 Web，因 upgrade 挂在 HTTP Server） */
+export type Platform = 'web' | 'console' | 'websocket';
+
+export const PLATFORMS: readonly Platform[] = [
+  'web',
+  'console',
+  'websocket',
+] as const;
+
+export const normalizePlatforms = (raw: readonly string[]): Platform[] => {
+  const set = new Set<Platform>();
+  for (const item of raw) {
+    if ((PLATFORMS as readonly string[]).includes(item)) {
+      set.add(item as Platform);
+    }
+  }
+  if (set.has('websocket')) set.add('web');
+  return PLATFORMS.filter((p) => set.has(p));
+};
+
+export const hasPlatform = (
+  platforms: readonly Platform[],
+  platform: Platform,
+): boolean => platforms.includes(platform);
+
 export type WebPlugin =
   | 'cors'
   | 'etag'
@@ -186,6 +211,8 @@ export const CLUSTER_STRATEGIES: readonly ClusterStrategy[] = [
 
 export interface ScaffoldOptions {
   packageManager: PackageManager;
+  /** 启用的平台：Web / Console / Websocket（默认 Web+Console） */
+  platforms: Platform[];
   orm: Orm;
   prismaDatabase?: PrismaDatabase;
   /** 启用的认证策略，可多选；空数组仍生成 auth.md.ts（策略注释保留） */

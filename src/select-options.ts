@@ -10,7 +10,9 @@ import {
   CLUSTER_STRATEGIES,
   OAUTH2_VENDOR_PRESETS,
   OAUTH_ENTRIES,
+  hasPlatform,
   normalizeOAuth2VendorPresets,
+  normalizePlatforms,
   parseAuthSelection,
   withBaseWebPlugins,
   type AuthStrategy,
@@ -23,6 +25,7 @@ import {
   type OAuthEntry,
   type Orm,
   type PackageManager,
+  type Platform,
   type PrismaDatabase,
   type ScaffoldOptions,
   type WebPlugin,
@@ -86,6 +89,35 @@ export const selectOptions = async (
       default: 'pnpm',
     }));
 
+  // 平台：Web / Console 默认勾选；Websocket 可选（勾选后自动带上 Web）
+  const platformsArg = parseList(argv['platforms'] ?? argv['platform']);
+  let platforms: Platform[];
+  if (platformsArg.length > 0) {
+    platforms = normalizePlatforms(platformsArg);
+  } else {
+    platforms = normalizePlatforms(
+      await checkbox<Platform>({
+        message: '启用哪些平台（可多选）',
+        choices: [
+          { name: 'Web（HTTP）', value: 'web', checked: true },
+          { name: 'Console（指令 / Cron）', value: 'console', checked: true },
+          {
+            name: 'Websocket（Channel + AsyncAPI）',
+            value: 'websocket',
+            checked: false,
+          },
+        ],
+        required: true,
+        loop: false,
+      }),
+    );
+  }
+  if (platforms.length === 0) {
+    platforms = ['web', 'console'];
+  }
+  const enableWeb = hasPlatform(platforms, 'web');
+  const enableConsole = hasPlatform(platforms, 'console');
+
   const orm =
     (argv['orm'] as Orm | undefined) ??
     (await select<Orm>({
@@ -118,102 +150,109 @@ export const selectOptions = async (
   }
 
   // 可多选；Auth + 首屏 OAuth/微信入口。选 oauth2-client 后再选厂商（可空＝仅注释模板）。选「无」清空。
+  // 无 Web 时跳过（鉴权挂在 HTTP）。
   type AuthChoice = AuthStrategy | OAuthEntry | 'none';
   const authArg = parseList(argv['auth']);
   const presetsArg = parseList(
     argv['oauth2-presets'] ?? argv['oauth2Presets'] ?? argv['oauth2'],
   );
-  let auth: AuthStrategy[];
-  let oauth2Presets: OAuth2Preset[];
-  let oauth2Client: boolean;
-  if (authArg.length > 0 || presetsArg.length > 0) {
-    const parsed = parseAuthSelection([...authArg, ...presetsArg]);
-    auth = parsed.auth;
-    oauth2Presets = parsed.oauth2Presets;
-    oauth2Client = parsed.oauth2Client;
-  } else {
-    const selected = await checkbox<AuthChoice>({
-      message: '身份认证（可多选；选「无」将清空其他项）',
-      choices: [
-        {
-          name: 'Bearer Token（不透明令牌，可吊销）',
-          value: 'bearer' as const,
-          checked: true,
-        },
-        {
-          name: 'JWT（无状态令牌）',
-          value: 'jwt' as const,
-          checked: false,
-        },
-        {
-          name: 'API Key（x-api-key）',
-          value: 'api-key' as const,
-          checked: false,
-        },
-        {
-          name: 'Session（Cookie 会话；需配合 csrf + cors.credentials/origin）',
-          value: 'session' as const,
-          checked: false,
-        },
-        ...OAUTH_ENTRIES.map((id) => ({
-          name: OAUTH_ENTRY_LABELS[id],
-          value: id as AuthChoice,
-          checked: false,
-        })),
-        { name: '无', value: 'none' as const, checked: false },
-      ],
-      loop: false,
-      pageSize: 16,
-    });
-    let parsed = parseAuthSelection(selected);
-    if (parsed.oauth2Client) {
-      const vendors = normalizeOAuth2VendorPresets(
-        await checkbox<OAuth2VendorPreset>({
-          message:
-            'OAuth2 厂商预设（可多选；可不选＝仅安装 @aomex/oauth2-client）',
-          choices: OAUTH2_VENDOR_PRESETS.map((id) => ({
-            name: OAUTH2_PRESET_META[id].label,
-            value: id,
+  let auth: AuthStrategy[] = [];
+  let oauth2Presets: OAuth2Preset[] = [];
+  let oauth2Client = false;
+  if (enableWeb) {
+    if (authArg.length > 0 || presetsArg.length > 0) {
+      const parsed = parseAuthSelection([...authArg, ...presetsArg]);
+      auth = parsed.auth;
+      oauth2Presets = parsed.oauth2Presets;
+      oauth2Client = parsed.oauth2Client;
+    } else {
+      const selected = await checkbox<AuthChoice>({
+        message: '身份认证（可多选；选「无」将清空其他项）',
+        choices: [
+          {
+            name: 'Bearer Token（不透明令牌，可吊销）',
+            value: 'bearer' as const,
+            checked: true,
+          },
+          {
+            name: 'JWT（无状态令牌）',
+            value: 'jwt' as const,
+            checked: false,
+          },
+          {
+            name: 'API Key（x-api-key）',
+            value: 'api-key' as const,
+            checked: false,
+          },
+          {
+            name: 'Session（Cookie 会话；需配合 csrf + cors.credentials/origin）',
+            value: 'session' as const,
+            checked: false,
+          },
+          ...OAUTH_ENTRIES.map((id) => ({
+            name: OAUTH_ENTRY_LABELS[id],
+            value: id as AuthChoice,
             checked: false,
           })),
-          loop: false,
-          pageSize: 12,
-          required: false,
-        }),
-      );
-      if (vendors.length > 0) {
-        parsed = parseAuthSelection([
-          ...selected.filter((s) => s !== 'oauth2-client' && s !== 'oauth2'),
-          'oauth2-client',
-          ...vendors,
-        ]);
+          { name: '无', value: 'none' as const, checked: false },
+        ],
+        loop: false,
+        pageSize: 16,
+      });
+      let parsed = parseAuthSelection(selected);
+      if (parsed.oauth2Client) {
+        const vendors = normalizeOAuth2VendorPresets(
+          await checkbox<OAuth2VendorPreset>({
+            message:
+              'OAuth2 厂商预设（可多选；可不选＝仅安装 @aomex/oauth2-client）',
+            choices: OAUTH2_VENDOR_PRESETS.map((id) => ({
+              name: OAUTH2_PRESET_META[id].label,
+              value: id,
+              checked: false,
+            })),
+            loop: false,
+            pageSize: 12,
+            required: false,
+          }),
+        );
+        if (vendors.length > 0) {
+          parsed = parseAuthSelection([
+            ...selected.filter((s) => s !== 'oauth2-client' && s !== 'oauth2'),
+            'oauth2-client',
+            ...vendors,
+          ]);
+        }
       }
+      auth = parsed.auth;
+      oauth2Presets = parsed.oauth2Presets;
+      oauth2Client = parsed.oauth2Client;
     }
-    auth = parsed.auth;
-    oauth2Presets = parsed.oauth2Presets;
-    oauth2Client = parsed.oauth2Client;
   }
 
   // Web 中间件不询问：默认 http-access-log + async-trace；可用 --web-plugins 覆盖
-  const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
-  const selectedWebPlugins: WebPlugin[] =
-    webPluginsArg.length > 0
-      ? (webPluginsArg as WebPlugin[])
-      : ['http-access-log', 'async-trace'];
-  // Session 鉴权必须配合 csrf：CLI 漏传时也自动补上
-  const webPlugins = withBaseWebPlugins(
-    auth.includes('session') && !selectedWebPlugins.includes('csrf')
-      ? [...selectedWebPlugins, 'csrf']
-      : selectedWebPlugins,
-  );
+  let webPlugins: WebPlugin[] = [];
+  if (enableWeb) {
+    const webPluginsArg = parseList(argv['web-plugins'] ?? argv['webPlugins']);
+    const selectedWebPlugins: WebPlugin[] =
+      webPluginsArg.length > 0
+        ? (webPluginsArg as WebPlugin[])
+        : ['http-access-log', 'async-trace'];
+    // Session 鉴权必须配合 csrf：CLI 漏传时也自动补上
+    webPlugins = withBaseWebPlugins(
+      auth.includes('session') && !selectedWebPlugins.includes('csrf')
+        ? [...selectedWebPlugins, 'csrf']
+        : selectedWebPlugins,
+    );
+  }
 
-  // 文档 UI 不询问：默认 scalar（@aomex/scalar-ui）；可用 --docs 覆盖
+  // 文档 UI 不询问：默认 scalar（@aomex/scalar-ui）；可用 --docs 覆盖。Websocket 另有 AsyncAPI。
   const docsArg = argv['docs'] as string | undefined;
-  const docsUI: DocsUI =
-    docsArg === 'swagger' ||
-    docsArg === 'redoc' ||
-    docsArg === 'scalar' ||
-    docsArg === 'none'
+  const docsUI: DocsUI = !enableWeb
+    ? 'none'
+    : docsArg === 'swagger' ||
+        docsArg === 'redoc' ||
+        docsArg === 'scalar' ||
+        docsArg === 'none'
       ? docsArg
       : 'scalar';
 
@@ -225,15 +264,20 @@ export const selectOptions = async (
       : ['console', 'file'];
 
   // Console 中间件不询问：统一安装 cron；可用 --console-middlewares 追加 openapi 等
-  const consoleArg = parseList(
-    argv['console-middlewares'] ?? argv['consoleMiddlewares'],
-  ) as ConsoleMiddleware[];
-  const consoleMiddlewares = [
-    ...new Set<ConsoleMiddleware>([
-      'cron',
-      ...consoleArg.filter((m) => m === 'cron' || m === 'openapi'),
-    ]),
-  ];
+  let consoleMiddlewares: ConsoleMiddleware[] = [];
+  if (enableConsole) {
+    const consoleArg = parseList(
+      argv['console-middlewares'] ?? argv['consoleMiddlewares'],
+    ) as ConsoleMiddleware[];
+    consoleMiddlewares = [
+      ...new Set<ConsoleMiddleware>([
+        'cron',
+        ...consoleArg.filter(
+          (m) => m === 'cron' || (m === 'openapi' && enableWeb),
+        ),
+      ]),
+    ];
+  }
 
   // 语言不询问：默认本机 locale；可用 --lang 覆盖
   const argvLang = argv['lang'] as string | undefined;
@@ -270,11 +314,14 @@ export const selectOptions = async (
     });
   }
 
-  // 集群不询问：默认单进程；可用 --cluster 覆盖
-  const cluster = parseClusterArg(argv['cluster']) ?? 'none';
+  // 集群不询问：默认单进程；可用 --cluster 覆盖（无 Web 时无意义）
+  const cluster = enableWeb
+    ? (parseClusterArg(argv['cluster']) ?? 'none')
+    : 'none';
 
   return {
     packageManager,
+    platforms,
     orm,
     prismaDatabase,
     auth,

@@ -4,17 +4,22 @@ import { fileURLToPath } from 'node:url';
 import { clusterListen, routers, WebApp } from '@aomex/web';
 // import { envelope } from '@aomex/web';
 import { globalErrorRewrite } from '@/middleware/format-error.md';
-import { httpAccessLog } from '@/middleware/http-access-log.md';
+import { accessLog } from '@/middleware/access-log.md';
 import { responseTime } from '@aomex/response-time';
 import { cors } from '@aomex/cors';
 import { csrf } from '@aomex/csrf';
 import { rateLimit } from '@aomex/rate-limit';
+import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';
 import { compress } from '@aomex/compress';
 import { etag } from '@aomex/etag';
 import { slowTrace } from '@/middleware/slow-trace.md';
 import { prettyJson } from '@aomex/pretty-json';
 import { helmet } from '@aomex/helmet';
+import { configs } from '@/configs';
+import { abuse } from '@/middleware/abuse.md';
+import { ws } from '@/ws';
 import { docs } from '@/middleware/docs.md';
+import { asyncapiDocs } from '@/middleware/asyncapi.md';
 import { services } from '@/services';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
@@ -35,7 +40,8 @@ export const app = new WebApp({
   //   },
   // },
   mount: [
-    httpAccessLog.skip(isProduction),
+    accessLog.skip(isProduction),
+    abuse.web(),
     responseTime(),
     cors({
       // 前端请求需携带 Cookies 时解开
@@ -48,8 +54,9 @@ export const app = new WebApp({
       // ],
     }),
     csrf(),
-    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
-    rateLimit(),
+    rateLimit({
+      store: new RateLimitRedisStore(configs.redis),
+    }),
     // 生产亦可交给 nginx gzip / brotli
     compress(),
     etag(),
@@ -57,6 +64,7 @@ export const app = new WebApp({
     slowTrace,
     prettyJson(),
     docs.skip(isProduction),
+    asyncapiDocs.skip(isProduction),
     helmet(),
     routers('./src/routers'),
   ],
@@ -76,16 +84,18 @@ if (isMain) {
     workers: 'max',
     listen: () => {
       const port = process.env['PORT'] || 3000;
-      app
-        .http({
-          // 对应 nginx upstream.keepalive_timeout=60s
-          // 注意 nginx upstream.keepalive=N 必须主动配置，否则无法复用连接
-          keepAliveTimeout: 61_000,
-          headersTimeout: 65_000,
-        })
-        .listen(port, () => {
-          console.log(`HTTP server is listening, visit http://localhost:${port}`);
-        });
+      const server = app.http({
+        // 对应 nginx upstream.keepalive_timeout=60s
+        // 注意 nginx upstream.keepalive=N 必须主动配置，否则无法复用连接
+        keepAliveTimeout: 61_000,
+        headersTimeout: 65_000,
+      });
+      // 须在 listen 之前 attach；只在本 HTTP 入口调用一次
+      ws.attach(app, server);
+      server.listen(port, () => {
+        console.log(`HTTP server is listening, visit http://localhost:${port}`);
+        console.log(`WebSocket endpoint: ws://localhost:${port}/ws`);
+      });
     },
   });
 }

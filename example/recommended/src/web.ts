@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { routers, WebApp } from '@aomex/web';
 // import { envelope } from '@aomex/web';
 import { globalErrorRewrite } from '@/middleware/format-error.md';
-import { httpAccessLog } from '@/middleware/http-access-log.md';
+import { accessLog } from '@/middleware/access-log.md';
 import { responseTime } from '@aomex/response-time';
 import { cors } from '@aomex/cors';
 import { etag } from '@aomex/etag';
@@ -29,7 +29,7 @@ export const app = new WebApp({
   //   },
   // },
   mount: [
-    httpAccessLog.skip(isProduction),
+    accessLog.skip(isProduction),
     responseTime(),
     cors({
       // 前端请求需携带 Cookies 时解开

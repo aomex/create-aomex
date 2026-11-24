@@ -2,5 +2,6 @@ dist/
 pnpm-lock.yaml
 coverage/
 openapi.json
+asyncapi.json
 build/
 src/generated

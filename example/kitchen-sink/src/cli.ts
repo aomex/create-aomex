@@ -4,7 +4,7 @@ import { commanders, ConsoleApp } from '@aomex/console';
 import { services } from '@/services';
 import { crons } from '@aomex/cron';
 import { configs } from '@/configs';
-import { openapi } from '@aomex/openapi';
+import { openapi } from '@aomex/openapi-generator';
 import { app as webApp } from '@/web';
 
 const app = new ConsoleApp({

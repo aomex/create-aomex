@@ -9,10 +9,10 @@
 
 需要中间件、鉴权、缓存适配、登录厂商、OpenAPI UI、日志出口、限流压缩等能力时，**先在下列仓库找现成包**，不要一上来就 `npm search` 第三方或自写一套：
 
-| 仓库                                                          | 范围                                                                                                     | 包名               |
-| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------ |
-| [aomex/aomex](https://github.com/aomex/aomex)                 | 框架核心与官方插件（Web / Console / auth / cache / cron / cors / compress / rate-limit / openapi UI 等） | `@aomex/*`         |
-| [aomex/aomex-contrib](https://github.com/aomex/aomex-contrib) | 周边集成（OAuth2 厂商、Google GIS、微信小程序登录等）                                                    | `@aomex-contrib/*` |
+| 仓库                                                          | 范围                                                                                                              | 包名               |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------ |
+| [aomex/aomex](https://github.com/aomex/aomex)                 | 框架核心与官方插件（Web / Console / auth / cache / cron / cors / compress / rate-limit / OpenAPI·AsyncAPI UI 等） | `@aomex/*`         |
+| [aomex/aomex-contrib](https://github.com/aomex/aomex-contrib) | 周边集成（OAuth2 厂商、Google GIS、微信小程序登录等）                                                             | `@aomex-contrib/*` |
 
 **怎么查**：
 
@@ -23,15 +23,17 @@
 
 ## 东西放哪
 
-| 你要做的事                         | 放这里                                                                                  |
-| ---------------------------------- | --------------------------------------------------------------------------------------- |
-| 新 HTTP 接口                       | `src/routers/<领域>.router.ts`（`*.router.ts` 才会被扫描）                              |
-| 可复用的请求级逻辑                 | `src/middleware/<名>.md.ts`，再挂到 Router / 接口 `mount`                               |
-| 业务逻辑、DB、外部 API             | `src/services/<名>.service.ts`（`export default class`），并在 `services/index.ts` 注册 |
-| 入参/出参校验复用、Prisma override | `src/schemas/`（可 `*.schema.ts`）                                                      |
-| 环境相关配置                       | `src/configs/`（不要把密钥硬编码进路由）                                                |
-| 一次性/运维指令、定时任务          | `src/commanders/<名>.cmd.ts`（定时用 `cron()` 挂在指令上，由已有 `cli.ts` 调度）        |
-| Mongoose 模型（若选了 mongoose）   | `src/models/` + `defineMongooseModel`（与路由共用 `rule`）                              |
+| 你要做的事                         | 放这里                                                                                    |
+| ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| 新 HTTP 接口                       | `src/routers/<领域>.router.ts`（`*.router.ts` 才会被扫描）                                |
+| 新 WebSocket 事件                  | `src/channels/<名>.channel.ts`（`*.channel.ts`；挂到 `src/ws.ts`；AsyncAPI 从这里生成）   |
+| 向已连接客户端推送                 | 业务侧 `import { ws } from '@/ws'`，用 `ws.room` / `ws.all`（勿在 console 进程再 attach） |
+| 可复用的请求级逻辑                 | `src/middleware/<名>.md.ts`，再挂到 Router / 接口 `mount`                                 |
+| 业务逻辑、DB、外部 API             | `src/services/<名>.service.ts`（`export default class`），并在 `services/index.ts` 注册   |
+| 入参/出参校验复用、Prisma override | `src/schemas/`（可 `*.schema.ts`）                                                        |
+| 环境相关配置                       | `src/configs/`（不要把密钥硬编码进路由）                                                  |
+| 一次性/运维指令、定时任务          | `src/commanders/<名>.cmd.ts`（定时用 `cron()` 挂在指令上，由已有 `cli.ts` 调度）          |
+| Mongoose 模型（若选了 mongoose）   | `src/models/` + `defineMongooseModel`（与路由共用 `rule`）                                |
 
 路径别名：`@/*` → `src/*`。
 

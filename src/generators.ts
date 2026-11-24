@@ -1016,9 +1016,35 @@ pnpm dev
 *Built with [aomex](https://aomex.js.org) · Type-safe · Production-ready*
 `.trim();
 
-const OPENAPI_MD_FILENAME = 'openapi.md';
+const asyncapiInfoDescription = () =>
+  `
+# AsyncAPI
 
-const docsMiddlewareImports = `import { generateOpenapi } from '@aomex/openapi';
+> WebSocket Channel 文档由 \`src/channels\` 源码生成，与实现同步。
+
+## Capabilities
+
+| 模块 | 说明 |
+| --- | --- |
+| **Channels** | \`*.channel.ts\` 声明事件、payload、emit |
+| **AsyncAPI** | 由 \`@aomex/asyncapi-generator\` 自动生成 |
+
+## Quick Start
+
+\`\`\`bash
+pnpm start
+# 打开本页即可浏览 Channel 契约
+\`\`\`
+
+---
+
+*Built with [aomex](https://aomex.js.org) · Type-safe · Production-ready*
+`.trim();
+
+const OPENAPI_MD_FILENAME = 'openapi.md';
+const ASYNCAPI_MD_FILENAME = 'asyncapi.md';
+
+const docsMiddlewareImports = `import { generateOpenapi } from '@aomex/openapi-generator';
 import { readFileSync } from 'node:fs';
 import { app } from '@/web';`;
 
@@ -1041,6 +1067,223 @@ const docsTagsBlock = (language: DefaultLanguage) => {
           },
         ]`;
 };
+
+/** WebSocket 心跳 Channel */
+export const generatePingChannel =
+  (): string => `import { rule } from '@aomex/common';
+import { Channel, emit, payload } from '@aomex/websocket';
+
+export const channel = new Channel();
+
+channel.on('ping', {
+  mount: [
+    payload({
+      at: rule.int().optional(),
+    }),
+    emit({
+      event: 'pong',
+      description: '心跳响应',
+      data: {
+        at: rule.int(),
+      },
+    }),
+  ],
+  action: async (ctx) => {
+    await ctx.send('pong', { at: ctx.payload.at ?? Date.now() });
+  },
+});
+`;
+
+/** WebSocket 房间聊天 Channel（专场示例） */
+export const generateChatChannel =
+  (): string => `import { rule } from '@aomex/common';
+import { Channel, emit, payload } from '@aomex/websocket';
+
+export const channel = new Channel();
+
+channel.on('room.join', {
+  mount: [
+    payload({
+      roomId: rule.string(),
+    }),
+    emit({
+      event: 'room.joined',
+      description: '进房成功',
+      data: {
+        roomId: rule.string(),
+        clientId: rule.string(),
+      },
+    }),
+  ],
+  action: async (ctx) => {
+    const { roomId } = ctx.payload;
+    await ctx.client.join(roomId);
+    await ctx.send('room.joined', { roomId, clientId: ctx.client.id });
+  },
+});
+
+channel.on('chat.send', {
+  mount: [
+    payload({
+      roomId: rule.string(),
+      text: rule.string().max(2000),
+    }),
+    emit({
+      event: 'chat.message',
+      description: '房间内聊天消息',
+      data: {
+        from: rule.string(),
+        text: rule.string(),
+      },
+    }),
+  ],
+  action: async (ctx) => {
+    const { roomId, text } = ctx.payload;
+    await ctx.room(roomId).send(
+      'chat.message',
+      { from: ctx.client.id, text },
+      { except: ctx.client },
+    );
+  },
+});
+`;
+
+/** 滥用计数 / IP 封禁（HTTP + WebSocket 共用） */
+export const generateAbuse =
+  (): string => `import { createAbuse } from '@aomex/abuse';
+import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
+import { configs } from '@/configs';
+
+/**
+ * HTTP / WebSocket 共用滥用计数与 IP 封禁。
+ * 业务侧可调用 \`abuse.ipAbuse\` / \`abuse.blockIP\`；挂 \`abuse.web()\` / \`abuse.socket()\`。
+ */
+export const abuse = createAbuse({
+  store: new CacheRedisAdapter(configs.redis),
+  strategies: [
+    {
+      strategy: 'honeypot',
+      paths: ['/admin.php', '/wp-login.php', '/.env', '/.git/**'],
+      limit: 3,
+      window: '1 hour',
+      blockFor: '1 day',
+    },
+    {
+      strategy: 'http-error',
+      statusCodes: [401, 403, 404],
+      limit: 80,
+      window: '10 minutes',
+      blockFor: '1 hour',
+    },
+    {
+      strategy: 'socket-events',
+      events: ['admin.*', 'debug.*', 'internal.*'],
+      limit: 5,
+      window: '1 hour',
+      blockFor: '1 day',
+    },
+  ],
+});
+`;
+
+/** WebsocketApp 独立模块（HTTP 入口只 attach 一次） */
+export const generateWs = (opts: {
+  language: DefaultLanguage;
+  withAccessLog: boolean;
+}): string => {
+  const imports = [
+    `import { WebsocketApp, channels } from '@aomex/websocket';`,
+    `import { WsTransport } from '@aomex/websocket-ws-transport';`,
+    `import { RedisHub } from '@aomex/websocket-redis-hub';`,
+    `import { websocketRateLimit } from '@aomex/rate-limit/websocket';`,
+    `import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';`,
+    `import { configs } from '@/configs';`,
+    `import { services } from '@/services';`,
+    `import { abuse } from '@/middleware/abuse.md';`,
+  ];
+  const mounts: string[] = [];
+
+  if (opts.withAccessLog) {
+    imports.push(`import { wsAccessLog } from '@/middleware/access-log.md';`);
+    mounts.push(`    wsAccessLog,`);
+  }
+  mounts.push(`    abuse.socket(),`);
+  mounts.push(`    websocketRateLimit({
+      store: new RateLimitRedisStore(configs.redis),
+      limit: 60,
+      window: '10s',
+    }),`);
+  mounts.push(`    channels('./src/channels'),`);
+
+  return `${imports.join('\n')}
+
+/**
+ * 与 WebApp 同级的 WebSocket 应用。
+ * 只在 HTTP 入口 attach 一次；路由 / console 可 import 本模块用 ws.room / ws.all 推送。
+ * RedisHub：多机 / console 跨进程推送须与 Web 共用同一 Redis 与 channel 前缀。
+ */
+export const ws = new WebsocketApp({
+  logger: services.logger,
+  language: { mode: 'fixed', language: '${opts.language}' },
+  path: '/ws',
+  transport: new WsTransport({
+    // 心跳间隔（毫秒）；\`0\` 关闭
+    heartbeatInterval: 30_000,
+    // permessage-deflate（帧级压缩）；高并发 / CPU 紧张时可关
+    perMessageDeflate: true,
+  }),
+  hub: new RedisHub(configs.redis),
+  mount: [
+${mounts.join('\n')}
+  ],
+});
+`;
+};
+
+/** Websocket 平台：AsyncAPI UI（与 OpenAPI docs.md.ts 并存） */
+export const generateAsyncapiDocsMiddleware = (
+  projectName: string,
+  docsPathSecret: string,
+): {
+  filename: string;
+  content: string;
+  markdown: { filename: string; content: string };
+} => ({
+  filename: 'asyncapi.md.ts',
+  markdown: {
+    filename: ASYNCAPI_MD_FILENAME,
+    content: asyncapiInfoDescription() + '\n',
+  },
+  content: `import { asyncapiUI } from '@aomex/asyncapi-ui';
+import { generateAsyncapi } from '@aomex/asyncapi-generator';
+import { readFileSync } from 'node:fs';
+
+// 随机路径：降低被扫到后滥用文档接口的风险；生产环境会 skip
+export const asyncapiDocs = asyncapiUI({
+  uriPrefix: '/asyncapi-${docsPathSecret}',
+  asyncapi: () => {
+    return generateAsyncapi({
+      channels: './src/channels',
+      docs: {
+        asyncapi: '3.1.0',
+        info: {
+          title: '${projectName}',
+          // 支持 Markdown（内容见项目根目录 ${ASYNCAPI_MD_FILENAME}）
+          description: readFileSync('./${ASYNCAPI_MD_FILENAME}', 'utf8'),
+        },
+        servers: {
+          local: {
+            host: 'localhost:3000',
+            protocol: 'ws',
+            pathname: '/ws',
+          },
+        },
+      },
+    });
+  },
+});
+`,
+});
 
 export const generateDocsMiddleware = (
   docsUI: DocsUI,
@@ -1136,7 +1379,10 @@ export const docs = scalarUI({
   };
 };
 
-const pluginImport = (plugin: WebPlugin): string => {
+const pluginImport = (
+  plugin: WebPlugin,
+  ctx?: { websocket?: boolean },
+): string => {
   switch (plugin) {
     case 'cors':
       return `import { cors } from '@aomex/cors';`;
@@ -1151,9 +1397,12 @@ const pluginImport = (plugin: WebPlugin): string => {
     case 'pretty-json':
       return `import { prettyJson } from '@aomex/pretty-json';`;
     case 'rate-limit':
-      return `import { rateLimit } from '@aomex/rate-limit';`;
+      return ctx?.websocket
+        ? `import { rateLimit } from '@aomex/rate-limit';
+import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';`
+        : `import { rateLimit } from '@aomex/rate-limit';`;
     case 'http-access-log':
-      return `import { httpAccessLog } from '@/middleware/http-access-log.md';`;
+      return `import { accessLog } from '@/middleware/access-log.md';`;
     case 'async-trace':
       return `import { slowTrace } from '@/middleware/slow-trace.md';`;
     case 'csrf':
@@ -1161,7 +1410,10 @@ const pluginImport = (plugin: WebPlugin): string => {
   }
 };
 
-const pluginMount = (plugin: WebPlugin): string => {
+const pluginMount = (
+  plugin: WebPlugin,
+  ctx?: { websocket?: boolean },
+): string => {
   switch (plugin) {
     case 'cors':
       return `    cors({
@@ -1186,10 +1438,14 @@ const pluginMount = (plugin: WebPlugin): string => {
     case 'pretty-json':
       return `    prettyJson(),`;
     case 'rate-limit':
-      return `    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
+      return ctx?.websocket
+        ? `    rateLimit({
+      store: new RateLimitRedisStore(configs.redis),
+    }),`
+        : `    // 生产亦可交给 nginx limit_req / limit_conn（多实例勿只靠进程内限流）
     rateLimit(),`;
     case 'http-access-log':
-      return `    httpAccessLog.skip(isProduction),`;
+      return `    accessLog.skip(isProduction),`;
     case 'async-trace':
       return `    slowTrace,`;
     case 'csrf':
@@ -1222,8 +1478,9 @@ const NGINX_PREFERRED_PLUGINS: readonly WebPlugin[] = [
 const nginxPreferredMount = (
   plugin: 'compress' | 'rate-limit',
   enabled: boolean,
+  ctx?: { websocket?: boolean },
 ): string => {
-  if (enabled) return pluginMount(plugin);
+  if (enabled) return pluginMount(plugin, ctx);
   if (plugin === 'compress') {
     return `    // 优先用 nginx gzip / brotli；确需 Node 层再解开并：pnpm add @aomex/compress
     // compress(),`;
@@ -1240,8 +1497,13 @@ export const generateWeb = (opts: {
   separateListen: boolean;
   /** 集群方案 */
   cluster: ClusterStrategy;
+  /** 启用 Websocket 平台时挂 WebsocketApp */
+  websocket: boolean;
+  /** 启用 Websocket 平台时挂 AsyncAPI UI */
+  asyncapiDocs: boolean;
 }): string => {
   const useClusterListen = opts.cluster === 'cluster-listen';
+  const pluginCtx = { websocket: opts.websocket };
   const enabled = new Set(opts.plugins);
   const ordered = PLUGIN_ORDER.filter(
     (p) => enabled.has(p) || NGINX_PREFERRED_PLUGINS.includes(p),
@@ -1256,14 +1518,28 @@ export const generateWeb = (opts: {
   const imports = [
     webImports,
     `import { globalErrorRewrite } from '@/middleware/format-error.md';`,
-    ...ordered.filter((p) => enabled.has(p)).map(pluginImport),
+    ...ordered
+      .filter((p) => enabled.has(p))
+      .map((p) => pluginImport(p, pluginCtx)),
   ];
+  if (opts.websocket) {
+    imports.push(`import { configs } from '@/configs';`);
+    imports.push(`import { abuse } from '@/middleware/abuse.md';`);
+    imports.push(`import { ws } from '@/ws';`);
+  }
 
   const mounts = ordered.map((p) =>
     p === 'compress' || p === 'rate-limit'
-      ? nginxPreferredMount(p, enabled.has(p))
-      : pluginMount(p),
+      ? nginxPreferredMount(p, enabled.has(p), pluginCtx)
+      : pluginMount(p, pluginCtx),
   );
+
+  // abuse.web：紧跟 access-log（有则），否则最前；与 WS 共用封禁态
+  if (opts.websocket) {
+    const accessIdx = mounts.findIndex((m) => m.includes('accessLog'));
+    const insertAt = accessIdx >= 0 ? accessIdx + 1 : 0;
+    mounts.splice(insertAt, 0, `    abuse.web(),`);
+  }
 
   // globalErrorRewrite：紧跟 etag（有则），否则 cors / responseTime 之后
   {
@@ -1283,23 +1559,41 @@ export const generateWeb = (opts: {
     mounts.splice(insertAt, 0, `    globalErrorRewrite,`);
   }
 
-  let docsMount: string | null = null;
+  const docsMounts: string[] = [];
   if (opts.docsUI !== 'none') {
     imports.push(`import { docs } from '@/middleware/docs.md';`);
-    docsMount = `    docs.skip(isProduction),`;
+    docsMounts.push(`    docs.skip(isProduction),`);
+  }
+  if (opts.asyncapiDocs) {
+    imports.push(`import { asyncapiDocs } from '@/middleware/asyncapi.md';`);
+    docsMounts.push(`    asyncapiDocs.skip(isProduction),`);
   }
 
   // 文档 UI 挂在 helmet 之前（与官方模板一致）
-  if (docsMount) {
+  if (docsMounts.length > 0) {
     const helmetIdx = mounts.findIndex((m) => m.includes('helmet('));
     if (helmetIdx >= 0) {
-      mounts.splice(helmetIdx, 0, docsMount);
+      mounts.splice(helmetIdx, 0, ...docsMounts);
     } else {
-      mounts.push(docsMount);
+      mounts.push(...docsMounts);
     }
   }
 
-  const httpChain = `const port = process.env['PORT'] || 3000;
+  const httpChain = opts.websocket
+    ? `const port = process.env['PORT'] || 3000;
+const server = app.http({
+  // 对应 nginx upstream.keepalive_timeout=60s
+  // 注意 nginx upstream.keepalive=N 必须主动配置，否则无法复用连接
+  keepAliveTimeout: 61_000,
+  headersTimeout: 65_000,
+});
+// 须在 listen 之前 attach；只在本 HTTP 入口调用一次
+ws.attach(app, server);
+server.listen(port, () => {
+  console.log(\`HTTP server is listening, visit http://localhost:\${port}\`);
+  console.log(\`WebSocket endpoint: ws://localhost:\${port}/ws\`);
+});`
+    : `const port = process.env['PORT'] || 3000;
 app
   .http({
     // 对应 nginx upstream.keepalive_timeout=60s
@@ -1344,7 +1638,9 @@ import { fileURLToPath } from 'node:url';
     : '';
 
   const needsIsProduction =
-    opts.docsUI !== 'none' || opts.plugins.includes('http-access-log');
+    opts.docsUI !== 'none' ||
+    opts.asyncapiDocs ||
+    opts.plugins.includes('http-access-log');
   const isProductionDecl = needsIsProduction
     ? `\nconst isProduction = process.env['NODE_ENV'] === 'production';\n`
     : '\n';
@@ -1412,7 +1708,7 @@ export const generateCli = (opts: {
     imports.push(`import { configs } from '@/configs';`);
   }
   if (hasOpenapi) {
-    imports.push(`import { openapi } from '@aomex/openapi';`);
+    imports.push(`import { openapi } from '@aomex/openapi-generator';`);
     imports.push(`import { app as webApp } from '@/web';`);
   }
 
@@ -2282,6 +2578,7 @@ export const remember = createRemember(CacheService);
 export const generateStartScript = (opts: {
   orm: Orm;
   hasCron: boolean;
+  hasWeb: boolean;
   packageManager: PackageManager;
 }): string => {
   const exec = packageManagerExec(opts.packageManager);
@@ -2308,11 +2605,22 @@ if (existsSync('prisma/migrations')) {
 `
       : '';
 
+  const apiSpawn = opts.hasWeb
+    ? `const api = spawn('node', ['--import', 'tsx/esm', '--watch', 'src/web.ts'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+`
+    : '';
   const cronSpawn = opts.hasCron
-    ? `const cron = spawn('${cronBin}', ${cronSpawnArgs}, { stdio: 'inherit', env: process.env });\n`
+    ? `const cron = spawn('${cronBin}', ${cronSpawnArgs}, { stdio: 'inherit', env: process.env });
+`
     : '';
 
-  const cronKill = opts.hasCron ? `  cron.kill('SIGINT');\n` : '';
+  const killLines = [
+    ...(opts.hasCron ? [`  cron.kill('SIGINT');`] : []),
+    ...(opts.hasWeb ? [`  api.kill('SIGINT');`] : []),
+  ].join('\n');
 
   const fsImport =
     opts.orm === 'prisma' ? `import { existsSync } from 'node:fs';\n` : '';
@@ -2325,13 +2633,9 @@ execSync('docker compose -f docker-compose.yml up --wait', { stdio: 'inherit' })
 const healthCheck = execSync('docker compose -f docker-compose.yml ps', { encoding: 'utf8' });
 if (healthCheck.includes('unhealthy')) process.exit(1);
 ${prismaBlock}
-const api = spawn('node', ['--import', 'tsx/esm', '--watch', 'src/web.ts'], {
-  stdio: 'inherit',
-  env: process.env,
-});
-${cronSpawn}
+${apiSpawn}${cronSpawn}
 process.on('SIGINT', () => {
-${cronKill}  api.kill('SIGINT');
+${killLines}
   execSync('docker compose -f docker-compose.yml down', { stdio: 'inherit' });
 });
 `;
@@ -2364,36 +2668,67 @@ export const globalErrorRewrite = formatError({
 });
 `;
 
-export const generateHttpAccessLog = (
+export const generateAccessLog = (
   transports: LoggerTransport[],
+  opts?: { websocket?: boolean },
 ): string => {
-  const imports = new Set<string>();
-  const list: string[] = [];
+  const withWebsocket = opts?.websocket === true;
+  const loggerImports = new Set<string>();
+  const httpList: string[] = [];
+  const wsList: string[] = [];
 
-  if (transports.includes('console') || !transports.includes('file')) {
-    imports.add('ConsoleTransport');
-    list.push(`    new ConsoleTransport(),`);
+  const useConsole =
+    transports.includes('console') || !transports.includes('file');
+  if (useConsole) {
+    loggerImports.add('ConsoleTransport');
+    httpList.push(`    new ConsoleTransport(),`);
+    if (withWebsocket) wsList.push(`    new ConsoleTransport(),`);
   }
   if (transports.includes('file')) {
-    imports.add('FileTransport');
-    list.push(
+    loggerImports.add('FileTransport');
+    httpList.push(
       `    new FileTransport({ file: 'logs/http/{year}-{month}-{day}/{level}.log' }),`,
     );
+    if (withWebsocket) {
+      wsList.push(
+        `    new FileTransport({ file: 'logs/ws/{year}-{month}-{day}/{level}.log' }),`,
+      );
+    }
   }
-  if (!list.length) {
-    imports.add('ConsoleTransport');
-    list.push(`    new ConsoleTransport(),`);
+  if (!httpList.length) {
+    loggerImports.add('ConsoleTransport');
+    httpList.push(`    new ConsoleTransport(),`);
+    if (withWebsocket) wsList.push(`    new ConsoleTransport(),`);
   }
 
-  return `import { httpAccessLog as aomexHttpAccessLog } from '@aomex/http-access-log';
-import { ${[...imports].join(', ')} } from '@aomex/logger';
-
-export const httpAccessLog = aomexHttpAccessLog({
-  transports: [
-${list.join('\n')}
-  ],
-});
-`;
+  const lines = [
+    `import { httpAccessLog as createHttpAccessLog } from '@aomex/access-log';`,
+  ];
+  if (withWebsocket) {
+    lines.push(
+      `import { websocketAccessLog as createWebsocketAccessLog } from '@aomex/access-log/websocket';`,
+    );
+  }
+  lines.push(
+    `import { ${[...loggerImports].join(', ')} } from '@aomex/logger';`,
+    '',
+    `export const accessLog = createHttpAccessLog({`,
+    `  transports: [`,
+    ...httpList,
+    `  ],`,
+    `});`,
+  );
+  if (withWebsocket) {
+    lines.push(
+      '',
+      `export const wsAccessLog = createWebsocketAccessLog({`,
+      `  transports: [`,
+      ...wsList,
+      `  ],`,
+      `});`,
+    );
+  }
+  return `${lines.join('\n')}\n`;
 };
 
 export const generateDeployCompose = (opts: {
@@ -3156,15 +3491,19 @@ export const buildDependencyGroups = (
 ): { label: string; pkgs: string[]; dev?: boolean }[] => {
   const aomex = (name: string) => `${name}@${aomexVersion}`;
   const prisma = (name: string) => `${name}@${prismaVersion!}`;
+  const enableWeb = opts.platforms.includes('web');
+  const enableConsole = opts.platforms.includes('console');
+  const enableWebsocket = opts.platforms.includes('websocket');
+
   const deps = new Set<string>([
     aomex('@aomex/common'),
-    aomex('@aomex/web'),
-    aomex('@aomex/console'),
     aomex('@aomex/cache'),
     aomex('@aomex/cache-redis-adapter'),
     aomex('@aomex/logger'),
     'dotenv@^18.0.10',
   ]);
+  if (enableWeb) deps.add(aomex('@aomex/web'));
+  if (enableConsole) deps.add(aomex('@aomex/console'));
 
   const devDeps = new Set<string>([
     'typescript@^7.0.2',
@@ -3179,81 +3518,97 @@ export const buildDependencyGroups = (
   // 无 Docker 运行时直接跑 TS，tsx 需在 dependencies；Docker 仅本地 start 用
   if (opts.docker) {
     devDeps.add('tsx@^4.23.15');
-    devDeps.add('esbuild@^0.28.2');
+    if (enableWeb) devDeps.add('esbuild@^0.28.2');
   } else {
     deps.add('tsx@^4.23.15');
   }
 
-  for (const plugin of opts.webPlugins) {
-    switch (plugin) {
-      case 'cors':
-        deps.add(aomex('@aomex/cors'));
-        break;
-      case 'etag':
-        deps.add(aomex('@aomex/etag'));
-        break;
-      case 'helmet':
-        deps.add(aomex('@aomex/helmet'));
-        break;
-      case 'compress':
-        deps.add(aomex('@aomex/compress'));
-        break;
-      case 'response-time':
-        deps.add(aomex('@aomex/response-time'));
-        break;
-      case 'pretty-json':
-        deps.add(aomex('@aomex/pretty-json'));
-        break;
-      case 'rate-limit':
-        deps.add(aomex('@aomex/rate-limit'));
-        break;
-      case 'http-access-log':
-        deps.add(aomex('@aomex/http-access-log'));
-        break;
-      case 'async-trace':
-        deps.add(aomex('@aomex/async-trace'));
-        break;
-      case 'csrf':
-        deps.add(aomex('@aomex/csrf'));
-        break;
-    }
-  }
-
-  if (opts.docsUI !== 'none' || opts.consoleMiddlewares.includes('openapi')) {
-    deps.add(aomex('@aomex/openapi'));
-  }
-  if (opts.docsUI === 'swagger') deps.add(aomex('@aomex/swagger-ui'));
-  if (opts.docsUI === 'redoc') deps.add(aomex('@aomex/redoc-ui'));
-  if (opts.docsUI === 'scalar') deps.add(aomex('@aomex/scalar-ui'));
-
-  if (opts.consoleMiddlewares.includes('cron')) {
-    deps.add(aomex('@aomex/cron'));
-  }
-
-  // auth 中间件始终生成；jwt 包仅在启用或保留注释模板时安装，便于解开即用
-  deps.add(aomex('@aomex/auth'));
-  deps.add(aomex('@aomex/auth-jwt-strategy'));
-
-  if (
-    opts.auth.includes('oauth2') &&
-    (opts.oauth2Client || opts.oauth2Presets.length > 0)
-  ) {
-    const metas = oauth2PresetMetas(opts.oauth2Presets);
-    if (opts.oauth2Client || metas.some((m) => m.kind === 'oauth2')) {
-      deps.add(aomex('@aomex/oauth2-client'));
-    }
-    if (metas.length > 0) {
-      if (!aomexContribVersions) {
-        throw new Error('启用登录集成时必须提供 aomexContribVersions');
+  if (enableWeb) {
+    for (const plugin of opts.webPlugins) {
+      switch (plugin) {
+        case 'cors':
+          deps.add(aomex('@aomex/cors'));
+          break;
+        case 'etag':
+          deps.add(aomex('@aomex/etag'));
+          break;
+        case 'helmet':
+          deps.add(aomex('@aomex/helmet'));
+          break;
+        case 'compress':
+          deps.add(aomex('@aomex/compress'));
+          break;
+        case 'response-time':
+          deps.add(aomex('@aomex/response-time'));
+          break;
+        case 'pretty-json':
+          deps.add(aomex('@aomex/pretty-json'));
+          break;
+        case 'rate-limit':
+          deps.add(aomex('@aomex/rate-limit'));
+          break;
+        case 'http-access-log':
+          deps.add(aomex('@aomex/access-log'));
+          break;
+        case 'async-trace':
+          deps.add(aomex('@aomex/async-trace'));
+          break;
+        case 'csrf':
+          deps.add(aomex('@aomex/csrf'));
+          break;
       }
-      for (const meta of metas) {
-        const ver = aomexContribVersions[meta.npmPackage];
-        if (!ver) {
-          throw new Error(`缺少 ${meta.npmPackage} 版本`);
+    }
+
+    if (opts.docsUI !== 'none' || opts.consoleMiddlewares.includes('openapi')) {
+      deps.add(aomex('@aomex/openapi-generator'));
+    }
+    if (opts.docsUI === 'swagger') deps.add(aomex('@aomex/swagger-ui'));
+    if (opts.docsUI === 'redoc') deps.add(aomex('@aomex/redoc-ui'));
+    if (opts.docsUI === 'scalar') deps.add(aomex('@aomex/scalar-ui'));
+
+    // auth 中间件在 Web 项目始终生成；jwt 包便于解开注释即用
+    deps.add(aomex('@aomex/auth'));
+    deps.add(aomex('@aomex/auth-jwt-strategy'));
+
+    if (
+      opts.auth.includes('oauth2') &&
+      (opts.oauth2Client || opts.oauth2Presets.length > 0)
+    ) {
+      const metas = oauth2PresetMetas(opts.oauth2Presets);
+      if (opts.oauth2Client || metas.some((m) => m.kind === 'oauth2')) {
+        deps.add(aomex('@aomex/oauth2-client'));
+      }
+      if (metas.length > 0) {
+        if (!aomexContribVersions) {
+          throw new Error('启用登录集成时必须提供 aomexContribVersions');
         }
-        deps.add(`${meta.npmPackage}@${ver}`);
+        for (const meta of metas) {
+          const ver = aomexContribVersions[meta.npmPackage];
+          if (!ver) {
+            throw new Error(`缺少 ${meta.npmPackage} 版本`);
+          }
+          deps.add(`${meta.npmPackage}@${ver}`);
+        }
       }
     }
+  }
+
+  if (enableWebsocket) {
+    deps.add(aomex('@aomex/asyncapi-ui'));
+    deps.add(aomex('@aomex/asyncapi-generator'));
+    deps.add(aomex('@aomex/websocket'));
+    deps.add(aomex('@aomex/websocket-ws-transport'));
+    deps.add(aomex('@aomex/websocket-redis-hub'));
+    deps.add(aomex('@aomex/rate-limit'));
+    deps.add(aomex('@aomex/rate-limit-redis-store'));
+    deps.add(aomex('@aomex/abuse'));
+    if (opts.webPlugins.includes('http-access-log')) {
+      deps.add(aomex('@aomex/access-log'));
+    }
+  }
+
+  if (enableConsole && opts.consoleMiddlewares.includes('cron')) {
+    deps.add(aomex('@aomex/cron'));
   }
 
   if (opts.loggerTransports.includes('sentry')) {

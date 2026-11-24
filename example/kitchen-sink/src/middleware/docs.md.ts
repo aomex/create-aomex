@@ -1,5 +1,5 @@
 import { swaggerUI } from '@aomex/swagger-ui';
-import { generateOpenapi } from '@aomex/openapi';
+import { generateOpenapi } from '@aomex/openapi-generator';
 import { readFileSync } from 'node:fs';
 import { app } from '@/web';
 

@@ -13,5 +13,5 @@
   "js/ts.suggest.autoImports": true,
   "js/ts.experimental.useTsgo": true,
   "js/ts.tsdk.path": "./node_modules/typescript",
-  "cSpell.words": ["openapi", "aomex"]
+  "cSpell.words": ["openapi", "asyncapi", "aomex"]
 }

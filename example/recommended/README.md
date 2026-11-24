@@ -7,6 +7,7 @@
 | 项       | 值              |
 | -------- | --------------- |
 | 包管理器 | pnpm            |
+| 平台     | Web + Console   |
 | ORM      | Prisma（mysql） |
 | 认证     | Bearer Token    |
 | 文档 UI  | Scalar UI       |
@@ -40,7 +41,9 @@ pnpm start
 
 ## API 文档
 
-启动后访问 `src/middleware/docs.md.ts` 中配置的 `uriPrefix`（**生产环境默认关闭**）。
+启动后访问（**生产环境默认关闭**）：
+
+- OpenAPI：`src/middleware/docs.md.ts` 的 `uriPrefix`
 
 ## 常用脚本
 
