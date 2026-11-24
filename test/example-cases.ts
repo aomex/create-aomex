@@ -49,7 +49,7 @@ const bareMinimum: ScaffoldOptions = {
   cluster: 'none',
 };
 
-/** 全家桶：尽量全开（启用 github/google，其余 oauth2 厂商注释模板） */
+/** 全家桶：尽量全开（oauth2 启用 github/google） */
 const kitchenSink: ScaffoldOptions = {
   packageManager: 'pnpm',
   platforms: ['web', 'console', 'websocket'],

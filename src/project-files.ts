@@ -1,10 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import {
-  OAUTH2_VENDOR_PRESETS,
-  hasPlatform,
-  withBaseWebPlugins,
-  type ScaffoldOptions,
-} from './types';
+import { hasPlatform, withBaseWebPlugins, type ScaffoldOptions } from './types';
 import {
   buildAllowInstallScripts,
   formatPnpmAllowBuilds,
@@ -149,11 +144,6 @@ export const generateProjectFiles = (opts: {
     (options.oauth2Client || options.oauth2Presets.length > 0);
   const docsPathSecret = opts.docsPathSecret ?? randomBytes(8).toString('hex');
   const enrichOpenapi = enableWeb && options.docsUI === 'scalar';
-  // 选了至少一个 oauth2 厂商预设时，其余厂商以注释模板保留；仅 oauth2-client 不落预设文件
-  const hasVendorPreset = options.oauth2Presets.some((id) =>
-    (OAUTH2_VENDOR_PRESETS as readonly string[]).includes(id),
-  );
-  const commentVendors = options.oauth2Client && hasVendorPreset;
   const files: Record<string, ProjectFile> = {};
 
   const add = (path: string, file: ProjectFile) => {
@@ -310,21 +300,17 @@ ${prismaSkillsDeny}`,
   // —— 配置 ——
   const oauthSecretsFields = generateOAuthEnvSecretsFields(
     hasOAuth2 ? options.oauth2Presets : [],
-    { commentVendors },
   );
   const oauthAppConfigType = generateOAuthAppConfigType(
     hasOAuth2 ? options.oauth2Presets : [],
-    { commentVendors },
   );
   const oauthConfigLocal = generateOAuthAppConfigValue(
     hasOAuth2 ? options.oauth2Presets : [],
     'local',
-    { commentVendors },
   );
   const oauthConfigDeploy = generateOAuthAppConfigValue(
     hasOAuth2 ? options.oauth2Presets : [],
     'deploy',
-    { commentVendors },
   );
   add(
     'src/configs/shared.ts',
@@ -561,7 +547,6 @@ commander.create('hello', {
     text(
       generateServicesIndex(options.orm, {
         oauth2Presets: hasOAuth2 ? options.oauth2Presets : [],
-        commentVendors,
       }),
     ),
   );
@@ -578,7 +563,7 @@ commander.create('hello', {
   add('src/services/cache.service.ts', text(generateCacheService()));
   if (hasOAuth2) {
     for (const [rel, content] of Object.entries(
-      generateOAuth2Services(options.oauth2Presets, { commentVendors }),
+      generateOAuth2Services(options.oauth2Presets),
     )) {
       add(rel, text(content));
     }
@@ -596,9 +581,7 @@ commander.create('hello', {
   }
 
   if (hasOAuth2) {
-    const oauthRouter = generateOAuth2Router(options.oauth2Presets, {
-      commentVendors,
-    });
+    const oauthRouter = generateOAuth2Router(options.oauth2Presets);
     if (oauthRouter) {
       add('src/routers/oauth2.router.ts', text(oauthRouter));
     }

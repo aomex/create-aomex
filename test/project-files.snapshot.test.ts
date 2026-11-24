@@ -24,7 +24,7 @@ import { exampleCases } from './example-cases';
 
 const PACKAGE_MANAGER_VERSION = '12.21.0';
 /** 示例固定 aomex 版本（真实脚手架运行时 resolveAomexVersion → latest） */
-const AOMEX_VERSION = '4.5.0';
+const AOMEX_VERSION = '4.6.0';
 /** 示例固定 @aomex-contrib/*（真实脚手架运行时 resolveAomexContribVersions） */
 const AOMEX_CONTRIB_VERSIONS: Record<string, string> = {
   '@aomex-contrib/oauth2-github': '0.1.0',

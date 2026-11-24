@@ -12,7 +12,6 @@ import type {
   ScaffoldOptions,
   WebPlugin,
 } from './types';
-import { OAUTH2_VENDOR_PRESETS } from './types';
 import {
   OAUTH2_PRESET_META,
   oauth2PresetMetas,
@@ -316,7 +315,7 @@ export const generateAuth = (strategies: AuthStrategy[]): string => {
   );
   const hasOAuth2 = strategies.includes('oauth2');
   const oauth2Note = hasOAuth2
-    ? `\n * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 \`src/routers/oauth2.router.ts\`（常用厂商多为注释模板，解开并 \`pnpm add @aomex-contrib/oauth2-*\` 后启用；回调后自行建立 session / JWT / bearer）。`
+    ? `\n * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 \`src/routers/oauth2.router.ts\`（回调后自行建立 session / JWT / bearer）。`
     : '';
 
   if (classic.length === 0) {
@@ -562,99 +561,51 @@ const oauth2ClientOptions = (meta: OAuth2PresetMeta): string => {
   }
 };
 
-/** 已启用预设 +（可选）oauth2-client 厂商注释模板，按启用优先去重 */
-const oauth2PresetPlan = (
-  active: readonly OAuth2Preset[],
-  commentVendors: boolean,
-): { meta: OAuth2PresetMeta; enabled: boolean }[] => {
-  const activeSet = new Set(active);
-  const out: { meta: OAuth2PresetMeta; enabled: boolean }[] = [];
-  const seen = new Set<OAuth2Preset>();
-  if (commentVendors) {
-    for (const id of OAUTH2_VENDOR_PRESETS) {
-      out.push({ meta: OAUTH2_PRESET_META[id], enabled: activeSet.has(id) });
-      seen.add(id);
-    }
-  }
-  for (const id of active) {
-    if (seen.has(id)) continue;
-    out.push({ meta: OAUTH2_PRESET_META[id], enabled: true });
-    seen.add(id);
-  }
-  return out;
-};
-
-/** EnvSecrets 中 OAuth 相关字段（未启用厂商的键以注释保留） */
+/** EnvSecrets 中 OAuth 相关字段（仅已选厂商） */
 export const generateOAuthEnvSecretsFields = (
   presets: OAuth2Preset[],
-  opts?: { commentVendors?: boolean },
 ): string => {
-  const keyEnabled = new Map<string, boolean>();
-  for (const { meta, enabled } of oauth2PresetPlan(
-    presets,
-    opts?.commentVendors === true,
-  )) {
-    for (const key of meta.envKeys) {
-      keyEnabled.set(key, (keyEnabled.get(key) ?? false) || enabled);
-    }
+  const keys = new Set<string>();
+  for (const meta of oauth2PresetMetas(presets)) {
+    for (const key of meta.envKeys) keys.add(key);
   }
-  if (keyEnabled.size === 0) return '';
-  return (
-    [...keyEnabled.entries()]
-      .map(([k, enabled]) => maybeComment(enabled, `  ${k}: string;`))
-      .join('\n') + '\n'
-  );
+  if (keys.size === 0) return '';
+  return [...keys].map((k) => `  ${k}: string;`).join('\n') + '\n';
 };
 
 /** AppConfig.oauth 类型块；无预设时返回空字符串 */
-export const generateOAuthAppConfigType = (
-  presets: OAuth2Preset[],
-  opts?: { commentVendors?: boolean },
-): string => {
-  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true);
-  if (plan.length === 0) return '';
-  const providerBlock = (meta: OAuth2PresetMeta) => {
-    const fields = meta.configFields
-      .map((f) => `    ${f.key}: string;`)
-      .join('\n');
-    return `  ${meta.serviceKey}: {\n${fields}\n  };`;
-  };
-  const anyEnabled = plan.some((p) => p.enabled);
-  if (!anyEnabled) {
-    const inner = plan.map(({ meta }) => providerBlock(meta)).join('\n');
-    return maybeComment(false, `  oauth: {\n${inner}\n  };\n`);
-  }
-  const providers = plan
-    .map(({ meta, enabled }) => maybeComment(enabled, providerBlock(meta)))
+export const generateOAuthAppConfigType = (presets: OAuth2Preset[]): string => {
+  const metas = oauth2PresetMetas(presets);
+  if (metas.length === 0) return '';
+  const providers = metas
+    .map((meta) => {
+      const fields = meta.configFields
+        .map((f) => `    ${f.key}: string;`)
+        .join('\n');
+      return `  ${meta.serviceKey}: {\n${fields}\n  };`;
+    })
     .join('\n');
   return `  oauth: {\n${providers}\n  };\n`;
 };
 
 /**
- * 各环境 AppConfig.oauth 赋值。
+ * 各环境 AppConfig.oauth 赋值（仅已选厂商）。
  * local：缺省 `change-me`；deploy：缺省空串。
  */
 export const generateOAuthAppConfigValue = (
   presets: OAuth2Preset[],
   mode: 'local' | 'deploy',
-  opts?: { commentVendors?: boolean },
 ): string => {
-  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true);
-  if (plan.length === 0) return '';
+  const metas = oauth2PresetMetas(presets);
+  if (metas.length === 0) return '';
   const fallback = mode === 'local' ? "'change-me'" : "''";
-  const providerBlock = (meta: OAuth2PresetMeta) => {
-    const fields = meta.configFields
-      .map((f) => `      ${f.key}: secrets.${f.env} || ${fallback},`)
-      .join('\n');
-    return `    ${meta.serviceKey}: {\n${fields}\n    },`;
-  };
-  const anyEnabled = plan.some((p) => p.enabled);
-  if (!anyEnabled) {
-    const inner = plan.map(({ meta }) => providerBlock(meta)).join('\n');
-    return maybeComment(false, `  oauth: {\n${inner}\n  },\n`);
-  }
-  const providers = plan
-    .map(({ meta, enabled }) => maybeComment(enabled, providerBlock(meta)))
+  const providers = metas
+    .map((meta) => {
+      const fields = meta.configFields
+        .map((f) => `      ${f.key}: secrets.${f.env} || ${fallback},`)
+        .join('\n');
+      return `    ${meta.serviceKey}: {\n${fields}\n    },`;
+    })
     .join('\n');
   return `  oauth: {\n${providers}\n  },\n`;
 };
@@ -750,23 +701,13 @@ export default class ${meta.serviceClassName} extends Service {
 `;
 };
 
-/** 登录集成 Service 文件：相对路径 → 内容（未启用厂商整文件注释） */
+/** 登录集成 Service 文件：相对路径 → 内容（仅已选厂商） */
 export const generateOAuth2Services = (
   presets: OAuth2Preset[],
-  opts?: { commentVendors?: boolean },
 ): Record<string, string> => {
   const out: Record<string, string> = {};
-  for (const { meta, enabled } of oauth2PresetPlan(
-    presets,
-    opts?.commentVendors === true,
-  )) {
-    const body = generateOAuth2Service(meta.id);
-    out[`src/services/${meta.serviceFile}`] = enabled
-      ? body
-      : `// 解开本文件注释，并：pnpm add ${meta.npmPackage}
-// 同时解开 services/index、configs.oauth、.env、oauth2.router 中对应项
-${maybeComment(false, body.trimEnd())}
-`;
+  for (const meta of oauth2PresetMetas(presets)) {
+    out[`src/services/${meta.serviceFile}`] = generateOAuth2Service(meta.id);
   }
   return out;
 };
@@ -801,26 +742,20 @@ router.get('/${m.pathSegment}', {
 ${cb}`;
 };
 
-/** `/oauth/:provider` 发起登录 + callback（oauth2-client 时厂商路由以注释保留） */
+/** `/oauth/:provider` 发起登录 + callback（仅已选厂商） */
 export const generateOAuth2Router = (
   presets: OAuth2Preset[],
-  opts?: { commentVendors?: boolean },
 ): string | null => {
-  const plan = oauth2PresetPlan(presets, opts?.commentVendors === true).filter(
-    ({ meta }) => meta.kind === 'oauth2',
-  );
-  if (plan.length === 0) return null;
-  const anyEnabled = plan.some((p) => p.enabled);
-  const routes = plan
-    .map(({ meta, enabled }) => maybeComment(enabled, oauth2RouteBlock(meta)))
-    .join('\n\n');
+  const metas = oauth2PresetMetas(presets).filter((m) => m.kind === 'oauth2');
+  if (metas.length === 0) return null;
+  const routes = metas.map((meta) => oauth2RouteBlock(meta)).join('\n\n');
 
   return `import { Router } from '@aomex/web';
-${maybeComment(anyEnabled, `import { services } from '@/services';`)}
+import { services } from '@/services';
 
 /**
  * OAuth2 / OIDC 授权码登录。
- * 未启用的厂商路由以注释保留；解开后安装对应 \`@aomex-contrib/oauth2-*\`，并启用 Service / configs / .env。
+ * 回调后自行建立 session / JWT / bearer。
  */
 export const router = new Router({ prefix: '/oauth' });
 
@@ -1126,7 +1061,7 @@ channel.on('chat.send', {
   mount: [
     payload({
       roomId: rule.string(),
-      text: rule.string().max(2000),
+      text: rule.string().length({ max: 2000 }),
     }),
     emit({
       event: 'chat.message',
@@ -1150,7 +1085,7 @@ channel.on('chat.send', {
 
 /** 滥用计数 / IP 封禁（HTTP + WebSocket 共用） */
 export const generateAbuse =
-  (): string => `import { createAbuse } from '@aomex/abuse';
+  (): string => `import { Abuse } from '@aomex/abuse';
 import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import { configs } from '@/configs';
 
@@ -1158,7 +1093,7 @@ import { configs } from '@/configs';
  * HTTP / WebSocket 共用滥用计数与 IP 封禁。
  * 业务侧可调用 \`abuse.ipAbuse\` / \`abuse.blockIP\`；挂 \`abuse.web()\` / \`abuse.socket()\`。
  */
-export const abuse = createAbuse({
+export const abuse = new Abuse({
   store: new CacheRedisAdapter(configs.redis),
   strategies: [
     {
@@ -1756,7 +1691,7 @@ declare module '@aomex/console' {
 
 export const generateServicesIndex = (
   orm: Orm,
-  opts?: { oauth2Presets?: OAuth2Preset[]; commentVendors?: boolean },
+  opts?: { oauth2Presets?: OAuth2Preset[] },
 ): string => {
   const loaders = [
     `    logger: () => import('./logger.service.js'),`,
@@ -1766,12 +1701,10 @@ export const generateServicesIndex = (
   if (orm !== 'none') {
     loaders.push(`    article: () => import('./article.service.js'),`);
   }
-  for (const { meta, enabled } of oauth2PresetPlan(
-    opts?.oauth2Presets ?? [],
-    opts?.commentVendors === true,
-  )) {
-    const line = `    ${meta.serviceKey}: () => import('./${meta.serviceFile.replace(/\.ts$/, '.js')}'),`;
-    loaders.push(enabled ? line : maybeComment(false, line));
+  for (const meta of oauth2PresetMetas(opts?.oauth2Presets ?? [])) {
+    loaders.push(
+      `    ${meta.serviceKey}: () => import('./${meta.serviceFile.replace(/\.ts$/, '.js')}'),`,
+    );
   }
 
   // mongoose 无 Service 类进 combineServices；侧效导入保证启动即 registerLifecycle
@@ -1842,39 +1775,59 @@ export default class ArticleService extends Service {
     return `import { Service } from '@aomex/common';
 import { ArticleModel } from '@/models/article.model';
 
+type ArticleInput = {
+  title: string;
+  content: string;
+  summary?: string | null;
+  published?: boolean;
+  tags?: string[] | null;
+};
+
+type ArticlePatch = {
+  title?: string;
+  content?: string;
+  summary?: string | null;
+  published?: boolean;
+  tags?: string[] | null;
+};
+
+const toArticle = (doc: {
+  _id: { toString(): string };
+  title: string;
+  content: string;
+  summary?: string | null;
+  published: boolean;
+  tags?: string[] | null;
+}) => ({
+  _id: String(doc._id),
+  title: doc.title,
+  content: doc.content,
+  summary: doc.summary ?? null,
+  published: doc.published,
+  tags: doc.tags ?? null,
+});
+
 export default class ArticleService extends Service {
   async findArticles() {
-    return await ArticleModel.find().sort({ created_at: -1 }).lean();
+    const docs = await ArticleModel.find().sort({ created_at: -1 }).lean();
+    return docs.map(toArticle);
   }
 
   async findArticleById(id: string | number) {
-    return await ArticleModel.findById(String(id)).lean();
+    const doc = await ArticleModel.findById(String(id)).lean();
+    return doc ? toArticle(doc) : null;
   }
 
-  async createArticle(data: {
-    title: string;
-    content: string;
-    summary?: string;
-    published?: boolean;
-    tags?: string[];
-  }) {
+  async createArticle(data: ArticleInput) {
     const doc = await ArticleModel.create(data);
-    return doc.toObject();
+    return toArticle(doc.toObject());
   }
 
-  async updateArticle(
-    id: string | number,
-    data: {
-      title?: string;
-      content?: string;
-      summary?: string;
-      published?: boolean;
-      tags?: string[];
-    },
-  ) {
-    return await ArticleModel.findByIdAndUpdate(String(id), data, {
+  async updateArticle(id: string | number, data: ArticlePatch) {
+    const doc = await ArticleModel.findByIdAndUpdate(String(id), data, {
       new: true,
     }).lean();
+    return doc ? toArticle(doc) : null;
   }
 
   async deleteArticle(id: string | number) {
@@ -2097,12 +2050,17 @@ ${oa.update}
       tags: rule.array(rule.string()).optional().nullable(),
     }),
 ${oa.updateResponse}
+    response({
+      statusCode: 404,
+      description: '${articleNotFound}',
+    }),
   ],
   action: async (ctx) => {
     const article = await services.article.updateArticle(
       ctx.params.id,
       ctx.body,
     );
+    if (!article) return ctx.throw(404);
     ctx.send(article);
   },
 });
@@ -2202,12 +2160,17 @@ router.patch('/:id', {
       statusCode: 200,
       content: articleSchema,
     }),
+    response({
+      statusCode: 404,
+      description: '${articleNotFound}',
+    }),
   ],
   action: async (ctx) => {
     const article = await services.article.updateArticle(
       ctx.params.id,
       ctx.body,
     );
+    if (!article) return ctx.throw(404);
     ctx.send(article);
   },
 });
@@ -2934,25 +2897,17 @@ export const generateEnvExample = (
     opts.auth.includes('oauth2') &&
     (opts.oauth2Client || opts.oauth2Presets.length > 0)
   ) {
-    const hasVendorPreset = opts.oauth2Presets.some((id) =>
-      (OAUTH2_VENDOR_PRESETS as readonly string[]).includes(id),
-    );
-    const commentVendors = opts.oauth2Client && hasVendorPreset;
-    const plan = oauth2PresetPlan(opts.oauth2Presets, commentVendors);
-    if (plan.length > 0) {
+    const metas = oauth2PresetMetas(opts.oauth2Presets);
+    if (metas.length > 0) {
       const placeholder = mode === 'local' ? 'change-me' : 'CHANGE_ME';
       lines.push('');
-      lines.push(
-        '# OAuth2 / OIDC / 微信（厂商后台回调须与路由一致；未启用项可保持注释）',
-      );
+      lines.push('# OAuth2 / OIDC / 微信（厂商后台回调须与路由一致）');
       const seen = new Set<string>();
-      for (const { meta, enabled } of plan) {
+      for (const meta of metas) {
         for (const key of meta.envKeys) {
           if (seen.has(key)) continue;
           seen.add(key);
-          lines.push(
-            enabled ? `${key}=${placeholder}` : `# ${key}=${placeholder}`,
-          );
+          lines.push(`${key}=${placeholder}`);
         }
       }
     }

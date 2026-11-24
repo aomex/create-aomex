@@ -28,7 +28,7 @@ channel.on('chat.send', {
   mount: [
     payload({
       roomId: rule.string(),
-      text: rule.string().max(2000),
+      text: rule.string().length({ max: 2000 }),
     }),
     emit({
       event: 'chat.message',

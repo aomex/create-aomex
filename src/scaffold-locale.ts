@@ -116,7 +116,7 @@ const authStrategyLabel = (
     case 'oauth2':
       return oauth2Presets.length > 0
         ? `OAuth / 微信 (${oauth2Presets.join(', ')})`
-        : 'OAuth2（厂商注释模板）';
+        : 'OAuth2（仅 client）';
   }
 };
 

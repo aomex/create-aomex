@@ -81,9 +81,14 @@ router.patch('/:id', {
       statusCode: 200,
       content: articleSchema,
     }),
+    response({
+      statusCode: 404,
+      description: '文章不存在',
+    }),
   ],
   action: async (ctx) => {
     const article = await services.article.updateArticle(ctx.params.id, ctx.body);
+    if (!article) return ctx.throw(404);
     ctx.send(article);
   },
 });

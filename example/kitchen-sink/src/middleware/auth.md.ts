@@ -15,7 +15,7 @@ import { services } from '@/services';
  * Session：登录 `await auth.strategy('session').login(ctx, { userId })`；
  * 登出 `logout(ctx)`；防 fixation `regenerateSessionId(ctx)`。
  * Cookie 会话须挂载 `csrf()`，并配置 `cors.credentials` + `cors.origin`。
- * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 `src/routers/oauth2.router.ts`（常用厂商多为注释模板，解开并 `pnpm add @aomex-contrib/oauth2-*` 后启用；回调后自行建立 session / JWT / bearer）。
+ * OAuth2 / OIDC / 微信登录：见各厂商 Service 与 `src/routers/oauth2.router.ts`（回调后自行建立 session / JWT / bearer）。
  */
 export const auth = new Auth({
   strategies: {

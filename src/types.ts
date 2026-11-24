@@ -115,14 +115,14 @@ export const normalizeOAuth2VendorPresets = (
  * 解析认证勾选 / `--auth` 列表。
  * 可含 Auth 策略、首屏入口（`oauth2-client` / `wechat` / …）与厂商预设（`github`…，CLI 可显式启用）。
  * 勾选任一登录集成或 `oauth2-client` / `oauth2` 即视为启用 `oauth2`。
- * 交互勾选 `oauth2-client` 后再选厂商（可空）；未选中的厂商以注释模板写入源码。
+ * 交互勾选 `oauth2-client` 后再选厂商（可空＝仅安装 client）；只生成已选厂商代码。
  */
 export const parseAuthSelection = (
   raw: readonly string[],
 ): {
   auth: AuthStrategy[];
   oauth2Presets: OAuth2Preset[];
-  /** 是否勾了 oauth2-client（未选厂商时仍写注释模板） */
+  /** 是否勾了 oauth2-client（未选厂商时仅安装 `@aomex/oauth2-client`） */
   oauth2Client: boolean;
 } => {
   if (raw.length === 0 || raw.includes('none')) {
@@ -219,7 +219,7 @@ export interface ScaffoldOptions {
   auth: AuthStrategy[];
   /**
    * 勾选了 `oauth2-client`：安装 `@aomex/oauth2-client`。
-   * 若同时选了厂商预设，未启用的厂商以注释模板写入；仅勾 client 不落预设文件。
+   * 厂商代码只按 `oauth2Presets` 生成；仅勾 client 不落预设文件。
    */
   oauth2Client: boolean;
   /**

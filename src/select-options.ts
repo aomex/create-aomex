@@ -149,7 +149,7 @@ export const selectOptions = async (
       }));
   }
 
-  // 可多选；Auth + 首屏 OAuth/微信入口。选 oauth2-client 后再选厂商（可空＝仅注释模板）。选「无」清空。
+  // 可多选；Auth + 首屏 OAuth/微信入口。选 oauth2-client 后再选厂商（可空＝仅安装 client）。选「无」清空。
   // 无 Web 时跳过（鉴权挂在 HTTP）。
   type AuthChoice = AuthStrategy | OAuthEntry | 'none';
   const authArg = parseList(argv['auth']);

@@ -6,3 +6,4 @@
 - 改「写入用户项目的 AI 指引」：只改 [`src/skills/aomex-skill.ts`](./src/skills/aomex-skill.ts)  
   （脚手架会把它写成用户项目根目录的 `aomex.md`）
 - 本仓库根目录**不要**再放一份 `aomex.md`，避免和生成器双份漂移
+- 每次重新生成 example 快照（`pnpm test:update`）后，必须再执行 `pnpm tsc`，确认根目录与各 `example/*` 类型检查通过
