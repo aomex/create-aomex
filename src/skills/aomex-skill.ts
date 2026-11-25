@@ -269,7 +269,7 @@ combineServices({
 
 \`services.xxx\` 是**懒加载代理**：从路由 / 其它 Service / commander 调用时**一律 \`await\`**（类型已是 \`Promise\`），即使 Class 里写的是同步方法。Service **内部** \`this.bar()\` 仍同步。互调：\`import { services } from '@/services'\` → \`await services.other....\`。\`onInit\` / \`onDestroy\` / private **不会**出现在 \`services.xxx\` 类型上。
 
-Prisma/Mongoose 连接跟现有 \`*.service.ts\` + \`registerLifecycle\`；**不要**再塞进 \`combineServices\`。
+Prisma/Mongoose 连接跟现有 \`*.service.ts\` + \`registerLifecycle\`；连接串读 \`configs.database\`（各环境写入 \`DATABASE_URL\`）。**不要**再塞进 \`combineServices\`。
 
 ## 鉴权
 

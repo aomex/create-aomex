@@ -14,6 +14,7 @@ type BaseConfig = typeof baseConfig;
  * 各环境密钥配置，来自.env*、Aws Secret Manager、Vault 等。
  */
 export interface EnvSecrets {
+  DATABASE_URL: string;
   REDIS_PASSWORD: string;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
@@ -29,6 +30,7 @@ export interface EnvSecrets {
  * 应用运行时配置
  */
 export interface AppConfig extends BaseConfig {
+  database: string;
   redis: RedisOptions;
   oauth: {
     github: {

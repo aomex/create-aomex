@@ -7,6 +7,7 @@ const secrets = process.env as unknown as EnvSecrets;
 
 export const development: AppConfig = {
   ...baseConfig,
+  database: secrets.DATABASE_URL || '',
   redis: {
     host: 'localhost',
     port: 6379,

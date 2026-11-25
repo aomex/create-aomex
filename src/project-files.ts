@@ -325,6 +325,20 @@ ${prismaSkillsDeny}`,
   const loggerConfigValue = generateLoggerAppConfigValue(
     options.loggerTransports,
   );
+  // Prisma driver adapter 与 Mongoose 在运行时读 configs.database。
+  // MongoDB 的 Prisma Client 不走 adapter，连接串仍只给 prisma.config.ts 的 env()。
+  const hasDatabaseConfig =
+    options.orm === 'mongoose' ||
+    (options.orm === 'prisma' &&
+      !!options.prismaDatabase &&
+      options.prismaDatabase !== 'mongodb');
+  const databaseSecretField = hasDatabaseConfig
+    ? '  DATABASE_URL: string;\n'
+    : '';
+  const databaseAppField = hasDatabaseConfig ? '  database: string;\n' : '';
+  const databaseConfigValue = hasDatabaseConfig
+    ? "  database: secrets.DATABASE_URL || '',\n"
+    : '';
   add(
     'src/configs/shared.ts',
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
@@ -343,14 +357,14 @@ type BaseConfig = typeof baseConfig;
  * 各环境密钥配置，来自.env*、Aws Secret Manager、Vault 等。
  */
 export interface EnvSecrets {
-  REDIS_PASSWORD: string;
+${databaseSecretField}  REDIS_PASSWORD: string;
 ${oauthSecretsFields}${loggerSecretsFields}}
 
 /**
  * 应用运行时配置
  */
 export interface AppConfig extends BaseConfig {
-  redis: RedisOptions;
+${databaseAppField}  redis: RedisOptions;
 ${oauthAppConfigType}${loggerAppConfigType}}
 `),
   );
@@ -366,7 +380,7 @@ const secrets = process.env as unknown as EnvSecrets;
 
 export const production: AppConfig = {
   ...baseConfig,
-  redis: {
+${databaseConfigValue}  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',
@@ -386,7 +400,7 @@ const secrets = process.env as unknown as EnvSecrets;
 
 export const development: AppConfig = {
   ...baseConfig,
-  redis: {
+${databaseConfigValue}  redis: {
     host: 'localhost',
     port: 6379,
     password: secrets.REDIS_PASSWORD || 'abcde',
@@ -407,7 +421,7 @@ const secrets = process.env as unknown as EnvSecrets;
 
 export const integration: AppConfig = {
   ...baseConfig,
-  redis: {
+${databaseConfigValue}  redis: {
     host: '',
     port: 6379,
     password: secrets.REDIS_PASSWORD || '',

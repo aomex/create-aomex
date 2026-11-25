@@ -88,14 +88,14 @@ export const prismaAdapterMeta = (
         importLines: [
           `import { PrismaMariaDb } from '@prisma/adapter-mariadb';`,
         ],
-        createAdapter: `const parsed = new URL(process.env['DATABASE_URL']!);
+        createAdapter: `const parsed = new URL(configs.database);
 const adapter = new PrismaMariaDb({
   host: parsed.hostname,
   port: parseInt(parsed.port || '3306', 10),
   user: parsed.username,
   password: parsed.password,
   database: parsed.pathname.slice(1),
-  connectionLimit: process.env['AOMEX_CLI_MODE'] === '1' ? 15 : 80,
+  connectionLimit: process.env['AOMEX_RUNTIME'] === 'cli' ? 15 : 80,
   acquireTimeout: 10_000,
   allowPublicKeyRetrieval: true,
 });`,
@@ -110,7 +110,7 @@ const adapter = new PrismaMariaDb({
           `import { PrismaPg } from '@prisma/adapter-pg';`,
           `import pg from 'pg';`,
         ],
-        createAdapter: `const pool = new pg.Pool({ connectionString: process.env['DATABASE_URL']! });
+        createAdapter: `const pool = new pg.Pool({ connectionString: configs.database });
 const adapter = new PrismaPg(pool);`,
         useAdapter: true,
       };
@@ -122,7 +122,7 @@ const adapter = new PrismaPg(pool);`,
           `import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';`,
           `import Database from 'better-sqlite3';`,
         ],
-        createAdapter: `const url = process.env['DATABASE_URL']!.replace(/^file:/, '');
+        createAdapter: `const url = configs.database.replace(/^file:/, '');
 const adapter = new PrismaBetterSqlite3(new Database(url));`,
         useAdapter: true,
       };
@@ -131,7 +131,7 @@ const adapter = new PrismaBetterSqlite3(new Database(url));`,
         adapterPkg: '@prisma/adapter-mssql',
         driverPkgs: ['mssql@^12.7.14'],
         importLines: [`import { PrismaMssql } from '@prisma/adapter-mssql';`],
-        createAdapter: `const adapter = new PrismaMssql(process.env['DATABASE_URL']!);`,
+        createAdapter: `const adapter = new PrismaMssql(configs.database);`,
         useAdapter: true,
       };
     case 'mongodb':
@@ -267,6 +267,7 @@ export const generatePrismaClient = (db: PrismaDatabase): string => {
   const meta = prismaAdapterMeta(db);
   const clientBlock = meta.useAdapter
     ? `${meta.importLines.join('\n')}
+import { configs } from '@/configs';
 
 ${meta.createAdapter}
 
@@ -1991,13 +1992,14 @@ export const generateMongooseFiles = (
   return {
     mongoose: `import { registerLifecycle } from '@aomex/common';
 import mongoose from 'mongoose';
+import { configs } from '@/configs';
 
 /**
  * 管理 Mongoose 连接生命周期；业务代码仍可 \`import { mongoose } from '@/services/mongoose.service'\`。
  */
 await registerLifecycle({
   onInit: async () => {
-    const uri = process.env['DATABASE_URL'];
+    const uri = configs.database;
     if (!uri) throw new Error('DATABASE_URL is required');
     await mongoose.connect(uri);
   },
