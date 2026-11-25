@@ -362,15 +362,11 @@ export { AuthError };
       session,
       `import { AuthSessionStrategy } from '@aomex/auth/session';`,
     ),
-    maybeComment(
-      session,
-      `import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';`,
-    ),
+    maybeComment(session, `import { cache } from '@/services/cache.service';`),
     maybeComment(
       needCookie,
       `import { CookieKey } from '@/constants/cookie-key';`,
     ),
-    maybeComment(session, `import { configs } from '@/configs';`),
     maybeComment(needServices, `import { services } from '@/services';`),
   ].filter((line) => line.length > 0);
 
@@ -403,7 +399,7 @@ ${maybeComment(
   bearer,
   `bearer: new AuthBearerStrategy({
   async onLoaded(token) {
-    const userId = await services.cache.getUserIdByToken(token, true);
+    const userId = await services.passport.getUserIdByToken(token, true);
     if (!userId) return false;
     // TODO: 按 userId 查询用户记录后返回
     // const user = await services.user.findById(userId);
@@ -468,7 +464,7 @@ ${maybeComment(
 ${maybeComment(
   session,
   `session: new AuthSessionStrategy({
-  store: new CacheRedisAdapter(configs.redis),
+  store: cache,
   cookie: {
     name: CookieKey.SESSION_ID,
     maxAge: 60 * 60 * 24 * 7, // 秒；同时作为缓存 TTL
@@ -523,7 +519,7 @@ const oauthConfigPath = (meta: OAuth2PresetMeta): string => {
 
 const oauth2ClientOptions = (meta: OAuth2PresetMeta): string => {
   const redirect = `(ctx) => \`\${ctx.request.origin}/oauth/${meta.pathSegment}/callback\``;
-  const store = `new CacheRedisAdapter(configs.redis)`;
+  const store = `cache`;
   const cfg = oauthConfigPath(meta);
   const fromConfig = meta.configFields
     .map((f) => `${f.key}: ${cfg}.${f.key},`)
@@ -622,8 +618,8 @@ export const generateOAuth2Service = (preset: OAuth2Preset): string => {
   const docsUrl = aomexContribPackageDocsUrl(meta.npmPackage);
   if (meta.kind === 'wechat-mini') {
     return `import { Service } from '@aomex/common';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import { ${meta.className} } from '${meta.npmPackage}';
+import { cache } from '@/services/cache.service';
 import { configs } from '@/configs';
 
 /**
@@ -677,9 +673,9 @@ export default class ${meta.serviceClassName} extends Service {
   }
 
   return `import { Service } from '@aomex/common';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import type { WebContext } from '@aomex/web';
 import { ${meta.className} } from '${meta.npmPackage}';
+import { cache } from '@/services/cache.service';
 import { configs } from '@/configs';
 
 /**
@@ -719,7 +715,7 @@ const oauth2RouteBlock = (m: OAuth2PresetMeta): string => {
   docs: { showInOpenapi: false },
   action: async (ctx) => {
     const profile = await services.${m.serviceKey}.oauthCallback(ctx);
-    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / passport.setUserIdInToken）
     ctx.send(profile);
   },
 });`
@@ -727,7 +723,7 @@ const oauth2RouteBlock = (m: OAuth2PresetMeta): string => {
   docs: { showInOpenapi: false },
   action: async (ctx) => {
     const profile = await services.${m.serviceKey}.oauthCallback(ctx);
-    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / passport.setUserIdInToken）
     ctx.send(profile);
   },
 });`;
@@ -808,7 +804,7 @@ router.post('/credential', {
     const claims = await services.googleIdentity.verifyCredential(
       ctx.body.credential,
     );
-    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / passport.setUserIdInToken）
     ctx.send(claims);
   },
 });
@@ -837,77 +833,139 @@ router.post('/auth-code', {
 `;
 };
 
+/** 需要密钥的 logger 出口 */
+const loggerNeedsSecrets = (transports: LoggerTransport[]): boolean =>
+  transports.includes('webhook') ||
+  transports.includes('sentry') ||
+  transports.includes('telegram');
+
+/** EnvSecrets 中 logger 相关字段 */
+export const generateLoggerEnvSecretsFields = (
+  transports: LoggerTransport[],
+): string => {
+  const lines: string[] = [];
+  if (transports.includes('webhook')) lines.push('  LOG_WEBHOOK_URL: string;');
+  if (transports.includes('sentry')) lines.push('  SENTRY_DSN: string;');
+  if (transports.includes('telegram')) {
+    lines.push('  TELEGRAM_BOT_TOKEN: string;');
+    lines.push('  TELEGRAM_CHAT_ID: string;');
+  }
+  return lines.length ? lines.join('\n') + '\n' : '';
+};
+
+/** AppConfig.logger 类型块；无密钥出口时返回空 */
+export const generateLoggerAppConfigType = (
+  transports: LoggerTransport[],
+): string => {
+  if (!loggerNeedsSecrets(transports)) return '';
+  const fields: string[] = [];
+  if (transports.includes('webhook')) fields.push('    webhookUrl: string;');
+  if (transports.includes('sentry')) fields.push('    sentryDsn: string;');
+  if (transports.includes('telegram')) {
+    fields.push('    telegram: {');
+    fields.push('      botToken: string;');
+    fields.push('      chatId: string;');
+    fields.push('    };');
+  }
+  return `  logger: {\n${fields.join('\n')}\n  };\n`;
+};
+
+/** 各环境 AppConfig.logger 赋值 */
+export const generateLoggerAppConfigValue = (
+  transports: LoggerTransport[],
+): string => {
+  if (!loggerNeedsSecrets(transports)) return '';
+  const fields: string[] = [];
+  if (transports.includes('webhook')) {
+    fields.push(`    webhookUrl: secrets.LOG_WEBHOOK_URL || '',`);
+  }
+  if (transports.includes('sentry')) {
+    fields.push(`    sentryDsn: secrets.SENTRY_DSN || '',`);
+  }
+  if (transports.includes('telegram')) {
+    fields.push(`    telegram: {`);
+    fields.push(`      botToken: secrets.TELEGRAM_BOT_TOKEN || '',`);
+    fields.push(`      chatId: secrets.TELEGRAM_CHAT_ID || '',`);
+    fields.push(`    },`);
+  }
+  return `  logger: {\n${fields.join('\n')}\n  },\n`;
+};
+
 export const generateLogger = (transports: LoggerTransport[]): string => {
-  const imports = new Set<string>(['BaseLoggerService']);
+  const imports = new Set<string>(['Logger']);
   const entries: string[] = [];
+  const needsConfigs = loggerNeedsSecrets(transports);
 
   if (transports.includes('console')) {
     imports.add('ConsoleTransport');
-    entries.push(`      {
-        transport: new ConsoleTransport(),
-        level: 'debug',
-      },`);
+    entries.push(`    {
+      transport: new ConsoleTransport(),
+      level: 'debug',
+    },`);
   }
 
   if (transports.includes('file')) {
     imports.add('FileTransport');
-    entries.push(`      {
-        transport: new FileTransport({
-          file: 'logs/error-{year}-{month}-{day}.log',
-        }),
-        level: 'error',
-      },`);
+    entries.push(`    {
+      transport: new FileTransport({
+        file: 'logs/error-{year}-{month}-{day}.log',
+      }),
+      level: 'error',
+    },`);
   }
 
   if (transports.includes('stream')) {
     imports.add('StreamTransport');
-    entries.push(`      {
-        transport: new StreamTransport({
-          stream: process.stdout,
-          format: 'text',
-        }),
-        level: 'info',
-      },`);
+    entries.push(`    {
+      transport: new StreamTransport({
+        stream: process.stdout,
+        format: 'text',
+      }),
+      level: 'info',
+    },`);
   }
 
   if (transports.includes('webhook')) {
     imports.add('WebhookTransport');
-    entries.push(`      {
-        transport: new WebhookTransport({
-          url: process.env['LOG_WEBHOOK_URL'] || 'https://example.com/hook',
-        }),
-        level: 'error',
-        disabled: !process.env['LOG_WEBHOOK_URL'],
-      },`);
+    entries.push(`    {
+      transport: new WebhookTransport({
+        url: configs.logger.webhookUrl || 'https://example.com/hook',
+      }),
+      level: 'error',
+      disabled: !configs.logger.webhookUrl,
+    },`);
   }
 
   const extraImports: string[] = [];
+  if (needsConfigs) {
+    extraImports.push(`import { configs } from '@/configs';`);
+  }
 
   if (transports.includes('sentry')) {
     extraImports.push(
       `import { SentryTransport } from '@aomex/logger-sentry';`,
     );
-    entries.push(`      {
-        transport: new SentryTransport({
-          dsn: process.env['SENTRY_DSN'] || '',
-        }),
-        level: 'error',
-        disabled: !process.env['SENTRY_DSN'],
-      },`);
+    entries.push(`    {
+      transport: new SentryTransport({
+        dsn: configs.logger.sentryDsn,
+      }),
+      level: 'error',
+      disabled: !configs.logger.sentryDsn,
+    },`);
   }
 
   if (transports.includes('telegram')) {
     extraImports.push(
       `import { TelegramTransport } from '@aomex/logger-telegram';`,
     );
-    entries.push(`      {
-        transport: new TelegramTransport({
-          botToken: process.env['TELEGRAM_BOT_TOKEN'] || '',
-          chatId: process.env['TELEGRAM_CHAT_ID'] || '',
-        }),
-        level: 'error',
-        disabled: !process.env['TELEGRAM_BOT_TOKEN'],
-      },`);
+    entries.push(`    {
+      transport: new TelegramTransport({
+        botToken: configs.logger.telegram.botToken,
+        chatId: configs.logger.telegram.chatId,
+      }),
+      level: 'error',
+      disabled: !configs.logger.telegram.botToken,
+    },`);
   }
 
   const importLine = `import {\n  ${[...imports].join(',\n  ')},\n} from '@aomex/logger';`;
@@ -915,13 +973,11 @@ export const generateLogger = (transports: LoggerTransport[]): string => {
   return `${importLine}
 ${extraImports.join('\n')}
 
-export default class LoggerService extends BaseLoggerService {
-  protected createTransports(): BaseLoggerService.TransportEntry[] {
-    return [
+export const logger = new Logger({
+  transports: [
 ${entries.join('\n')}
-    ];
-  }
-}
+  ],
+});
 `;
 };
 
@@ -1086,15 +1142,14 @@ channel.on('chat.send', {
 /** 滥用计数 / IP 封禁（HTTP + WebSocket 共用） */
 export const generateAbuse =
   (): string => `import { Abuse } from '@aomex/abuse';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
-import { configs } from '@/configs';
+import { cache } from '@/services/cache.service';
 
 /**
  * HTTP / WebSocket 共用滥用计数与 IP 封禁。
  * 业务侧可调用 \`abuse.ipAbuse\` / \`abuse.blockIP\`；挂 \`abuse.web()\` / \`abuse.socket()\`。
  */
 export const abuse = new Abuse({
-  store: new CacheRedisAdapter(configs.redis),
+  store: cache,
   strategies: [
     {
       strategy: 'honeypot',
@@ -1133,7 +1188,7 @@ export const generateWs = (opts: {
     `import { websocketRateLimit } from '@aomex/rate-limit/websocket';`,
     `import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';`,
     `import { configs } from '@/configs';`,
-    `import { services } from '@/services';`,
+    `import { logger } from '@/services/logger.service';`,
     `import { abuse } from '@/middleware/abuse.md';`,
   ];
   const mounts: string[] = [];
@@ -1158,7 +1213,7 @@ export const generateWs = (opts: {
  * RedisHub：多机 / console 跨进程推送须与 Web 共用同一 Redis 与 channel 前缀。
  */
 export const ws = new WebsocketApp({
-  logger: services.logger,
+  logger,
   language: { mode: 'fixed', language: '${opts.language}' },
   path: '/ws',
   transport: new WsTransport({
@@ -1593,11 +1648,12 @@ import { fileURLToPath } from 'node:url';
 
   return `import 'dotenv/config';
 ${headImports}${imports.join('\n')}
+import { logger } from '@/services/logger.service';
 import { services } from '@/services';
 ${isProductionDecl}
 export const app = new WebApp({
   services,
-  logger: services.logger,
+  logger,
   // 按 Accept-Language 自动切换语言时，改用：
   // language: { mode: 'dynamic', header: 'accept-language', fallback: '${opts.language}' },
   language: { mode: 'fixed', language: '${opts.language}' },
@@ -1609,7 +1665,7 @@ ${mounts.join('\n')}
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 ${listenBlock}
 
@@ -1636,11 +1692,8 @@ export const generateCli = (opts: {
   ];
 
   if (hasCron) {
-    imports.unshift(
-      `import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';`,
-    );
     imports.push(`import { crons } from '@aomex/cron';`);
-    imports.push(`import { configs } from '@/configs';`);
+    imports.push(`import { cache } from '@/services/cache.service';`);
   }
   if (hasOpenapi) {
     imports.push(`import { openapi } from '@aomex/openapi-generator';`);
@@ -1653,7 +1706,7 @@ export const generateCli = (opts: {
       commanders: './src/commanders',
       // 随机高位端口，降低与本机服务冲突、被扫到的概率
       port: ${opts.cronPort},
-      store: new CacheRedisAdapter(configs.redis),
+      store: cache,
     }),`);
   }
   if (hasOpenapi) {
@@ -1663,10 +1716,11 @@ export const generateCli = (opts: {
 
   return `import 'dotenv/config';
 ${imports.join('\n')}
+import { logger } from '@/services/logger.service';
 
 const app = new ConsoleApp({
   services,
-  logger: services.logger,
+  logger,
   language: '${opts.language}',
   mount: [
 ${mounts.join('\n')}
@@ -1674,7 +1728,7 @@ ${mounts.join('\n')}
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 
 const code = await app.run();
@@ -1693,11 +1747,7 @@ export const generateServicesIndex = (
   orm: Orm,
   opts?: { oauth2Presets?: OAuth2Preset[] },
 ): string => {
-  const loaders = [
-    `    logger: () => import('./logger.service.js'),`,
-    `    cache: () => import('./cache.service.js'),`,
-  ];
-  const eager = ['cache'];
+  const loaders = [`    passport: () => import('./passport.service.js'),`];
   if (orm !== 'none') {
     loaders.push(`    article: () => import('./article.service.js'),`);
   }
@@ -1713,12 +1763,9 @@ export const generateServicesIndex = (
 
   return `import { combineServices } from '@aomex/common';${mongooseImport}
 
-export const services = await combineServices(
-  {
+export const services = await combineServices({
 ${loaders.join('\n')}
-  },
-  { eager: [${eager.map((k) => `'${k}'`).join(', ')}] },
-);
+});
 `;
 };
 
@@ -2450,12 +2497,12 @@ export const generateSlowTrace = (language: DefaultLanguage): string => {
   const text = scaffoldText(language);
   return `import { asyncTrace, traceMiddleware } from '@aomex/async-trace';
 import type { WebContext } from '@aomex/web';
-import { services } from '@/services';
+import { logger } from '@/services/logger.service';
 
 export const slowTrace = traceMiddleware('${text.slowTrace}', async (record, ctx: WebContext) => {
   if (record.duration > 1_000) {
     const stack = asyncTrace.toStack(record.children);
-    void services.logger.warn(
+    void logger.warn(
       \`\${ctx.request.method} \${ctx.request.pathname} \${record.duration}ms\\n\\n\${stack}\`,
     );
   }
@@ -2463,60 +2510,25 @@ export const slowTrace = traceMiddleware('${text.slowTrace}', async (record, ctx
 `;
 };
 
-export const generateCacheService = (): string => {
-  return `import { BaseCacheService, createRemember } from '@aomex/cache';
+/** 组合根共享 Caching + remember；业务键写在各自 Service */
+export const generateCache = (): string => {
+  return `import { Caching, createRemember } from '@aomex/cache';
 import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import { configs } from '@/configs';
 
-export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
-  protected readonly passportUserToken = this.key('passport-user-token', 'v1');
-  protected readonly captcha = this.key('captcha', 'v1');
+const adapter = new CacheRedisAdapter(configs.redis);
 
-  protected createAdapter() {
-    return new CacheRedisAdapter(configs.redis);
-  }
-
-  /** Bearer 策略会话：token → userId（见 auth.md.ts） */
-  async getUserIdByToken(token: string, refreshTTL: boolean) {
-    const key = this.passportUserToken.keyHash(token);
-    const userId = await this.cache.get<number>(key);
-    if (!userId) return null;
-    if (refreshTTL) {
-      await this.cache.expire(key, this.ttl.DAY);
-    }
-    return userId;
-  }
-
-  async setUserIdInToken(token: string, userId: number) {
-    await this.cache.set(this.passportUserToken.keyHash(token), userId, this.ttl.DAY);
-  }
-
-  async deleteUserToken(token: string) {
-    await this.cache.delete(this.passportUserToken.keyHash(token));
-  }
-
-  async getCaptcha(sessionId: string) {
-    return this.cache.get<string>(this.captcha.key(sessionId));
-  }
-
-  async setCaptcha(sessionId: string, code: string) {
-    return this.cache.set(this.captcha.key(sessionId), code, this.ttl.MINUTE * 5);
-  }
-
-  async deleteCaptcha(sessionId: string) {
-    return this.cache.delete(this.captcha.key(sessionId));
-  }
-}
+export const cache = new Caching(adapter);
 
 /**
- * 方法装饰器：缓存异步方法返回值（绑定本 CacheService；未命中时并发只跑一次）。
+ * 方法装饰器：缓存异步方法返回值（绑定本 cache；未命中时并发只跑一次）。
  *
  * \`\`\`ts
  * import { Service } from '@aomex/common';
  * import { remember } from '@/services/cache.service';
  *
  * export default class ArticleService extends Service {
- *   // 简写：过期时间（毫秒）；key 默认按「类名-方法名-参数」生成
+ *   // 简写：过期时间（毫秒或 '1 minute'）；key 默认按「类名-方法名-参数」生成
  *   \\@remember(60_000)
  *   async findById(id: number) {
  *     return db.article.findUnique({ where: { id } });
@@ -2524,7 +2536,7 @@ export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
  *
  *   // 完整写法：自定义 key / defaultValue
  *   \\@remember({
- *     duration: 60_000,
+ *     duration: '1 minute',
  *     key: (id) => \`article:\${id}\`,
  *     // defaultValue: null,
  *   })
@@ -2534,7 +2546,39 @@ export default class CacheService extends BaseCacheService<CacheRedisAdapter> {
  * }
  * \`\`\`
  */
-export const remember = createRemember(CacheService);
+export const remember = createRemember(cache);
+`;
+};
+
+/** Bearer 会话等鉴权相关缓存：示范「业务缓存放领域 Service」 */
+export const generatePassportService = (): string => {
+  return `import { Service } from '@aomex/common';
+import { cache } from '@/services/cache.service';
+
+/** Bearer 策略会话：token → userId（见 auth.md.ts） */
+export default class PassportService extends Service {
+  private readonly userToken = cache.key('passport-user-token', 'v1');
+
+  async getUserIdByToken(token: string, refreshTTL: boolean) {
+    const key = this.userToken.keyHash(token);
+    const userId = await cache.get<number>(key);
+    if (!userId) return null;
+    if (refreshTTL) {
+      await cache.expire(key, '1 day');
+    }
+    return userId;
+  }
+
+  async setUserIdInToken(token: string, userId: number) {
+    const key = this.userToken.keyHash(token);
+    await cache.set(key, userId, '1 day');
+  }
+
+  async deleteUserToken(token: string) {
+    const key = this.userToken.keyHash(token);
+    await cache.delete(key);
+  }
+}
 `;
 };
 
@@ -2910,6 +2954,21 @@ export const generateEnvExample = (
           lines.push(`${key}=${placeholder}`);
         }
       }
+    }
+  }
+
+  if (loggerNeedsSecrets(opts.loggerTransports)) {
+    lines.push('');
+    lines.push('# Logger 出口密钥（空则对应 transport disabled）');
+    if (opts.loggerTransports.includes('webhook')) {
+      lines.push('LOG_WEBHOOK_URL=');
+    }
+    if (opts.loggerTransports.includes('sentry')) {
+      lines.push('SENTRY_DSN=');
+    }
+    if (opts.loggerTransports.includes('telegram')) {
+      lines.push('TELEGRAM_BOT_TOKEN=');
+      lines.push('TELEGRAM_CHAT_ID=');
     }
   }
 

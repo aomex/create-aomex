@@ -3,9 +3,8 @@ import { AuthBearerStrategy } from '@aomex/auth/bearer';
 // import { AuthJwtStrategy } from '@aomex/auth-jwt-strategy';
 // import { AuthApiKeyStrategy } from '@aomex/auth/api-key';
 // import { AuthSessionStrategy } from '@aomex/auth/session';
-// import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
+// import { cache } from '@/services/cache.service';
 import { CookieKey } from '@/constants/cookie-key';
-// import { configs } from '@/configs';
 import { services } from '@/services';
 
 /**
@@ -17,7 +16,7 @@ export const auth = new Auth({
     /** Bearer：不透明令牌，可随时吊销 */
     bearer: new AuthBearerStrategy({
       async onLoaded(token) {
-        const userId = await services.cache.getUserIdByToken(token, true);
+        const userId = await services.passport.getUserIdByToken(token, true);
         if (!userId) return false;
         // TODO: 按 userId 查询用户记录后返回
         // const user = await services.user.findById(userId);
@@ -73,7 +72,7 @@ export const auth = new Auth({
 
     /** Session：Cookie 存 sessionId，数据在 cache（如 Redis） */
     // session: new AuthSessionStrategy({
-    //   store: new CacheRedisAdapter(configs.redis),
+    //   store: cache,
     //   cookie: {
     //     name: CookieKey.SESSION_ID,
     //     maxAge: 60 * 60 * 24 * 7, // 秒；同时作为缓存 TTL

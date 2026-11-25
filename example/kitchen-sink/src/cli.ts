@@ -1,22 +1,22 @@
 import 'dotenv/config';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import { commanders, ConsoleApp } from '@aomex/console';
 import { services } from '@/services';
 import { crons } from '@aomex/cron';
-import { configs } from '@/configs';
+import { cache } from '@/services/cache.service';
 import { openapi } from '@aomex/openapi-generator';
 import { app as webApp } from '@/web';
+import { logger } from '@/services/logger.service';
 
 const app = new ConsoleApp({
   services,
-  logger: services.logger,
+  logger,
   language: 'zh-CN',
   mount: [
     crons({
       commanders: './src/commanders',
       // 随机高位端口，降低与本机服务冲突、被扫到的概率
       port: 23456,
-      store: new CacheRedisAdapter(configs.redis),
+      store: cache,
     }),
     openapi({ routers: './src/routers', app: webApp }),
     commanders('./src/commanders'),
@@ -24,7 +24,7 @@ const app = new ConsoleApp({
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 
 const code = await app.run();

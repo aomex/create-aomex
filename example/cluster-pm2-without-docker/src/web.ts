@@ -6,11 +6,12 @@ import { responseTime } from '@aomex/response-time';
 import { cors } from '@aomex/cors';
 import { etag } from '@aomex/etag';
 import { helmet } from '@aomex/helmet';
+import { logger } from '@/services/logger.service';
 import { services } from '@/services';
 
 export const app = new WebApp({
   services,
-  logger: services.logger,
+  logger,
   // 按 Accept-Language 自动切换语言时，改用：
   // language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
   language: { mode: 'fixed', language: 'zh-CN' },
@@ -47,7 +48,7 @@ export const app = new WebApp({
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 
 const port = process.env['PORT'] || 3000;

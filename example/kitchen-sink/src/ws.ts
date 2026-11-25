@@ -4,7 +4,7 @@ import { RedisHub } from '@aomex/websocket-redis-hub';
 import { websocketRateLimit } from '@aomex/rate-limit/websocket';
 import { RateLimitRedisStore } from '@aomex/rate-limit-redis-store';
 import { configs } from '@/configs';
-import { services } from '@/services';
+import { logger } from '@/services/logger.service';
 import { abuse } from '@/middleware/abuse.md';
 import { wsAccessLog } from '@/middleware/access-log.md';
 
@@ -14,7 +14,7 @@ import { wsAccessLog } from '@/middleware/access-log.md';
  * RedisHub：多机 / console 跨进程推送须与 Web 共用同一 Redis 与 channel 前缀。
  */
 export const ws = new WebsocketApp({
-  logger: services.logger,
+  logger,
   language: { mode: 'fixed', language: 'zh-CN' },
   path: '/ws',
   transport: new WsTransport({

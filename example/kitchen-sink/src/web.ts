@@ -20,13 +20,14 @@ import { abuse } from '@/middleware/abuse.md';
 import { ws } from '@/ws';
 import { docs } from '@/middleware/docs.md';
 import { asyncapiDocs } from '@/middleware/asyncapi.md';
+import { logger } from '@/services/logger.service';
 import { services } from '@/services';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
 
 export const app = new WebApp({
   services,
-  logger: services.logger,
+  logger,
   // 按 Accept-Language 自动切换语言时，改用：
   // language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
   language: { mode: 'fixed', language: 'zh-CN' },
@@ -71,7 +72,7 @@ export const app = new WebApp({
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 
 // 仅直接运行本文件时 listen（Console openapi 会 import { app }，避免副作用起服）

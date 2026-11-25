@@ -1,7 +1,7 @@
 import { Service } from '@aomex/common';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import type { WebContext } from '@aomex/web';
 import { GitHubOAuth2Client } from '@aomex-contrib/oauth2-github';
+import { cache } from '@/services/cache.service';
 import { configs } from '@/configs';
 
 /**
@@ -14,7 +14,7 @@ export default class GithubService extends Service {
     clientId: configs.oauth.github.clientId,
     clientSecret: configs.oauth.github.clientSecret,
     redirectUri: (ctx) => `${ctx.request.origin}/oauth/github/callback`,
-    store: new CacheRedisAdapter(configs.redis),
+    store: cache,
   });
 
   oauthRedirect(ctx: WebContext) {

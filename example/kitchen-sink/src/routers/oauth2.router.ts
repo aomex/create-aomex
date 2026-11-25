@@ -19,7 +19,7 @@ router.get('/github/callback', {
   docs: { showInOpenapi: false },
   action: async (ctx) => {
     const profile = await services.github.oauthCallback(ctx);
-    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / passport.setUserIdInToken）
     ctx.send(profile);
   },
 });
@@ -36,7 +36,7 @@ router.get('/google/callback', {
   docs: { showInOpenapi: false },
   action: async (ctx) => {
     const profile = await services.google.oauthCallback(ctx);
-    // TODO: 落库 / 建立登录态（session.login / jwt.signature / bearer 写 cache）
+    // TODO: 落库 / 建立登录态（session.login / jwt.signature / passport.setUserIdInToken）
     ctx.send(profile);
   },
 });

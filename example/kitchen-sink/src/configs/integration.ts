@@ -24,4 +24,12 @@ export const integration: AppConfig = {
       clientSecret: secrets.GOOGLE_CLIENT_SECRET || '',
     },
   },
+  logger: {
+    webhookUrl: secrets.LOG_WEBHOOK_URL || '',
+    sentryDsn: secrets.SENTRY_DSN || '',
+    telegram: {
+      botToken: secrets.TELEGRAM_BOT_TOKEN || '',
+      chatId: secrets.TELEGRAM_CHAT_ID || '',
+    },
+  },
 };

@@ -1,13 +1,12 @@
 import { Abuse } from '@aomex/abuse';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
-import { configs } from '@/configs';
+import { cache } from '@/services/cache.service';
 
 /**
  * HTTP / WebSocket 共用滥用计数与 IP 封禁。
  * 业务侧可调用 `abuse.ipAbuse` / `abuse.blockIP`；挂 `abuse.web()` / `abuse.socket()`。
  */
 export const abuse = new Abuse({
-  store: new CacheRedisAdapter(configs.redis),
+  store: cache,
   strategies: [
     {
       strategy: 'honeypot',

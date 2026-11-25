@@ -1,12 +1,10 @@
-import { BaseLoggerService, ConsoleTransport } from '@aomex/logger';
+import { Logger, ConsoleTransport } from '@aomex/logger';
 
-export default class LoggerService extends BaseLoggerService {
-  protected createTransports(): BaseLoggerService.TransportEntry[] {
-    return [
-      {
-        transport: new ConsoleTransport(),
-        level: 'debug',
-      },
-    ];
-  }
-}
+export const logger = new Logger({
+  transports: [
+    {
+      transport: new ConsoleTransport(),
+      level: 'debug',
+    },
+  ],
+});

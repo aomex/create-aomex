@@ -7,7 +7,8 @@ import {
   generateAsyncapiDocsMiddleware,
   generateBareDeployScript,
   generateBuildInDockerScript,
-  generateCacheService,
+  generateCache,
+  generatePassportService,
   generateCli,
   generateCookieKey,
   generateDeployCompose,
@@ -28,6 +29,9 @@ import {
   generateOAuth2Services,
   generateOAuthAppConfigType,
   generateOAuthAppConfigValue,
+  generateLoggerAppConfigType,
+  generateLoggerAppConfigValue,
+  generateLoggerEnvSecretsFields,
   generateOAuthEnvSecretsFields,
   generateGoogleIdentityRouter,
   generateWechatMiniRouter,
@@ -312,6 +316,15 @@ ${prismaSkillsDeny}`,
     hasOAuth2 ? options.oauth2Presets : [],
     'deploy',
   );
+  const loggerSecretsFields = generateLoggerEnvSecretsFields(
+    options.loggerTransports,
+  );
+  const loggerAppConfigType = generateLoggerAppConfigType(
+    options.loggerTransports,
+  );
+  const loggerConfigValue = generateLoggerAppConfigValue(
+    options.loggerTransports,
+  );
   add(
     'src/configs/shared.ts',
     text(`import type { RedisOptions } from '@aomex/cache-redis-adapter';
@@ -331,14 +344,14 @@ type BaseConfig = typeof baseConfig;
  */
 export interface EnvSecrets {
   REDIS_PASSWORD: string;
-${oauthSecretsFields}}
+${oauthSecretsFields}${loggerSecretsFields}}
 
 /**
  * 应用运行时配置
  */
 export interface AppConfig extends BaseConfig {
   redis: RedisOptions;
-${oauthAppConfigType}}
+${oauthAppConfigType}${loggerAppConfigType}}
 `),
   );
   add(
@@ -359,7 +372,7 @@ export const production: AppConfig = {
     password: secrets.REDIS_PASSWORD || '',
     db: 0,
   },
-${oauthConfigDeploy}};
+${oauthConfigDeploy}${loggerConfigValue}};
 `),
   );
   add(
@@ -379,7 +392,7 @@ export const development: AppConfig = {
     password: secrets.REDIS_PASSWORD || 'abcde',
     db: 0,
   },
-${oauthConfigLocal}};
+${oauthConfigLocal}${loggerConfigValue}};
 `),
   );
   add(
@@ -400,7 +413,7 @@ export const integration: AppConfig = {
     password: secrets.REDIS_PASSWORD || '',
     db: 0,
   },
-${oauthConfigDeploy}};
+${oauthConfigDeploy}${loggerConfigValue}};
 `),
   );
   add(
@@ -560,7 +573,8 @@ commander.create('hello', {
     'src/services/logger.service.ts',
     text(generateLogger(options.loggerTransports)),
   );
-  add('src/services/cache.service.ts', text(generateCacheService()));
+  add('src/services/cache.service.ts', text(generateCache()));
+  add('src/services/passport.service.ts', text(generatePassportService()));
   if (hasOAuth2) {
     for (const [rel, content] of Object.entries(
       generateOAuth2Services(options.oauth2Presets),

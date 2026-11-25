@@ -19,6 +19,10 @@ export interface EnvSecrets {
   GITHUB_CLIENT_SECRET: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  LOG_WEBHOOK_URL: string;
+  SENTRY_DSN: string;
+  TELEGRAM_BOT_TOKEN: string;
+  TELEGRAM_CHAT_ID: string;
 }
 
 /**
@@ -34,6 +38,14 @@ export interface AppConfig extends BaseConfig {
     google: {
       clientId: string;
       clientSecret: string;
+    };
+  };
+  logger: {
+    webhookUrl: string;
+    sentryDsn: string;
+    telegram: {
+      botToken: string;
+      chatId: string;
     };
   };
 }

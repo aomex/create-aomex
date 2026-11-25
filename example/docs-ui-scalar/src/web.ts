@@ -9,13 +9,14 @@ import { etag } from '@aomex/etag';
 import { slowTrace } from '@/middleware/slow-trace.md';
 import { helmet } from '@aomex/helmet';
 import { docs } from '@/middleware/docs.md';
+import { logger } from '@/services/logger.service';
 import { services } from '@/services';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
 
 export const app = new WebApp({
   services,
-  logger: services.logger,
+  logger,
   // 按 Accept-Language 自动切换语言时，改用：
   // language: { mode: 'dynamic', header: 'accept-language', fallback: 'zh-CN' },
   language: { mode: 'fixed', language: 'zh-CN' },
@@ -55,7 +56,7 @@ export const app = new WebApp({
 });
 
 process.on('uncaughtException', (err) => {
-  void services.logger.fatal(err);
+  void logger.fatal(err);
 });
 
 const port = process.env['PORT'] || 3000;

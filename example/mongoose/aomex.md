@@ -29,7 +29,9 @@
 | 新 WebSocket 事件                  | `src/channels/<名>.channel.ts`（`*.channel.ts`；挂到 `src/ws.ts`；AsyncAPI 从这里生成）   |
 | 向已连接客户端推送                 | 业务侧 `import { ws } from '@/ws'`，用 `ws.room` / `ws.all`（勿在 console 进程再 attach） |
 | 可复用的请求级逻辑                 | `src/middleware/<名>.md.ts`，再挂到 Router / 接口 `mount`                                 |
-| 业务逻辑、DB、外部 API             | `src/services/<名>.service.ts`（`export default class`），并在 `services/index.ts` 注册   |
+| 业务逻辑、DB、外部 API、业务缓存   | `src/services/<名>.service.ts`（`export default class`），并在 `services/index.ts` 注册   |
+| 共享缓存 / `@remember`             | `src/services/cache.service.ts`（`export const cache`）                                   |
+| 应用日志                           | `src/services/logger.service.ts`（`export const logger`）                                 |
 | 入参/出参校验复用、Prisma override | `src/schemas/`（可 `*.schema.ts`）                                                        |
 | 环境相关配置                       | `src/configs/`（不要把密钥硬编码进路由）                                                  |
 | 一次性/运维指令、定时任务          | `src/commanders/<名>.cmd.ts`（定时用 `cron()` 挂在指令上，由已有 `cli.ts` 调度）          |
@@ -37,7 +39,7 @@
 
 路径别名：`@/*` → `src/*`。
 
-**分层**：Router 只做校验 + 鉴权挂载 + 调 Service + `ctx.send` / `ctx.throw`；SQL / 事务 / 缓存 / 第三方调用进 Service。不要自己 `new XxxService()`。
+**分层**：Router 只做校验 + 鉴权挂载 + 调 Service + `ctx.send` / `ctx.throw`；SQL / 事务 / 业务缓存 / 第三方调用进 Service。不要自己 `new XxxService()`。
 
 ## 路由怎么写
 
@@ -231,10 +233,10 @@ export default class ArticleService extends Service {
 在 `services/index.ts` 注册（**必须**动态 import；测试注入才用 `async () => Fake`）：
 
 ```ts
-combineServices(
-  { article: () => import('./article.service.js') },
-  { eager: ['cache', 'logger'] }, // 进程一起来就要就绪的放 eager
-);
+combineServices({
+  article: () => import('./article.service.js'),
+  // 可选 eager: ['xxx'] —— 进程起来就要 onInit 的放这里
+});
 ```
 
 `services.xxx` 是**懒加载代理**：从路由 / 其它 Service / commander 调用时**一律 `await`**（类型已是 `Promise`），即使 Class 里写的是同步方法。Service **内部** `this.bar()` 仍同步。互调：`import { services } from '@/services'` → `await services.other....`。`onInit` / `onDestroy` / private **不会**出现在 `services.xxx` 类型上。
@@ -248,19 +250,23 @@ Prisma/Mongoose 连接跟现有 `*.service.ts` + `registerLifecycle`；**不要*
 - 整组私有 API：`new Router({ mount: [auth.authenticate('<策略名>')] })`；策略名看 `auth.md.ts` 的 `strategies` key（`bearer` / `jwt` / `apiKey` / `session`）。
 - 单接口更严：`auth.authenticate(name).authorize(...)` 或 `auth.authorize(name, ...)`。先认证再授权；未登录 **401**，已登录权限不够 **403**。
 - 通过后读身份：`ctx.auth.bearer`（或 jwt / apiKey / session）——名字与策略 key 一致；Session 为 `ctx.auth.session.data`。
-- **Bearer / JWT**：登录路由不要挂 authenticate；签发用 `auth.strategy(name).signature(...)`，会话写入 `services.cache`（见 `cache.service.ts` 里 token 一类方法）。
-- **Session**（Cookie 会话）：登录 `await auth.strategy('session').login(ctx, stored)`；登出 `logout(ctx)`；登录后建议 `regenerateSessionId(ctx)` 防 fixation。启用 Session 时**必须**同时：
+- **Bearer / JWT**：登录路由不要挂 authenticate；签发用 `auth.strategy(name).signature(...)`，Bearer 会话写入 `services.passport`（见 `passport.service.ts`）。
+- **Session**（Cookie 会话）：`store: cache`（共享 `cache.service.ts`）；登录 `await auth.strategy('session').login(ctx, stored)`；登出 `logout(ctx)`；登录后建议 `regenerateSessionId(ctx)` 防 fixation。启用 Session 时**必须**同时：
   1. 安装并挂载 `@aomex/csrf`：`pnpm add @aomex/csrf`，在 `web.ts` 的 `mount` 里加 `csrf()`（脚手架可选 Web 中间件；与 `cors` 同开时放在 `cors` 之后）。
   2. 配置 `cors`：解开 `credentials: true`，并**显式**配置 `origin` 为前端域名白名单（开启凭证时禁止 `*` / 盲反射 Origin，见 `web.ts` 注释）。
-- **OAuth2 / GIS / 微信登录**：**不是** `auth.authenticate` 策略。脚手架首屏提供 `oauth2-client` / Google GIS / 微信系；选 `oauth2-client` 后再多选厂商（**可不选**则只装 `@aomex/oauth2-client`，不生成厂商文件）。选了厂商后，未启用的以注释写入。GIS / 微信为首屏直选。凭证经 `configs.oauth.*`。详见 [aomex-contrib](https://github.com/aomex/aomex-contrib)。
+- **OAuth2 / GIS / 微信登录**：**不是** `auth.authenticate` 策略。脚手架首屏提供 `oauth2-client` / Google GIS / 微信系；选 `oauth2-client` 后再多选厂商（**可不选**则只装 `@aomex/oauth2-client`，不生成厂商文件）。选了厂商后，未启用的以注释写入。GIS / 微信为首屏直选。凭证经 `configs.oauth.*`；厂商 `store` 传共享 `cache`。详见 [aomex-contrib](https://github.com/aomex/aomex-contrib)。
 - CSRF：双提交 Cookie；前端读 Cookie `csrfToken`，写入请求头 `x-csrf-token`；服务端可用 `ctx.csrfToken`。GET/HEAD/OPTIONS 默认跳过。跨域时浏览器会预检该头，不写 `allowHeaders` 时 cors 默认镜像预检头即可。
 - 少数路径免鉴权优先拆公开 Router；临时绕过可用 `.skip(ctx => ...)`（**不改类型**，action 里仍要处理未登录）。
 
-## 缓存
+## 缓存与日志
 
-- 读写：`services.cache` 上你声明的方法；键用 `this.key('前缀', 'v1').key(id)`，发版改版本号即可整批失效。
-- 方法级缓存：从 `cache.service.ts` 引入 `@remember(ms)` / `@remember({ duration, key, defaultValue })`——**只挂读多写少**；写库/发短信/扣库存别挂。返回 `null` 默认不写缓存。
-- 幂等 / 抢锁：`setNX`；计数窗口：`increment` + `expire`。生产多实例 cache 应在 `eager`（脚手架一般已做）。
+共享 `cache` / `logger`（`src/services/cache.service.ts` / `logger.service.ts`）。**业务缓存写在各自领域 Service**（如 passport），不要往 `cache.service.ts` 堆方法。
+
+- 读写：`import { cache } from '@/services/cache.service'`；键用 `cache.key('前缀', 'v1').key(id)` / `.keyHash(...)`，发版改版本号即可整批失效。
+- 方法级缓存：`@remember(ms|'1 minute')` / `@remember({ duration, key, defaultValue })`——**只挂读多写少**；写库/发短信/扣库存别挂。返回 `null` 默认不写缓存。
+- 幂等 / 抢锁：`cache.setNX`；计数窗口：`cache.increment` + `cache.expire`；短时单飞：`cache.singleFlight`。
+- 插件复用：session / abuse / cron / oauth2 等 `store: cache`，不要再 `new Caching(...)`。
+- 业务日志：`import { logger } from '@/services/logger.service'` 或 `ctx.logger`（info/warn/error/fatal）；别 `console.log` 打生产。密钥走 `configs.logger.*`。
 
 ## SSE（服务端推送）
 
@@ -293,8 +299,8 @@ router.get('/events', {
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | 缺资源 / 无权限 / 业务拒绝     | `ctx.throw(404\|403\|400, …)` + 对应 `response({ statusCode })`                                                              |
 | 需要登录                       | `auth.authenticate('<策略>')`（Router 或方法级 `mount`）                                                                     |
-| 读写缓存 / 方法级缓存          | `services.cache`；`@remember`（只挂查询）                                                                                    |
-| 业务日志                       | `services.logger`（info/warn/error/fatal）；别 `console.log` 打生产                                                          |
+| 读写缓存 / 方法级缓存          | 领域 Service 调 `cache`；`@remember`（只挂查询）                                                                             |
+| 业务日志                       | `logger` / `ctx.logger`（info/warn/error/fatal）；别 `console.log` 打生产                                                    |
 | 入参复用 / PATCH               | `schema` + `pick`/`omit`/`extend`/`partial`                                                                                  |
 | 上传文件                       | `rule.file()` + 响应结束前搬走                                                                                               |
 | 互斥 JSON / 根级数组体         | `rule.oneOf([...])` / `body(rule.array(...))`                                                                                |
@@ -358,6 +364,7 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 - 在路由里堆 SQL / 事务 / 第三方 SDK
 - 自己 `new Service()`，或不走 `combineServices` 动态 import（正式代码写成 `async () => Class` 也等于没懒加载）
 - 用 `send(4xx)` 代替 `throw`；或再造一套错误/鉴权/缓存/cron/logger
+- 往 `cache.service.ts` 堆业务方法，或再 `new Caching`
 - 官方仓已有能力却去装无关第三方（先查 [aomex](https://github.com/aomex/aomex) / [aomex-contrib](https://github.com/aomex/aomex-contrib)）
 - 改完 Service 忘了注册；破坏现有 `declare module '@aomex/web'` 的 Infer 扩展
 - 登录接口挂 `authenticate`（会永远 401）
@@ -372,5 +379,5 @@ export const withUser = middleware.web<{ userId: number }>(async (ctx, next) => 
 - [ ] 有入参则挂 `body`/`query`/`params`；有出参则挂 `response`（含会 throw 的状态码）
 - [ ] OpenAPI：`tags` + `summary`（或有意 `showInOpenapi: false`）
 - [ ] 业务在 Service；路由只编排；`await services.xxx`
-- [ ] 新 Service 已注册；需启动即连的进 `eager`
-- [ ] 鉴权 / 缓存 / 错误格式复用现有文件，不另起炉灶
+- [ ] 业务缓存写在领域 Service；新 Service 已注册；需启动即连的进 `eager`
+- [ ] 鉴权 / 缓存 / 日志 / 错误格式复用现有文件，不另起炉灶

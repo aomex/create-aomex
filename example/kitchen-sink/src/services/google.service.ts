@@ -1,7 +1,7 @@
 import { Service } from '@aomex/common';
-import { CacheRedisAdapter } from '@aomex/cache-redis-adapter';
 import type { WebContext } from '@aomex/web';
 import { GoogleOAuth2Client } from '@aomex-contrib/oauth2-google';
+import { cache } from '@/services/cache.service';
 import { configs } from '@/configs';
 
 /**
@@ -14,7 +14,7 @@ export default class GoogleService extends Service {
     clientId: configs.oauth.google.clientId,
     clientSecret: configs.oauth.google.clientSecret,
     redirectUri: (ctx) => `${ctx.request.origin}/oauth/google/callback`,
-    store: new CacheRedisAdapter(configs.redis),
+    store: cache,
   });
 
   oauthRedirect(ctx: WebContext) {
